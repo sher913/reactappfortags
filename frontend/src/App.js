@@ -22,19 +22,30 @@ class App extends React.Component {
     //Get all users details and table columns names in bootstrap table
     const colsholder =[]
     const rowsholder=[]
-    axios.get('/metadata').then(res => 
-    {
-      //Storing users detail in state array object
-      for(let i = 0; i < res.data.response[0].length; i++){
-       colsholder.push(res.data.response[0][i]['Field']) 
+    // on here, nid to make Python FASTAPI as middleware to bypass CORS, then axios.get(http://localhost/FASTAPI)
+    axios.get('http://localhost:8080/datasets?q=search&input=*', {
+      headers: {
+          'X-RestLi-Protocol-Version': '2.0.0',
+          'X-RestLi-Method': 'finder',
+        
+          "Access-Control-Allow-Origin": '*',
+          'Access-Control-Allow-Credentials': true,
+          
+      
       }
+    }).then(res => 
+    { console.log(res)
+      //Storing users detail in state array object
+      //for(let i = 0; i < res.data.response[0].length; i++){
+      // colsholder.push(res.data.response[0][i]['Field']) 
+      //}
     
-      for(let i = 0; i < res.data.response[1].length; i++){
-      rowsholder.push(res.data.response[1][i]) 
-     }
+      //for(let i = 0; i < res.data.response[1].length; i++){
+     // rowsholder.push(res.data.response[1][i]) 
+     //}
     console.log(colsholder)
     console.log(rowsholder)
-    this.setState({data: rowsholder, cols: colsholder});
+    //this.setState({data: rowsholder, cols: colsholder});
        }); 
     //init Datatable  
     setTimeout(()=>{                        
