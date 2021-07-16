@@ -46,9 +46,11 @@ class App extends React.Component {
     for(let i=0; i< elements.length; i++){
       for(let j=0; j< elements[i]["schemaMetadata"]["fields"].length; j++){
         let rowsholder={}
+    
         //for loop for platform and table name of datasets, always add key and value pair when pushing to array so aDataSort can refrence later
         Object.assign(rowsholder, {"Platform_Name": (elements[i]["platform"]).split(':').pop()});
         Object.assign(rowsholder,{"Table_Name": elements[i]["name"]});
+      
         //For elements with global tags, if they not equal to undefined, push the tags to array, else push ' ' to array
         if(elements[i]["globalTags"]!==undefined){
           let globaltagholder= []
@@ -69,6 +71,7 @@ class App extends React.Component {
    
     //injest field name
       Object.assign(rowsholder,({"Field_Name": elements[i]["schemaMetadata"]["fields"][j]["fieldPath"]}))
+     
       //if the dataset even has editableSchemadata
       if(elements[i]["editableSchemaMetadata"]!==undefined){
         //Field in editableSchemaMetadata has to match fields in schemaMetadata
@@ -90,7 +93,7 @@ class App extends React.Component {
           tagsholder.push((elements[i]["schemaMetadata"]["fields"][j]["globalTags"]["tags"][m]["tag"].split(':').pop()))
          
         }
-        rowsholder= ({"Tags_For_Field": tagsholder})
+        Object.assign(rowsholder,({"Tags_For_Field": tagsholder}))
       }
 
       //If both don't exist, push a blank
@@ -126,7 +129,7 @@ class App extends React.Component {
       //for Timestamp, checks if editableschemametadata exists, if not use schemametadata
       if(elements[i]["editableSchemaMetadata"] === undefined){
         let date = new Date (elements[i]["schemaMetadata"]["lastModified"]["time"])
-        console.log("HERERERERER:",date)
+        
         Object.assign(rowsholder,({ "Date_Modified": date.toLocaleString()}))
       }else{
         let date = new Date (elements[i]["editableSchemaMetadata"]["lastModified"]["time"])
@@ -164,12 +167,12 @@ class App extends React.Component {
       //for(let i = 0; i < res.data.response[1].length; i++){
      // rowsholder =(res.data.response[1][i]) 
      //}
-     console.log(elements)
-    console.log(colsholder)
+     console.log("fetched elements from GMS VIA FASTAPI:",elements)
+    console.log("Column Headers:",colsholder)
   
    
 
-    console.log(finalrowsholder)
+    console.log("Data to feed columns:",finalrowsholder)
     this.setState({data: finalrowsholder, cols: colsholder});
        }); 
     //init Datatable  
