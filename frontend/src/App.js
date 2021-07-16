@@ -23,25 +23,15 @@ class App extends React.Component {
   componentDidMount() {
     //array holders for data(rowsholder) and column name holder(colsholder)
     const colsholder =[]
-    var rowsholder=[]
-   
+  
+    const finalrowsholder=[]
     /**
  * Define the chunk method in the prototype of an array
  * that returns an array with arrays of the given size.
  *
  * @param chunkSize {Integer} Size of every group
  */
-Object.defineProperty(Array.prototype, 'chunk', {
-  value: function(chunkSize){
-      var temporal = [];
-      
-      for (var i = 0; i < this.length; i+= chunkSize){
-          temporal.push(this.slice(i,i+chunkSize));
-      }
-              
-      return temporal;
-  }
-});
+
     
     // on here, nid to make Python FASTAPI as middleware to bypass CORS, then axios.get(http://localhost/FASTAPI)
     axios.get('http://localhost:8000/getdatasets', {
@@ -55,30 +45,30 @@ Object.defineProperty(Array.prototype, 'chunk', {
     //for loop for total datasets iteration
     for(let i=0; i< elements.length; i++){
       for(let j=0; j< elements[i]["schemaMetadata"]["fields"].length; j++){
-      
-      //for loop for platform and table name of datasets, always add key and value pair when pushing to array so aDataSort can refrence later
-      rowsholder.push({key: "Platform_Name", value: (elements[i]["platform"]).split(':').pop()});
-      rowsholder.push({key: "Table_Name", value: elements[i]["name"]});
-      //For elements with global tags, if they not equal to undefined, push the tags to array, else push ' ' to array
-      if(elements[i]["globalTags"]!==undefined){
-        let globaltagholder= []
-        
-      
-        for(let k=0; k< elements[i]["globalTags"]["tags"].length; k++){
+        let rowsholder={}
+        //for loop for platform and table name of datasets, always add key and value pair when pushing to array so aDataSort can refrence later
+        Object.assign(rowsholder, {"Platform_Name": (elements[i]["platform"]).split(':').pop()});
+        Object.assign(rowsholder,{"Table_Name": elements[i]["name"]});
+        //For elements with global tags, if they not equal to undefined, push the tags to array, else push ' ' to array
+        if(elements[i]["globalTags"]!==undefined){
+          let globaltagholder= []
           
-       
-      globaltagholder.push(elements[i]["globalTags"]["tags"][k]["tag"].split(':').pop())
+        
+          for(let k=0; k< elements[i]["globalTags"]["tags"].length; k++){
+            
+        
+        globaltagholder.push(elements[i]["globalTags"]["tags"][k]["tag"].split(':').pop())
     }
-    rowsholder.push({key: "Global_Tags", value: globaltagholder})
+    Object.assign(rowsholder, ({"Global_Tags": globaltagholder}))
  
   }     else{
           let globaltagholder= []
           globaltagholder.push(' ')
-          rowsholder.push({key: "Global_Tags", value: globaltagholder})
+          Object.assign(rowsholder, ({"Global_Tags": globaltagholder}))
   }
    
     //injest field name
-      rowsholder.push({key: "Field_Name", value: elements[i]["schemaMetadata"]["fields"][j]["fieldPath"]})
+      Object.assign(rowsholder,({"Field_Name": elements[i]["schemaMetadata"]["fields"][j]["fieldPath"]}))
       //if the dataset even has editableSchemadata
       if(elements[i]["editableSchemaMetadata"]!==undefined){
         //Field in editableSchemaMetadata has to match fields in schemaMetadata
@@ -88,7 +78,7 @@ Object.defineProperty(Array.prototype, 'chunk', {
           for(let l=0; l< elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"].length; l++){
             tagsholder.push((elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"][l]["tag"].split(':').pop()))
         }
-        rowsholder.push({key: "Tags_For_Field", value: tagsholder})
+        Object.assign(rowsholder, ({"Tags_For_Field": tagsholder}))
       }
     }
        
@@ -100,14 +90,14 @@ Object.defineProperty(Array.prototype, 'chunk', {
           tagsholder.push((elements[i]["schemaMetadata"]["fields"][j]["globalTags"]["tags"][m]["tag"].split(':').pop()))
          
         }
-        rowsholder.push({key: "Tags_For_Field", value: tagsholder})
+        rowsholder= ({"Tags_For_Field": tagsholder})
       }
 
       //If both don't exist, push a blank
       if (elements[i]["editableSchemaMetadata"] === undefined && elements[i]["schemaMetadata"]["fields"][j]["globalTags"] === undefined){
         let tagsholder= []
         tagsholder.push(' ')
-        rowsholder.push({key: "Tags_For_Field", value: tagsholder})
+        Object.assign(rowsholder,({"Tags_For_Field": tagsholder}))
       }
      
 
@@ -117,31 +107,36 @@ Object.defineProperty(Array.prototype, 'chunk', {
         && elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["fieldPath"] === elements[i]["schemaMetadata"]["fields"][j]["fieldPath"] 
         && elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["description"]!==undefined)
         {
-          rowsholder.push({key: "Description", value: elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["description"]})
+          Object.assign(rowsholder,({"Description": elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["description"]}))
          
       } else if(elements[i]["schemaMetadata"]["fields"][j]["description"]!==undefined)
       {
-        rowsholder.push({key: "Description", value: elements[i]["schemaMetadata"]["fields"][j]["description"]})
+        Object.assign(rowsholder,({"Description": elements[i]["schemaMetadata"]["fields"][j]["description"]}))
       }
     }
 
 
     //Since already checked in editableschemaMetaData , now just checks in schemametadata, else if empty, fill with blank
       if (elements[i]["editableSchemaMetadata"] ===undefined && elements[i]["schemaMetadata"]["fields"][j]["description"]!==undefined){
-            rowsholder.push({key: "Description", value: elements[i]["schemaMetadata"]["fields"][j]["description"]})
+            Object.assign(rowsholder,({"Description": elements[i]["schemaMetadata"]["fields"][j]["description"]}))
 
       }if (elements[i]["editableSchemaMetadata"] === undefined && elements[i]["schemaMetadata"]["fields"][j]["description"] === undefined){
-        rowsholder.push({key: "Description", value: ' '})
+        Object.assign(rowsholder,({"Description": ' '}))
       }
       //for Timestamp, checks if editableschemametadata exists, if not use schemametadata
       if(elements[i]["editableSchemaMetadata"] === undefined){
-        rowsholder.push({key: "Date_Modified", value: Date(elements[i]["schemaMetadata"]["lastModified"]["time"]).toLocaleString()})
+        let date = new Date (elements[i]["schemaMetadata"]["lastModified"]["time"])
+        console.log("HERERERERER:",date)
+        Object.assign(rowsholder,({ "Date_Modified": date.toLocaleString()}))
       }else{
-        rowsholder.push({key: "Date_Modified", value: Date(elements[i]["editableSchemaMetadata"]["lastModified"]["time"]).toLocaleString()})
+        let date = new Date (elements[i]["editableSchemaMetadata"]["lastModified"]["time"])
+        Object.assign(rowsholder,({ "Date_Modified": date.toLocaleString()}))
       }
-      
-
-    }}
+      finalrowsholder.push(rowsholder)
+      rowsholder = {}
+    }
+    
+  }
     colsholder.push("Platform_Name", "Table_Name","Global_Tags", "Field_Name", "Tags_For_Field", "Description", "Date_Modified")
    
       // testing
@@ -167,12 +162,13 @@ Object.defineProperty(Array.prototype, 'chunk', {
       //}
     
       //for(let i = 0; i < res.data.response[1].length; i++){
-     // rowsholder.push(res.data.response[1][i]) 
+     // rowsholder =(res.data.response[1][i]) 
      //}
      console.log(elements)
     console.log(colsholder)
   
-    const finalrowsholder = rowsholder.chunk(7)
+   
+
     console.log(finalrowsholder)
     this.setState({data: finalrowsholder, cols: colsholder});
        }); 
