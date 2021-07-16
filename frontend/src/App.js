@@ -21,7 +21,7 @@ class App extends React.Component {
 
  
   componentDidMount() {
-    //Get all users details and table columns names in bootstrap table
+    //array holders for data(rowsholder) and column name holder(colsholder)
     const colsholder =[]
     const rowsholder=[]
     
@@ -29,11 +29,7 @@ class App extends React.Component {
     axios.get('http://localhost:8000/getdatasets', {
       headers: {
           'X-RestLi-Protocol-Version': '2.0.0',
-          'X-RestLi-Method': 'finder'
-        
-      
-          
-      
+          'X-RestLi-Method': 'finder'      
       }
     }).then(res => 
     { //pushing datasets data to 'elements' varaiable
@@ -43,8 +39,8 @@ class App extends React.Component {
       for(let j=0; j< elements[i]["schemaMetadata"]["fields"].length; j++){
       
       //for loop for platform and table name of datasets
-      console.log("platform name: ",(elements[i]["platform"]).split(':').pop());
-      console.log( elements[i]["name"]);
+      rowsholder.push((elements[i]["platform"]).split(':').pop());
+      rowsholder.push( elements[i]["name"]);
       //For elements with global tags, if they not equal to undefined, push the tags to array, else push ' ' to array
       if(elements[i]["globalTags"]!==undefined){
         let globaltagholder= []
@@ -55,16 +51,16 @@ class App extends React.Component {
        
       globaltagholder.push(elements[i]["globalTags"]["tags"][k]["tag"].split(':').pop())
     }
-    console.log("global  tags: ", globaltagholder)
+    rowsholder.push(globaltagholder)
  
   }     else{
           let globaltagholder= []
           globaltagholder.push(' ')
-          console.log("global  tags: ", globaltagholder)
+          rowsholder.push(globaltagholder)
   }
    
     //injest field name
-      console.log(elements[i]["schemaMetadata"]["fields"][j]["fieldPath"])
+      rowsholder.push(elements[i]["schemaMetadata"]["fields"][j]["fieldPath"])
       //if the dataset even has editableSchemadata
       if(elements[i]["editableSchemaMetadata"]!==undefined){
         //Field in editableSchemaMetadata has to match fields in schemaMetadata
@@ -73,7 +69,7 @@ class App extends React.Component {
           for(let l=0; l< elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"].length; l++){
             tagsholder.push((elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"][l]["tag"].split(':').pop()))
         }
-        console.log("tags name:",tagsholder)
+        rowsholder.push(tagsholder)
       } 
       } 
       //Use schemadata tag if exist, since no editableSchemaMetaData
@@ -84,21 +80,48 @@ class App extends React.Component {
           tagsholder.push((elements[i]["schemaMetadata"]["fields"][j]["globalTags"]["tags"][m]["tag"].split(':').pop()))
          
         }
-        console.log("tags name:",tagsholder)
+        rowsholder.push(tagsholder)
         //If both don't exist, push a blank
       } else{
         let tagsholder= []
         tagsholder.push(' ')
-        console.log("tags name:",tagsholder)
+        rowsholder.push(tagsholder)
       }
-      console.log("Description:", elements[0]["schemaMetadata"]["fields"][0]["description"])
+      //Checks for Description in editableschemaMetaData first, then checks in SchemaMetaData.
+      if(elements[i]["editableSchemaMetadata"]!==undefined){
+        if (elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]!==undefined 
+        && elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["fieldPath"] === elements[i]["schemaMetadata"]["fields"][j]["fieldPath"] 
+        && elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["description"]!==undefined)
+        {
+          rowsholder.push(elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["description"])
+         
+      } else if(elements[i]["schemaMetadata"]["fields"][j]["description"]!==undefined)
+      {
+        rowsholder.push(elements[i]["schemaMetadata"]["fields"][j]["description"])
+      }
+    }
 
+
+    //Since already checked in editableschemaMetaData , now just checks in schemametadata, else if empty, fill with blank
+      if (elements[i]["editableSchemaMetadata"] ===undefined && elements[i]["schemaMetadata"]["fields"][j]["description"]!==undefined){
+            rowsholder.push(elements[i]["schemaMetadata"]["fields"][j]["description"])
+
+      }if (elements[i]["editableSchemaMetadata"] === undefined && elements[i]["schemaMetadata"]["fields"][j]["description"] === undefined){
+        rowsholder.push(' ')
+      }
+      //for Timestamp, checks if editableschemametadata exists, if not use schemametadata
+      if(elements[i]["editableSchemaMetadata"] === undefined){
+        rowsholder.push(Date(elements[i]["schemaMetadata"]["lastModified"]["time"]).toLocaleString())
+      }else{
+        rowsholder.push(Date(elements[i]["editableSchemaMetadata"]["lastModified"]["time"]).toLocaleString())
+      }
+    
 
     }}
-      
-
+    colsholder.push("Platform_Name", "Table_Name","Global_Tags", "Field_Name", "Tags_For_Field", "Description", "Date_Modified")
+   
       // testing
-      console.log("Elements:", elements)
+      //console.log("Elements:", elements)
       // console.log("Platform name:", (elements[0]["platform"]).split(':').pop())
       // console.log("table name:", elements[0]["name"])
       // console.log("Global Tags:", elements[0]["globalTags"]["tags"])
@@ -122,9 +145,9 @@ class App extends React.Component {
       //for(let i = 0; i < res.data.response[1].length; i++){
      // rowsholder.push(res.data.response[1][i]) 
      //}
-    //console.log(colsholder)
-   //console.log(rowsholder)
-    //this.setState({data: rowsholder, cols: colsholder});
+    console.log(colsholder)
+   console.log(rowsholder)
+    this.setState({data: rowsholder, cols: colsholder});
        }); 
     //init Datatable  
     setTimeout(()=>{                        
@@ -163,16 +186,15 @@ class App extends React.Component {
           {this.state.data.map((result) => {
             return (
               <tr class="table-success">
+     
                   
-                  
-                  <td>{result.urn}</td>
-                  <td>{result.aspect}</td>
-                  <td>{result.version}</td>
-                  <td>{result.metadata}</td>
-                  <td>{result.systemmetadata}</td>
-                  <td>{result.createdon}</td>
-                  <td>{result.createdby}</td>
-                  <td>{result.createdfor}</td>
+                  <td>{result.Platform_Name}</td>
+                  <td>{result.Table_Name}</td>
+                  <td>{result.Global_Tags}</td>
+                  <td>{result.Field_Name}</td>
+                  <td>{result.Tags_For_Field}</td>
+                  <td>{result.Description}</td>
+                  <td>{result.Date_Modified}</td>
                 </tr>
           )
           })}
