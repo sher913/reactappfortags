@@ -1,4 +1,4 @@
-This is the web i will be developing for my intern, it is based on React, FASTAPI.
+This is the web i will be developing for my intern, it is based on React, FASTAPI, yarn.
 
 For now it is only local host, thus unable for anyone to test it out yet.
 
