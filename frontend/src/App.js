@@ -39,11 +39,14 @@ class App extends React.Component {
     }).then(res => 
     { //pushing datasets data to 'elements' varaiable
       let elements = (res["data"]["elements"])
+      let count =0
     //for loop for total datasets iteration
     for(let i=0; i< elements.length; i++){
       for(let j=0; j< elements[i]["schemaMetadata"]["fields"].length; j++){
         let rowsholder={}
-    
+        
+        Object.assign(rowsholder,{"ID": count});
+        count+=1
         //for loop for platform and table name of datasets, always add key and value pair when pushing to array so aDataSort can refrence later
         Object.assign(rowsholder, {"Platform_Name": (elements[i]["platform"]).split(':').pop()});
         Object.assign(rowsholder,{"Table_Name": elements[i]["name"]});
@@ -148,7 +151,7 @@ class App extends React.Component {
     }
     
   }
-    colsholder.push("Platform_Name", "Table_Name","Global_Tags", "Field_Name", "Tags_For_Field", "Description", "Date_Modified")
+    colsholder.push("#", "Platform_Name", "Table_Name","Global_Tags", "Field_Name", "Tags_For_Field", "Description", "Date_Modified")
    
       // testing
       //console.log(elements)
@@ -186,7 +189,7 @@ class App extends React.Component {
     //init Datatable  
     setTimeout(()=>{                        
     $('#example').DataTable(
-      {
+      {order: [[ 0, "asc" ]],
         responsive: true,
         "lengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]]
       }
@@ -222,7 +225,7 @@ class App extends React.Component {
             return (
               <tr class="table-success">
      
-                  
+                  <td>{result.ID}</td>
                   <td>{result.Platform_Name}</td>
                   <td>{result.Table_Name}</td>
                   <td>{result.Global_Tags}</td>
