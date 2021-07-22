@@ -6,31 +6,28 @@ import 'jquery/dist/jquery.min.js';
 //Datatable Modules
 import "datatables.net-dt/js/dataTables.dataTables";
 import "datatables.net-dt/css/jquery.dataTables.min.css";
-import $, { data } from 'jquery'; 
+import $ from 'jquery'; 
 //For API Requests
 import axios from 'axios';
 class App extends React.Component {
+  
   //Declare data store variables
   constructor(props) {
     super(props)
       this.state = {
-        data: [],
+        rows: [],
         cols:[]
               }
       }
 
  
   componentDidMount() {
-    //array holders for data(rowsholder) and column name holder(colsholder)
+    //array holders for rows(rowsholder) and column name holder(colsholder)
     const colsholder =[]
   
     const finalrowsholder=[]
-    /**
- * Define the chunk method in the prototype of an array
- * that returns an array with arrays of the given size.
- *
- * @param chunkSize {Integer} Size of every group
- */
+
+
 
     
     // on here, nid to make Python FASTAPI as middleware to bypass CORS, then axios.get(http://localhost/FASTAPI)
@@ -57,10 +54,13 @@ class App extends React.Component {
           
         
           for(let k=0; k< elements[i]["globalTags"]["tags"].length; k++){
-            
-        
+            if(k>0){
+              globaltagholder.push(', '+ elements[i]["globalTags"]["tags"][k]["tag"].split(':').pop())
+            }
+            else{
         globaltagholder.push(elements[i]["globalTags"]["tags"][k]["tag"].split(':').pop())
     }
+  }
     Object.assign(rowsholder, ({"Global_Tags": globaltagholder}))
  
   }     else{
@@ -71,7 +71,7 @@ class App extends React.Component {
    
     //injest field name
       Object.assign(rowsholder,({"Field_Name": elements[i]["schemaMetadata"]["fields"][j]["fieldPath"]}))
-     
+
       //if the dataset even has editableSchemadata
       if(elements[i]["editableSchemaMetadata"]!==undefined){
         //Field in editableSchemaMetadata has to match fields in schemaMetadata
@@ -79,8 +79,12 @@ class App extends React.Component {
         && elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["fieldPath"]===elements[i]["schemaMetadata"]["fields"][j]["fieldPath"]){
           let tagsholder= []
           for(let l=0; l< elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"].length; l++){
+            if(l>0){
+              tagsholder.push(', ' + (elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"][l]["tag"].split(':').pop()))
+            }else{
             tagsholder.push((elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"][l]["tag"].split(':').pop()))
         }
+      }
         Object.assign(rowsholder, ({"Tags_For_Field": tagsholder}))
       }
     }
@@ -90,9 +94,13 @@ class App extends React.Component {
         
         let tagsholder= []
           for(let m=0; m< elements[i]["schemaMetadata"]["fields"][j]["globalTags"]["tags"].length; m++){
-          tagsholder.push((elements[i]["schemaMetadata"]["fields"][j]["globalTags"]["tags"][m]["tag"].split(':').pop()))
+            if(m>0){
+          tagsholder.push(', ' + (elements[i]["schemaMetadata"]["fields"][j]["globalTags"]["tags"][m]["tag"].split(':').pop()))
          
-        }
+        }else{
+          tagsholder.push((elements[i]["schemaMetadata"]["fields"][j]["globalTags"]["tags"][m]["tag"].split(':').pop()))
+      }
+    }
         Object.assign(rowsholder,({"Tags_For_Field": tagsholder}))
       }
 
@@ -143,7 +151,7 @@ class App extends React.Component {
     colsholder.push("Platform_Name", "Table_Name","Global_Tags", "Field_Name", "Tags_For_Field", "Description", "Date_Modified")
    
       // testing
-      
+      //console.log(elements)
       // console.log("Platform name:", (elements[0]["platform"]).split(':').pop())
       // console.log("table name:", elements[0]["name"])
       // console.log("Global Tags:", elements[0]["globalTags"]["tags"])
@@ -173,12 +181,13 @@ class App extends React.Component {
    
 
     console.log("Data to feed columns:",finalrowsholder)
-    this.setState({data: finalrowsholder, cols: colsholder});
+    this.setState({rows: finalrowsholder, cols: colsholder});
        }); 
     //init Datatable  
     setTimeout(()=>{                        
     $('#example').DataTable(
       {
+        responsive: true,
         "lengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]]
       }
     );
@@ -191,7 +200,7 @@ class App extends React.Component {
   return (
     <div className="MainDiv">
       <div class="jumbotron text-center">
-          <h3>Sher's Intern Journey</h3>
+          <h3>Datahub Tagging UI</h3>
       </div>
       
       <div className="container">
@@ -209,7 +218,7 @@ class App extends React.Component {
             </tr>
           </thead>
           <tbody>
-          {this.state.data.map((result) => {
+          {this.state.rows.map((result) => {
             return (
               <tr class="table-success">
      
