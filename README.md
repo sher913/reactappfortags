@@ -10,9 +10,17 @@ From this wall of Json Text, wrangled the response painstakingly to fill the dat
 
 
 If you want to explore, most of the code changes made are to these files;
+
+
 Python FASTAPI:
+
+
 backend/main.py
 
 REACT APP:
+
+
 frontend/App.js
+
+
 Next step is to make the table editable to submit to GMS
