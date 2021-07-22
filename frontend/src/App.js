@@ -186,15 +186,43 @@ class App extends React.Component {
     console.log("Data to feed columns:",finalrowsholder)
     this.setState({rows: finalrowsholder, cols: colsholder});
        }); 
-    //init Datatable  
+    //init Datatable, #example is the table element id
     setTimeout(()=>{                        
-    $('#example').DataTable(
+    var example =$('#example').DataTable(
       {order: [[ 0, "asc" ]],
         responsive: true,
-        "lengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]]
+     
+        
+        "lengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+        columnDefs : [
+          { "type": "html-input", targets: [3,5,6],
+            render: function (rows, type, row) {
+          
+              return '<input class="form-control" type="text"  value ="'+ rows + '" style= "width:auto">';
+            
+            }
+            
+          }
+        ]
+        
       }
-    );
+
+    )// workking on here rn, to get edited data to update to rows().data()
+    $('#test').on( 'click', function () {
+      var data = example.row().data();
+      
+      //console.log( example.rows().data().length);
+      for(let x=0; x<example.rows().data().length; x++){
+        console.log(example.rows().data()[x]);}
+
+  } );
   }, 100);
+
+  
+
+
+ 
+
  }
 
  
@@ -206,9 +234,9 @@ class App extends React.Component {
           <h3>Datahub Tagging UI</h3>
       </div>
       
-      <div className="container">
+      <div className="container" >
           
-      <table id="example" class="table table-striped table-bordered table-sm row-border hover mb-5" >
+      <table id="example" class="table table-striped table-bordered table-sm row-border hover mb-5">
           <thead>
             <tr>
             {this.state.cols.map((result) => {
@@ -233,6 +261,7 @@ class App extends React.Component {
                   <td>{result.Tags_For_Field}</td>
                   <td>{result.Description}</td>
                   <td>{result.Date_Modified}</td>
+            
                 </tr>
           )
           })}
