@@ -27,6 +27,7 @@ class App extends React.Component {
   
     const finalrowsholder=[]
 
+    var finaleditedholder=[]
 
 
     
@@ -207,17 +208,40 @@ class App extends React.Component {
         
       }
 
-    )// workking on here rn, to get edited data to update to rows().data()
-    $('#test').on( 'click', function () {
-      var data = example.row().data();
-      
-      //console.log( example.rows().data().length);
-      for(let x=0; x<example.rows().data().length; x++){
-        console.log(example.rows().data()[x]);}
+    )
 
-  } );
+ 
+ //Iterate thru all row and compare original data vs edited, if edited, add to array (finaleditedholder) to be sent to endpoint
+  $('#test').click(function () {
+    let editedrowsholder = {};
+    finaleditedholder=[]
+    example.rows().every(function(){
+    
+      if(this.data()[3] !== ($(example.cell(this.index(), 3).node()).find('input').val()) 
+      ||this.data()[5] !== ($(example.cell(this.index(), 5).node()).find('input').val())
+      ||this.data()[6] !== ($(example.cell(this.index(), 6).node()).find('input').val())
+      ){
+        let date = new Date();
+        Object.assign(editedrowsholder,({"ID": this.data()[0], "Platform_Name": this.data()[1], "Table_Name": this.data()[2],
+        "Global_Tags": ($(example.cell(this.index(), 3).node()).find('input').val()), "Field_Name": this.data()[4], 
+        "Tags_For_Field": ($(example.cell(this.index(), 5).node()).find('input').val()),
+        "Description": ($(example.cell(this.index(), 6).node()).find('input').val()), "Date_Modified": date.toLocaleString()}))
+        finaleditedholder.push(editedrowsholder)
+        editedrowsholder={}
+        
+      }
+   
+  
+      });
+    
+    console.log(finaleditedholder)
+    return finaleditedholder
+  });
+
   }, 100);
-
+  
+ 
+  
   
 
 
@@ -275,4 +299,6 @@ class App extends React.Component {
   );
 }
 }
+
+
 export default App;
