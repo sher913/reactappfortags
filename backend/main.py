@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, Request
 from starlette.datastructures import URL
 import requests
-import json
+
 
 app = FastAPI()
 
@@ -21,8 +21,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
-
-URL ="http://localhost:8080/datasets"
+#VM address for hosting datahub
+URL ="http://172.104.42.65:8080/datasets"
 headers = {
 'Content-Type': 'application/json',
 'X-RestLi-Protocol-Version': '2.0.0',
@@ -38,7 +38,12 @@ def main():
     datasetobject =response.json()
     return datasetobject
 
+@app.get('/getresult')
+def main():
   
+    response = ["fred","adad"]
+    result =response
+    return result  
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

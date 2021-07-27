@@ -79,8 +79,11 @@ class App extends React.Component {
       //if the dataset even has editableSchemadata
       if(elements[i]["editableSchemaMetadata"]!==undefined){
         //Field in editableSchemaMetadata has to match fields in schemaMetadata
-        if(elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]!==undefined 
-        && elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["fieldPath"]===elements[i]["schemaMetadata"]["fields"][j]["fieldPath"]){
+        if(elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]!==undefined)
+        //This line matches [x] element in array of editableschema to [x] element in array of schemadata
+        //&& elements[i]["schemaMetadata"]["fields"][j]["fieldPath"].includes(elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["fieldPath"]))
+     
+        {
           let tagsholder= []
           for(let l=0; l< elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"].length; l++){
             if(l>0){
@@ -236,11 +239,14 @@ class App extends React.Component {
     
     console.log(finaleditedholder)
     return finaleditedholder
+    
   });
+
+  
 
   }, 100);
   
- 
+  
   
   
 
