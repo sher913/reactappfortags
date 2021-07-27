@@ -1,3 +1,4 @@
+from requests.api import request
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -39,10 +40,10 @@ def main():
     return datasetobject
 
 @app.get('/getresult')
-def main():
+def getresult():
   
-    response = ["fred","adad"]
-    result =response
+    response = requests.request("GET", "http://localhost:3000/result")
+    result =response.json()
     return result  
 
 if __name__ == "__main__":

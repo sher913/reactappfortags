@@ -80,7 +80,7 @@ class App extends React.Component {
       if(elements[i]["editableSchemaMetadata"]!==undefined){
         //Field in editableSchemaMetadata has to match fields in schemaMetadata
         if(elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]!==undefined)
-        //This line matches [x] element in array of editableschema to [x] element in array of schemadata
+        //This line matches [x] element in array of editableschema to [x] element in array of schemadata, but wont workk because the element index of editable does not match schemametadata element index
         //&& elements[i]["schemaMetadata"]["fields"][j]["fieldPath"].includes(elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["fieldPath"]))
      
         {
@@ -236,7 +236,10 @@ class App extends React.Component {
    
   
       });
-    
+    axios.post('/result',
+    {
+      finaleditedholder
+    })
     console.log(finaleditedholder)
     return finaleditedholder
     
