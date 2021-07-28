@@ -18,10 +18,23 @@ class App extends React.Component {
         rows: [],
         cols:[]
               }
+
+
+              
       }
 
  
   componentDidMount() {
+    function moveArrayItemToNewIndex(arr, old_index, new_index) {
+      if (new_index >= arr.length) {
+          var k = new_index - arr.length + 1;
+          while (k--) {
+              arr.push(undefined);
+          }
+      }
+      arr.splice(new_index, 0, arr.splice(old_index, 1)[0]);
+      return arr; 
+    };
     //array holders for rows(rowsholder) and column name holder(colsholder)
     const colsholder =[]
   
@@ -41,7 +54,21 @@ class App extends React.Component {
     { //pushing datasets data to 'elements' varaiable
       let elements = (res["data"]["elements"])
       let count =0
-    //for loop for total datasets iteration
+    //For loop for all fields in dataset, compare with editableSchema fields; if exist, push both to first element of each array, thus index positions of both edited Schema
+    // and Schemameta(original) will match 
+    for(let i=0; i< elements.length; i++){
+      for(let j=0; j< elements[i]["schemaMetadata"]["fields"].length; j++){
+        if(elements[i]["editableSchemaMetadata"]!==undefined){
+          for( let a = 0; a<elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"].length; a++){
+            if(elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][a]["fieldPath"] === elements[i]["schemaMetadata"]["fields"][j]["fieldPath"]){
+              moveArrayItemToNewIndex(elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"],a,0)
+              moveArrayItemToNewIndex(elements[i]["schemaMetadata"]["fields"],j,0)
+            }   
+      }
+    }
+  }
+}
+//for loop for total datasets iteration
     for(let i=0; i< elements.length; i++){
       for(let j=0; j< elements[i]["schemaMetadata"]["fields"].length; j++){
         let rowsholder={}
@@ -79,9 +106,10 @@ class App extends React.Component {
       //if the dataset even has editableSchemadata
       if(elements[i]["editableSchemaMetadata"]!==undefined){
         //Field in editableSchemaMetadata has to match fields in schemaMetadata
-        if(elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]!==undefined)
+        if(elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]!==undefined
+        
         //This line matches [x] element in array of editableschema to [x] element in array of schemadata, but wont workk because the element index of editable does not match schemametadata element index
-        //&& elements[i]["schemaMetadata"]["fields"][j]["fieldPath"].includes(elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["fieldPath"]))
+        && elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["fieldPath"] === elements[i]["schemaMetadata"]["fields"][j]["fieldPath"])
      
         {
           let tagsholder= []
@@ -182,7 +210,7 @@ class App extends React.Component {
       //for(let i = 0; i < res.data.response[1].length; i++){
      // rowsholder =(res.data.response[1][i]) 
      //}
-     console.log("fetched elements from GMS VIA FASTAPI:",elements)
+     console.log("Sorted fields of data retrived from GMS:",elements)
     console.log("Column Headers:",colsholder)
   
    
@@ -236,7 +264,7 @@ class App extends React.Component {
    
   
       });
-    axios.post('/result',
+    axios.post('http://localhost:8000/getresult',
     {
       finaleditedholder
     })

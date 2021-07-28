@@ -39,12 +39,15 @@ def main():
     datasetobject =response.json()
     return datasetobject
 
-@app.get('/getresult')
-def getresult():
+@app.post('/getresult')
+def getresult(request:Request):
+    print(request)
+    
+    return 
   
-    response = requests.request("GET", "http://localhost:3000/result")
-    result =response.json()
-    return result  
+   
+    
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
