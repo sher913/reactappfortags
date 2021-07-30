@@ -1,11 +1,13 @@
 from requests.api import request
 import uvicorn
-from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response, status
 from starlette.datastructures import URL
 import requests
-
+from starlette.responses import JSONResponse
+from pydantic import BaseModel
+import datetime
+from typing import List, Optional
 
 app = FastAPI()
 
@@ -22,6 +24,19 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
+
+class Item(BaseModel):
+    ID: int
+    Platform_Name: str
+    Table_Name: str
+    Global_Tags: Optional[str]= None
+    Tags_For_Field: Optional[str]= None
+    Description: Optional[str]= None
+    Date_Modified: int
+
+
+
+
 #VM address for hosting datahub
 URL ="http://172.104.42.65:8080/datasets"
 headers = {
@@ -40,12 +55,9 @@ def main():
     return datasetobject
 
 @app.post('/getresult')
-def getresult(request:Request):
-    print(request)
+def getresult(items: List[Item]):
+   return items
     
-    return 
-  
-   
     
 
 

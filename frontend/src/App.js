@@ -53,6 +53,7 @@ class App extends React.Component {
     }).then(res => 
     { //pushing datasets data to 'elements' varaiable
       let elements = (res["data"]["elements"])
+      console.log(typeof elements[0]["schemaMetadata"]["lastModified"]["time"])
       let count =0
     //For loop for all fields in dataset, compare with editableSchema fields; if exist, push both to first element of each array, thus index positions of both edited Schema
     // and Schemameta(original) will match 
@@ -253,23 +254,33 @@ class App extends React.Component {
       ||this.data()[6] !== ($(example.cell(this.index(), 6).node()).find('input').val())
       ){
         let date = new Date();
-        Object.assign(editedrowsholder,({"ID": this.data()[0], "Platform_Name": this.data()[1], "Table_Name": this.data()[2],
+        Object.assign(editedrowsholder,({"ID": parseInt(this.data()[0]), "Platform_Name": this.data()[1], "Table_Name": this.data()[2],
         "Global_Tags": ($(example.cell(this.index(), 3).node()).find('input').val()), "Field_Name": this.data()[4], 
         "Tags_For_Field": ($(example.cell(this.index(), 5).node()).find('input').val()),
-        "Description": ($(example.cell(this.index(), 6).node()).find('input').val()), "Date_Modified": date.toLocaleString()}))
+        "Description": ($(example.cell(this.index(), 6).node()).find('input').val()), "Date_Modified": Date.parse(date.toLocaleString())}))
         finaleditedholder.push(editedrowsholder)
         editedrowsholder={}
-        
+       
       }
-   
+  
   
       });
+      console.log("submitted:", finaleditedholder)
+
+
+    
     axios.post('http://localhost:8000/getresult',
-    {
-      finaleditedholder
-    })
-    console.log(finaleditedholder)
-    return finaleditedholder
+    finaleditedholder
+  
+  ,{
+        headers: {
+          // Overwrite Axios's automatically set Content-Type
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+    .then(res =>  console.log("Response from what API received: ", res.data))
+   
     
   });
 
