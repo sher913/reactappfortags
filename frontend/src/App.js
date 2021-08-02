@@ -11,6 +11,7 @@ import $ from 'jquery';
 import axios from 'axios';
 class App extends React.Component {
   
+  
   //Declare data store variables
   constructor(props) {
     super(props)
@@ -25,6 +26,9 @@ class App extends React.Component {
 
  
   componentDidMount() {
+    function insertAt(array, index, ...elementsArray) {
+      array.splice(index, 0, ...elements);
+  }
     function moveArrayItemToNewIndex(arr, old_index, new_index) {
       if (new_index >= arr.length) {
           var k = new_index - arr.length + 1;
@@ -42,7 +46,7 @@ class App extends React.Component {
 
     var finaleditedholder=[]
 
-
+    var elements
     
     // on here, nid to make Python FASTAPI as middleware to bypass CORS, then axios.get(http://localhost/FASTAPI)
     axios.get('http://localhost:8000/getdatasets', {
@@ -52,8 +56,7 @@ class App extends React.Component {
       }
     }).then(res => 
     { //pushing datasets data to 'elements' varaiable
-      let elements = (res["data"]["elements"])
-      console.log(typeof elements[0]["schemaMetadata"]["lastModified"]["time"])
+      elements = (res["data"]["elements"])
       let count =0
     //For loop for all fields in dataset, compare with editableSchema fields; if exist, push both to first element of each array, thus index positions of both edited Schema
     // and Schemameta(original) will match 
@@ -78,7 +81,7 @@ class App extends React.Component {
         count+=1
         //for loop for platform and table name of datasets, always add key and value pair when pushing to array so aDataSort can refrence later
         Object.assign(rowsholder, {"Platform_Name": (elements[i]["platform"]).split(':').pop()});
-        Object.assign(rowsholder,{"Table_Name": elements[i]["name"]});
+        Object.assign(rowsholder,{"Dataset_Name": elements[i]["name"]});
       
         //For elements with global tags, if they not equal to undefined, push the tags to array, else push ' ' to array
         if(elements[i]["globalTags"]!==undefined){
@@ -122,7 +125,14 @@ class App extends React.Component {
         }
       }
         Object.assign(rowsholder, ({"Tags_For_Field": tagsholder}))
-      }
+        Object.assign(rowsholder, ({"From_EditableSchema": "Yes"}))
+        //If have editableschemametadata but fieldpaths dont match, set to NO
+      }else{
+        Object.assign(rowsholder, ({"From_EditableSchema": "No"}))
+      } 
+      //If do not have editableschemametadata at all
+    }else{
+      Object.assign(rowsholder, ({"From_EditableSchema": "No"}))
     }
        
       //Use schemadata tag if exist, since no editableSchemaMetaData
@@ -184,7 +194,7 @@ class App extends React.Component {
     }
     
   }
-    colsholder.push("#", "Platform_Name", "Table_Name","Global_Tags", "Field_Name", "Tags_For_Field", "Description", "Date_Modified")
+    colsholder.push("#", "Platform_Name", "Dataset_Name","Global_Tags", "Field_Name", "Tags_For_Field", "Description", "Date_Modified","From_EditableSchema")
    
       // testing
       //console.log(elements)
@@ -254,18 +264,27 @@ class App extends React.Component {
       ||this.data()[6] !== ($(example.cell(this.index(), 6).node()).find('input').val())
       ){
         let date = new Date();
-        Object.assign(editedrowsholder,({"ID": parseInt(this.data()[0]), "Platform_Name": this.data()[1], "Table_Name": this.data()[2],
+        Object.assign(editedrowsholder,({"ID": parseInt(this.data()[0]), "Platform_Name": this.data()[1], "Dataset_Name": this.data()[2],
         "Global_Tags": ($(example.cell(this.index(), 3).node()).find('input').val()), "Field_Name": this.data()[4], 
         "Tags_For_Field": ($(example.cell(this.index(), 5).node()).find('input').val()),
         "Description": ($(example.cell(this.index(), 6).node()).find('input').val()), "Date_Modified": Date.parse(date.toLocaleString())}))
         finaleditedholder.push(editedrowsholder)
         editedrowsholder={}
-       
-      }
+        }
   
   
       });
       console.log("submitted:", finaleditedholder)
+      for(let j=0; j< finaleditedholder.length; j++){
+        example.rows().every(function(){
+        
+          if(finaleditedholder[j]["Dataset_Name"] === this.data()[2]){
+
+          }
+        
+      })
+    };
+
 
 
     
@@ -327,12 +346,13 @@ class App extends React.Component {
      
                   <td>{result.ID}</td>
                   <td>{result.Platform_Name}</td>
-                  <td>{result.Table_Name}</td>
+                  <td>{result.Dataset_Name}</td>
                   <td>{result.Global_Tags}</td>
                   <td>{result.Field_Name}</td>
                   <td>{result.Tags_For_Field}</td>
                   <td>{result.Description}</td>
                   <td>{result.Date_Modified}</td>
+                  <td>{result.From_EditableSchema}</td>
             
                 </tr>
           )

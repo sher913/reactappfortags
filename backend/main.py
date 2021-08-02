@@ -28,7 +28,7 @@ app.add_middleware(
 class Item(BaseModel):
     ID: int
     Platform_Name: str
-    Table_Name: str
+    Dataset_Name: str
     Global_Tags: Optional[str]= None
     Tags_For_Field: Optional[str]= None
     Description: Optional[str]= None
