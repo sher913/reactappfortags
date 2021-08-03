@@ -27,7 +27,7 @@ class App extends React.Component {
  
   componentDidMount() {
     function insertAt(array, index, ...elementsArray) {
-      array.splice(index, 0, ...elements);
+      array.splice(index, 0, ...elementsArray);
   }
     function moveArrayItemToNewIndex(arr, old_index, new_index) {
       if (new_index >= arr.length) {
@@ -46,6 +46,8 @@ class App extends React.Component {
 
     var finaleditedholder=[]
 
+    var tempfieldnameholder=[]
+    var tempdatasetnameholder=[]
     var elements
     
     // on here, nid to make Python FASTAPI as middleware to bypass CORS, then axios.get(http://localhost/FASTAPI)
@@ -256,7 +258,7 @@ class App extends React.Component {
  //Iterate thru all row and compare original data vs edited, if edited, add to array (finaleditedholder) to be sent to endpoint
   $('#test').click(function () {
     let editedrowsholder = {};
-    finaleditedholder=[]
+    finaleditedholder=[];
     example.rows().every(function(){
     
       if(this.data()[3] !== ($(example.cell(this.index(), 3).node()).find('input').val()) 
@@ -274,18 +276,44 @@ class App extends React.Component {
   
   
       });
-      console.log("submitted:", finaleditedholder)
+      console.log("First iteration:", finaleditedholder)
+     
       for(let j=0; j< finaleditedholder.length; j++){
-        example.rows().every(function(){
-        
-          if(finaleditedholder[j]["Dataset_Name"] === this.data()[2]){
-
+        tempfieldnameholder.push(finaleditedholder[j]["Field_Name"])
+        tempdatasetnameholder.push(finaleditedholder[j]["Dataset_Name"])
+      }
+      console.log(tempfieldnameholder)
+      console.log(tempdatasetnameholder)
+      editedrowsholder= {}
+      example.rows().every(function(){
+        console.log(tempdatasetnameholder.includes(this.data()[2]) && !tempfieldnameholder.includes(this.data()[4]) && this.data()[8]==="Yes")
+        if((tempdatasetnameholder.includes(this.data()[2]) && !tempfieldnameholder.includes(this.data()[4]) && this.data()[8]==="Yes")===true){
+          let date = new Date();
+          Object.assign(editedrowsholder,({"ID": parseInt(this.data()[0]), "Platform_Name": this.data()[1], "Dataset_Name": this.data()[2],
+          "Global_Tags": ($(example.cell(this.index(), 3).node()).find('input').val()), "Field_Name": this.data()[4], 
+          "Tags_For_Field": ($(example.cell(this.index(), 5).node()).find('input').val()),
+          "Description": ($(example.cell(this.index(), 6).node()).find('input').val()), "Date_Modified": Date.parse(date.toLocaleString())}))
+          insertAt(finaleditedholder, tempdatasetnameholder.indexOf(this.data()[2]), editedrowsholder)
+          editedrowsholder={}
           }
-        
-      })
-    };
+    });
 
+      tempfieldnameholder=[]
+      tempdatasetnameholder=[]
+      // for(let j=0; j< finaleditedholder.length; j++){
 
+      //   for(let k=0; k< finalrowsholder.length; k++){
+      //     console.log(finaleditedholder[j]["Dataset_Name"] === finalrowsholder[k]["Dataset_Name"] && finaleditedholder[j]["Field_Name"] !== finalrowsholder[k]["Field_Name"] && finalrowsholder[k]["From_EditableSchema"]==="Yes")
+   
+      //     if(finaleditedholder[j]["Dataset_Name"] === finalrowsholder[k]["Dataset_Name"] && finaleditedholder[j]["Field_Name"] !== finalrowsholder[k]["Field_Name"] && finalrowsholder[k]["From_EditableSchema"]==="Yes"){
+      //       insertAt(finaleditedholder, j, finalrowsholder[k])
+              
+      //   }
+      // };
+
+      // }
+
+    console.log("Second iteration:", finaleditedholder) 
 
     
     axios.post('http://localhost:8000/getresult',
