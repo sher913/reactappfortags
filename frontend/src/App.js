@@ -49,6 +49,7 @@ class App extends React.Component {
     var tempfieldnameholder=[]
     var tempdatasetnameholder=[]
     var elements
+   
     
     // on here, nid to make Python FASTAPI as middleware to bypass CORS, then axios.get(http://localhost/FASTAPI)
     axios.get('http://localhost:8000/getdatasets', {
@@ -82,9 +83,10 @@ class App extends React.Component {
         Object.assign(rowsholder,{"ID": count});
         count+=1
         //for loop for platform and table name of datasets, always add key and value pair when pushing to array so aDataSort can refrence later
+        Object.assign(rowsholder,{"Origin": elements[i]["origin"]});
         Object.assign(rowsholder, {"Platform_Name": (elements[i]["platform"]).split(':').pop()});
         Object.assign(rowsholder,{"Dataset_Name": elements[i]["name"]});
-      
+        
         //For elements with global tags, if they not equal to undefined, push the tags to array, else push ' ' to array
         if(elements[i]["globalTags"]!==undefined){
           let globaltagholder= []
@@ -118,7 +120,7 @@ class App extends React.Component {
         && elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["fieldPath"] === elements[i]["schemaMetadata"]["fields"][j]["fieldPath"])
      
         {
-          let tagsholder= []
+         let tagsholder= []
           for(let l=0; l< elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"].length; l++){
             if(l>0){
               tagsholder.push(', ' + (elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"][l]["tag"].split(':').pop()))
@@ -126,7 +128,7 @@ class App extends React.Component {
             tagsholder.push((elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"][l]["tag"].split(':').pop()))
         }
       }
-        Object.assign(rowsholder, ({"Tags_For_Field": tagsholder}))
+        Object.assign(rowsholder, ({"Editable_Tags": tagsholder}))
         Object.assign(rowsholder, ({"From_EditableSchema": "Yes"}))
         //If have editableschemametadata but fieldpaths dont match, set to NO
       }else{
@@ -139,9 +141,8 @@ class App extends React.Component {
        
       //Use schemadata tag if exist, since no editableSchemaMetaData
       if(elements[i]["schemaMetadata"]["fields"][j]["globalTags"]!==undefined){
-        
         let tagsholder= []
-          for(let m=0; m< elements[i]["schemaMetadata"]["fields"][j]["globalTags"]["tags"].length; m++){
+        for(let m=0; m< elements[i]["schemaMetadata"]["fields"][j]["globalTags"]["tags"].length; m++){
             if(m>0){
           tagsholder.push(', ' + (elements[i]["schemaMetadata"]["fields"][j]["globalTags"]["tags"][m]["tag"].split(':').pop()))
          
@@ -149,14 +150,15 @@ class App extends React.Component {
           tagsholder.push((elements[i]["schemaMetadata"]["fields"][j]["globalTags"]["tags"][m]["tag"].split(':').pop()))
       }
     }
-        Object.assign(rowsholder,({"Tags_For_Field": tagsholder}))
+        Object.assign(rowsholder,({"Original_Tags": tagsholder}))
       }
 
       //If both don't exist, push a blank
       if (elements[i]["editableSchemaMetadata"] === undefined && elements[i]["schemaMetadata"]["fields"][j]["globalTags"] === undefined){
         let tagsholder= []
         tagsholder.push(' ')
-        Object.assign(rowsholder,({"Tags_For_Field": tagsholder}))
+        Object.assign(rowsholder,({"Editable_Tags": tagsholder}))
+        Object.assign(rowsholder,({"Original_Tags": tagsholder}))
       }
      
 
@@ -196,7 +198,8 @@ class App extends React.Component {
     }
     
   }
-    colsholder.push("#", "Platform_Name", "Dataset_Name","Global_Tags", "Field_Name", "Tags_For_Field", "Description", "Date_Modified","From_EditableSchema")
+  //Columns header defintion #important
+    colsholder.push("#", "Platform_Name", "Dataset_Name","Global_Tags", "Field_Name", "Editable_Tags","Original_Tags", "Description", "Date_Modified","From_EditableSchema","Origin")
    
       // testing
       //console.log(elements)
@@ -240,14 +243,18 @@ class App extends React.Component {
         
         "lengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
         columnDefs : [
-          { "type": "html-input", targets: [3,5,6],
+          { "type": "html-input", targets: [3,5,6,7],
             render: function (rows, type, row) {
           
               return '<input class="form-control" type="text"  value ="'+ rows + '" style= "width:auto">';
             
             }
             
-          }
+          }, {
+            "targets": [0,9,10],
+            "visible": false,
+            "searchable": false
+        }
         ]
         
       }
@@ -264,12 +271,14 @@ class App extends React.Component {
       if(this.data()[3] !== ($(example.cell(this.index(), 3).node()).find('input').val()) 
       ||this.data()[5] !== ($(example.cell(this.index(), 5).node()).find('input').val())
       ||this.data()[6] !== ($(example.cell(this.index(), 6).node()).find('input').val())
+      ||this.data()[7] !== ($(example.cell(this.index(), 7).node()).find('input').val())
       ){
         let date = new Date();
-        Object.assign(editedrowsholder,({"ID": parseInt(this.data()[0]), "Platform_Name": this.data()[1], "Dataset_Name": this.data()[2],
+        Object.assign(editedrowsholder,({"ID": parseInt(this.data()[0]),"Origin": this.data()[10], "Platform_Name": this.data()[1], "Dataset_Name": this.data()[2],
         "Global_Tags": ($(example.cell(this.index(), 3).node()).find('input').val()), "Field_Name": this.data()[4], 
-        "Tags_For_Field": ($(example.cell(this.index(), 5).node()).find('input').val()),
-        "Description": ($(example.cell(this.index(), 6).node()).find('input').val()), "Date_Modified": Date.parse(date.toLocaleString())}))
+        "Editable_Tags": ($(example.cell(this.index(), 5).node()).find('input').val()),
+        "Original_tags": ($(example.cell(this.index(), 6).node()).find('input').val()),
+        "Description": ($(example.cell(this.index(), 7).node()).find('input').val()), "Date_Modified": Date.parse(date.toLocaleString())}))
         finaleditedholder.push(editedrowsholder)
         editedrowsholder={}
         }
@@ -288,12 +297,13 @@ class App extends React.Component {
       //If condition (dataset exist, field name does not exist, came from editable schema ===true) is fuifilled, 
       //Takes the row and insert above the row containing the same dataset name in finaleditedholder
       example.rows().every(function(){
-        if((tempdatasetnameholder.includes(this.data()[2]) && !tempfieldnameholder.includes(this.data()[4]) && this.data()[8]==="Yes")===true){
+        if((tempdatasetnameholder.includes(this.data()[2]) && !tempfieldnameholder.includes(this.data()[4]) && this.data()[9]==="Yes")===true){
           let date = new Date();
-          Object.assign(editedrowsholder,({"ID": parseInt(this.data()[0]), "Platform_Name": this.data()[1], "Dataset_Name": this.data()[2],
+          Object.assign(editedrowsholder,({"ID": parseInt(this.data()[0]), "Origin": this.data()[10], "Platform_Name": this.data()[1], "Dataset_Name": this.data()[2],
           "Global_Tags": ($(example.cell(this.index(), 3).node()).find('input').val()), "Field_Name": this.data()[4], 
-          "Tags_For_Field": ($(example.cell(this.index(), 5).node()).find('input').val()),
-          "Description": ($(example.cell(this.index(), 6).node()).find('input').val()), "Date_Modified": Date.parse(date.toLocaleString())}))
+          "Editable_Tags": ($(example.cell(this.index(), 5).node()).find('input').val()),
+          "Original_Tags": ($(example.cell(this.index(), 6).node()).find('input').val()),
+          "Description": ($(example.cell(this.index(), 7).node()).find('input').val()), "Date_Modified": Date.parse(date.toLocaleString())}))
           //If row id of row with same dataset name of edited array is > current selected row, insert row from temp array before, else insert after
           if(finaleditedholder[tempdatasetnameholder.indexOf(this.data()[2])]["ID"] > this.data()[0]){
             insertAt(finaleditedholder, tempdatasetnameholder.indexOf(this.data()[2]), editedrowsholder)
@@ -308,18 +318,7 @@ class App extends React.Component {
       tempfieldnameholder=[]
       tempdatasetnameholder=[]
       console.log("Second iteration:", finaleditedholder) 
-      // for(let j=0; j< finaleditedholder.length; j++){
-
-      //   for(let k=0; k< finalrowsholder.length; k++){
-      //     console.log(finaleditedholder[j]["Dataset_Name"] === finalrowsholder[k]["Dataset_Name"] && finaleditedholder[j]["Field_Name"] !== finalrowsholder[k]["Field_Name"] && finalrowsholder[k]["From_EditableSchema"]==="Yes")
-   
-      //     if(finaleditedholder[j]["Dataset_Name"] === finalrowsholder[k]["Dataset_Name"] && finaleditedholder[j]["Field_Name"] !== finalrowsholder[k]["Field_Name"] && finalrowsholder[k]["From_EditableSchema"]==="Yes"){
-      //       insertAt(finaleditedholder, j, finalrowsholder[k])
-              
-      //   }
-      // };
-
-      // }
+      
 
     
 
@@ -385,11 +384,12 @@ class App extends React.Component {
                   <td>{result.Dataset_Name}</td>
                   <td>{result.Global_Tags}</td>
                   <td>{result.Field_Name}</td>
-                  <td>{result.Tags_For_Field}</td>
+                  <td>{result.Editable_Tags}</td>
+                  <td>{result.Original_Tags}</td>
                   <td>{result.Description}</td>
                   <td>{result.Date_Modified}</td>
                   <td>{result.From_EditableSchema}</td>
-            
+                  <td>{result.Origin}</td>
                 </tr>
           )
           })}
