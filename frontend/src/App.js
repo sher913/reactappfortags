@@ -50,7 +50,7 @@ class App extends React.Component {
     var tempdatasetnameholder=[]
     var elements
    
-    
+    var testholder 
     // on here, nid to make Python FASTAPI as middleware to bypass CORS, then axios.get(http://localhost/FASTAPI)
     axios.get('http://localhost:8000/getdatasets', {
       headers: {
@@ -115,12 +115,12 @@ class App extends React.Component {
       if(elements[i]["editableSchemaMetadata"]!==undefined){
         //Field in editableSchemaMetadata has to match fields in schemaMetadata
         if(elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]!==undefined
-        
-        //This line matches [x] element in array of editableschema to [x] element in array of schemadata, but wont workk because the element index of editable does not match schemametadata element index
         && elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["fieldPath"] === elements[i]["schemaMetadata"]["fields"][j]["fieldPath"])
-     
-        {
-         let tagsholder= []
+        
+        {let tagsholder= []
+          if(elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"].length ===0){
+          tagsholder.push(' ')
+        }else{
           for(let l=0; l< elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"].length; l++){
             if(l>0){
               tagsholder.push(', ' + (elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"][l]["tag"].split(':').pop()))
@@ -128,20 +128,30 @@ class App extends React.Component {
             tagsholder.push((elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"][l]["tag"].split(':').pop()))
         }
       }
+    }
         Object.assign(rowsholder, ({"Editable_Tags": tagsholder}))
         Object.assign(rowsholder, ({"From_EditableSchema": "Yes"}))
         //If have editableschemametadata but fieldpaths dont match, set to NO
       }else{
+        let tagsholder= []
+        tagsholder.push(' ')
+        Object.assign(rowsholder,({"Editable_Tags": tagsholder}))
         Object.assign(rowsholder, ({"From_EditableSchema": "No"}))
       } 
       //If do not have editableschemametadata at all
     }else{
+      let tagsholder= []
+      tagsholder.push(' ')
+      Object.assign(rowsholder,({"Editable_Tags": tagsholder}))
       Object.assign(rowsholder, ({"From_EditableSchema": "No"}))
     }
        
-      //Use schemadata tag if exist, since no editableSchemaMetaData
+      //Filling tags from schemametadata
       if(elements[i]["schemaMetadata"]["fields"][j]["globalTags"]!==undefined){
         let tagsholder= []
+        if(elements[i]["schemaMetadata"]["fields"][j]["globalTags"]["tags"].length ===0){
+          tagsholder.push(' ')
+        }else{
         for(let m=0; m< elements[i]["schemaMetadata"]["fields"][j]["globalTags"]["tags"].length; m++){
             if(m>0){
           tagsholder.push(', ' + (elements[i]["schemaMetadata"]["fields"][j]["globalTags"]["tags"][m]["tag"].split(':').pop()))
@@ -150,17 +160,14 @@ class App extends React.Component {
           tagsholder.push((elements[i]["schemaMetadata"]["fields"][j]["globalTags"]["tags"][m]["tag"].split(':').pop()))
       }
     }
+  }
+        Object.assign(rowsholder,({"Original_Tags": tagsholder}))
+      }else{
+        let tagsholder= []
+        tagsholder.push(' ')
         Object.assign(rowsholder,({"Original_Tags": tagsholder}))
       }
 
-      //If both don't exist, push a blank
-      if (elements[i]["editableSchemaMetadata"] === undefined && elements[i]["schemaMetadata"]["fields"][j]["globalTags"] === undefined){
-        let tagsholder= []
-        tagsholder.push(' ')
-        Object.assign(rowsholder,({"Editable_Tags": tagsholder}))
-        Object.assign(rowsholder,({"Original_Tags": tagsholder}))
-      }
-     
 
       //Checks for Description in editableschemaMetaData first, then checks in SchemaMetaData.
       if(elements[i]["editableSchemaMetadata"]!==undefined){
@@ -230,7 +237,7 @@ class App extends React.Component {
     console.log("Column Headers:",colsholder)
   
    
-
+    testholder = finalrowsholder
     console.log("Data to feed columns:",finalrowsholder)
     this.setState({rows: finalrowsholder, cols: colsholder});
        }); 
@@ -260,6 +267,20 @@ class App extends React.Component {
       }
 
     )
+    // send to FASTAPI, sorted original data to compare against edited later in FASTAPI
+    axios.post('http://localhost:8000/originalresult',
+  
+    
+    finalrowsholder
+    
+  ,{
+        headers: {
+          // Overwrite Axios's automatically set Content-Type
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+    .then(res =>  console.log("Response from what originalresult endpoint received: ", res.data))
 
  
  //Iterate thru all row and compare original data vs edited, if edited, add to array (finaleditedholder) to be sent to endpoint
@@ -277,7 +298,7 @@ class App extends React.Component {
         Object.assign(editedrowsholder,({"ID": parseInt(this.data()[0]),"Origin": this.data()[10], "Platform_Name": this.data()[1], "Dataset_Name": this.data()[2],
         "Global_Tags": ($(example.cell(this.index(), 3).node()).find('input').val()), "Field_Name": this.data()[4], 
         "Editable_Tags": ($(example.cell(this.index(), 5).node()).find('input').val()),
-        "Original_tags": ($(example.cell(this.index(), 6).node()).find('input').val()),
+        "Original_Tags": ($(example.cell(this.index(), 6).node()).find('input').val()),
         "Description": ($(example.cell(this.index(), 7).node()).find('input').val()), "Date_Modified": Date.parse(date.toLocaleString())}))
         finaleditedholder.push(editedrowsholder)
         editedrowsholder={}
@@ -324,8 +345,10 @@ class App extends React.Component {
 
     
     axios.post('http://localhost:8000/getresult',
-    finaleditedholder
   
+    
+    finaleditedholder
+    
   ,{
         headers: {
           // Overwrite Axios's automatically set Content-Type
@@ -333,7 +356,11 @@ class App extends React.Component {
         }
       }
     )
-    .then(res =>  console.log("Response from what API received: ", res.data))
+    .then(res =>  console.log("Response from what getresult endpoint received: ", res.data))
+     
+    
+    
+
    
     
   });

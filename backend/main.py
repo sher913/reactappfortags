@@ -8,6 +8,9 @@ from starlette.responses import JSONResponse
 from pydantic import BaseModel
 import datetime
 from typing import List, Optional
+import json
+import socket
+socket.getaddrinfo('localhost', 8080)
 
 app = FastAPI()
 
@@ -25,14 +28,35 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-class Item(BaseModel):
+class EditedItem(BaseModel):
     ID: int
+    Origin: str
     Platform_Name: str
     Dataset_Name: str
     Global_Tags: Optional[str]= None
-    Tags_For_Field: Optional[str]= None
+    Field_Name: str
+    Editable_Tags: Optional[str]= None
+    Original_Tags: Optional[str]= None
     Description: Optional[str]= None
-    Date_Modified: int
+    
+
+class OriginalItem(BaseModel):
+    ID: int
+    Origin: str
+    Platform_Name: str
+    Dataset_Name: str
+    Global_Tags: List[Optional[str]]= None
+    Field_Name: str
+    Editable_Tags: List[Optional[str]]= None
+    Original_Tags: List[Optional[str]]= None
+    Description: Optional[str]= None
+    
+    
+
+
+
+
+
 
 
 
@@ -47,22 +71,42 @@ headers = {
 parameters = {'q':'search',
                 'input':'*'}
 
+
+
+
+
+
 @app.get('/getdatasets')
 def main():
   
     response = requests.request("GET", URL, headers=headers, params = parameters)
+   
     datasetobject =response.json()
+   
+    
     return datasetobject
 
+#datafromGMS=main() #to get orignial json data from gms
+#print(datafromGMS)  
+
+
 @app.post('/getresult')
-def getresult(items: List[Item]):
-   return items
-    
+def getresult(Editeditems: List[EditedItem]):
+    #YES IT WORKKS
+    print(orignaldatafromgms)
+    return Editeditems
+
+@app.post('/originalresult')
+def orginaldata(Originalitems: List[OriginalItem]):
+    global orignaldatafromgms
+    orignaldatafromgms = Originalitems
+    return orignaldatafromgms
+    #print(Originalitems)
     
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="localhost", port=8000)
 
 
 
