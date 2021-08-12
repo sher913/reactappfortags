@@ -92,15 +92,15 @@ def main():
 
 @app.post('/getresult')
 def getresult(Editeditems: List[EditedItem]):
-    #YES IT WORKKS
+    
     print(orignaldatafromgms)
-    return Editeditems
+    return Editeditems #switch the return to something else after everything working
 
 @app.post('/originalresult')
 def orginaldata(Originalitems: List[OriginalItem]):
     global orignaldatafromgms
     orignaldatafromgms = Originalitems
-    return orignaldatafromgms
+    return orignaldatafromgms #switch the return to something else after everything working
     #print(Originalitems)
     
 
