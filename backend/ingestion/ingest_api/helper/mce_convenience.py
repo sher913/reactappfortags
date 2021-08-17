@@ -125,9 +125,11 @@ def make_lineage_mce(
 
 def make_dataset_description_mce(
     dataset_name: str,
-    description: str,
+    #edited this -sher
+    description: Optional[str] =None,
     externalUrl: str = None, 
-    tags: List[str] = [],
+    #edited this -sher
+    tags: List[Optional[str]] =None,
     customProperties: Optional[Dict[str, str]]=None
 ) -> MetadataChangeEventClass:
     """
@@ -140,8 +142,9 @@ def make_dataset_description_mce(
                 DatasetPropertiesClass(
                     description=description,
                     externalUrl = externalUrl,
-                    customProperties = customProperties
-#                    tags = [make_tag_urn(tag) for tag in tags]
+                    customProperties = customProperties,
+                    #edited this -sher
+                    tags = [make_tag_urn(tag) for tag in tags]
                 )
             ],
         )

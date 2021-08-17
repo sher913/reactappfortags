@@ -97,10 +97,73 @@ def main():
 
 @app.post('/getresult')
 def getresult(Editeditems: List[EditedItem]):
-    # datasetName = make_dataset_urn(Editeditems[0].Platform_Name, Editeditems[0].Dataset_Name)
-    # print("{}_{}".format(Editeditems[0].Dataset_Name,str(get_sys_time())))
-    print(Editeditems[0].Original_Tags== '')
-   
+    datasetEdited=[]
+    for item in Editeditems:
+        #extracts all edited unique datasets to use as for loops
+        if item.Dataset_Name not in datasetEdited:
+            datasetEdited.append(item.Dataset_Name)
+       
+        #makes the edited tags into a list for a fields
+        item.Editable_Tags= item.Editable_Tags.replace(" ", "")
+        item.Editable_Tags= item.Editable_Tags.split(",")
+    print(datasetEdited)
+    print(Editeditems[0].Editable_Tags)
+    for dataset in datasetEdited:
+        field_params = []
+        for item in Editeditems:
+            if item.Dataset_Name == dataset:
+                datasetName = make_dataset_urn(item.Platform_Name, item.Dataset_Name)
+                platformName = make_platform(item.Platform_Name)  
+                browsePath = "/{}/{}".format(item.Platform_Name, item.Dataset_Name) 
+
+                requestor = make_user_urn("datahub")
+
+                properties = {"dataset_origin": item.Origin}#, 
+                                #"dataset_location": item.dict().get("dataset_location", "")}  
+
+                all_mce=[]
+                all_mce.append(make_dataset_description_mce(dataset_name = datasetName, 
+                                                            customProperties=properties
+                                                            ))    
+
+                all_mce.append(make_ownership_mce(actor = requestor, 
+                                                    dataset_urn = datasetName))   
+
+                all_mce.append(make_browsepath_mce(dataset_urn=datasetName, 
+                                                    path=[browsePath]))  
+
+                
+              #need help formatting this
+                current_field={}
+                current_field.update(existing_field.dict())          
+                current_field["fieldPath"]  = current_field.pop("field_name")
+                if "field_description" not in current_field:
+                    current_field["field_description"] = ""
+                field_params.append(current_field)
+            all_mce.append(make_schema_mce(dataset_urn = datasetName,
+                                            platformName = platformName,
+                                            actor = requestor,
+                                            fields = field_params,
+                                            ))  
+        # try:
+        #     emitter = DatahubRestEmitter(rest_endpoint)
+
+        #     for mce in all_mce:
+        #         emitter.emit_mce(mce)   
+        #     emitter._session.close()
+        # except Exception as e:
+        #     rootLogger.debug(e)
+        #     return Response("Dataset was not created because upstream has encountered an error {}".format(e), status_code=502)
+        # rootLogger.info("Make_dataset_request_completed_for {} requested_by {}".format(item.dataset_name, item.dataset_owner))      
+        # return Response(content = "dataset can be found at {}/dataset/{}".format(datahub_url, make_dataset_urn(item.dataset_type, item.dataset_name)),
+        #                 status_code = 205) 
+    
+#    #empty orginal tags are == ''
+#     print(Editeditems[0].Original_Tags== '')
+
+    
+#     print(editedtags[0])
+    return(Editeditems)
 
 @app.post('/originalresult')
 def orginaldata(Originalitems: List[OriginalItem]):
