@@ -11,6 +11,11 @@ from typing import List, Optional
 import json
 import socket
 socket.getaddrinfo('localhost', 8080)
+# from ingestion.ingest_api.helper.models import FieldParam, create_dataset_params, dataset_status_params, determine_type
+# from ingestion.ingest_api.helper.mce_convenience import make_delete_mce, make_schema_mce, make_dataset_urn, \
+#                     make_user_urn, make_dataset_description_mce, make_recover_mce, \
+#                     make_browsepath_mce, make_ownership_mce, make_platform, get_sys_time 
+# from datahub.emitter.rest_emitter import DatahubRestEmitter
 
 app = FastAPI()
 
@@ -92,9 +97,10 @@ def main():
 
 @app.post('/getresult')
 def getresult(Editeditems: List[EditedItem]):
-    
-    print(orignaldatafromgms)
-    return Editeditems #switch the return to something else after everything working
+    # datasetName = make_dataset_urn(Editeditems[0].Platform_Name, Editeditems[0].Dataset_Name)
+    # print("{}_{}".format(Editeditems[0].Dataset_Name,str(get_sys_time())))
+    print(Editeditems[0].Original_Tags== '')
+   
 
 @app.post('/originalresult')
 def orginaldata(Originalitems: List[OriginalItem]):
