@@ -11,11 +11,13 @@ from typing import List, Optional
 import json
 import socket
 socket.getaddrinfo('localhost', 8080)
-# from ingestion.ingest_api.helper.models import FieldParam, create_dataset_params, dataset_status_params, determine_type
-# from ingestion.ingest_api.helper.mce_convenience import make_delete_mce, make_schema_mce, make_dataset_urn, \
-#                     make_user_urn, make_dataset_description_mce, make_recover_mce, \
-#                     make_browsepath_mce, make_ownership_mce, make_platform, get_sys_time 
-# from datahub.emitter.rest_emitter import DatahubRestEmitter
+from logging.handlers import TimedRotatingFileHandler
+import logging
+from ingestion.ingest_api.helper.models import FieldParam, create_dataset_params, dataset_status_params, determine_type
+from ingestion.ingest_api.helper.mce_convenience import make_delete_mce, make_schema_mce, make_dataset_urn, \
+                    make_user_urn, make_dataset_description_mce, make_recover_mce, \
+                    make_browsepath_mce, make_ownership_mce, make_platform, get_sys_time 
+from datahub.emitter.rest_emitter import DatahubRestEmitter
 
 app = FastAPI()
 
@@ -32,6 +34,24 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
+
+DEBUG = False
+rootLogger = logging.getLogger("__name__")
+logformatter = logging.Formatter('%(asctime)s;%(levelname)s;%(message)s')
+rootLogger.setLevel(logging.DEBUG)
+
+streamLogger = logging.StreamHandler()
+streamLogger.setFormatter(logformatter)
+streamLogger.setLevel(logging.DEBUG)
+rootLogger.addHandler(streamLogger)
+
+if not DEBUG:
+    log = TimedRotatingFileHandler('./log/api.log', when='midnight', interval=1, backupCount=14)
+    log.setLevel(logging.DEBUG)
+    log.setFormatter(logformatter)
+    rootLogger.addHandler(log)    
+
+rootLogger.info("started!")
 
 class EditedItem(BaseModel):
     ID: int
@@ -145,18 +165,18 @@ def getresult(Editeditems: List[EditedItem]):
                                             actor = requestor,
                                             fields = field_params,
                                             ))  
-        # try:
-        #     emitter = DatahubRestEmitter(rest_endpoint)
+        try:
+            emitter = DatahubRestEmitter(rest_endpoint)
 
-        #     for mce in all_mce:
-        #         emitter.emit_mce(mce)   
-        #     emitter._session.close()
-        # except Exception as e:
-        #     rootLogger.debug(e)
-        #     return Response("Dataset was not created because upstream has encountered an error {}".format(e), status_code=502)
-        # rootLogger.info("Make_dataset_request_completed_for {} requested_by {}".format(item.dataset_name, item.dataset_owner))      
-        # return Response(content = "dataset can be found at {}/dataset/{}".format(datahub_url, make_dataset_urn(item.dataset_type, item.dataset_name)),
-        #                 status_code = 205) 
+            for mce in all_mce:
+                emitter.emit_mce(mce)   
+            emitter._session.close()
+        except Exception as e:
+            rootLogger.debug(e)
+            return Response("Dataset was not created because upstream has encountered an error {}".format(e), status_code=502)
+        rootLogger.info("Make_dataset_request_completed_for {} requested_by {}".format(item.dataset_name, item.dataset_owner))      
+        return Response(content = "dataset can be found at {}/dataset/{}".format(datahub_url, make_dataset_urn(item.dataset_type, item.dataset_name)),
+                        status_code = 205) 
     
 #    #empty orginal tags are == ''
 #     print(Editeditems[0].Original_Tags== '')
