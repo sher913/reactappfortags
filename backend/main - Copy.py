@@ -3,7 +3,6 @@ from os import environ
 import logging
 from logging.handlers import TimedRotatingFileHandler
 
-
 from requests.api import request
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
@@ -100,6 +99,16 @@ class OriginalItem(BaseModel):
 
 
 
+#VM address for hosting datahub
+URL ="http://172.104.42.65:8080/datasets"
+headers = {
+'Content-Type': 'application/json',
+'X-RestLi-Protocol-Version': '2.0.0',
+          'X-RestLi-Method': 'finder'
+}
+parameters = {'q':'search',
+                'input':'*'}
+
 
 
 
@@ -107,14 +116,6 @@ class OriginalItem(BaseModel):
 
 @app.get('/getdatasets')
 def main():
-    URL ="http://172.104.42.65:8080/datasets"
-    headers = {
-    'Content-Type': 'application/json',
-    'X-RestLi-Protocol-Version': '2.0.0',
-            'X-RestLi-Method': 'finder'
-    }
-    parameters = {'q':'search',
-                    'input':'*'}
   
     response = requests.request("GET", URL, headers=headers, params = parameters)
    
@@ -150,41 +151,33 @@ def getresult(Editeditems: List[EditedItem]):
 
                 requestor = make_user_urn("datahub")
 
-               
+                properties = {"dataset_origin": item.Origin}#, 
+                                #"dataset_location": item.dict().get("dataset_location", "")}  
 
-                properties = {
-                "dataset_origin": "Copied from XL's ingest API, need check how to use this",
-                "dataset_location": "Copied from XL's ingest API, need check how to use this"}
+                all_mce=[]
+                all_mce.append(make_dataset_description_mce(dataset_name = datasetName, 
+                                                            customProperties=properties
+                                                            ))    
 
-                dataset_description = ""
+                all_mce.append(make_ownership_mce(actor = requestor, 
+                                                    dataset_urn = datasetName))   
 
-                dataset_snapshot = DatasetSnapshot(
-                urn=datasetName,
-                aspects=[],
-                )
+                all_mce.append(make_browsepath_mce(dataset_urn=datasetName, 
+                                                    path=[browsePath]))  
 
-                dataset_snapshot.aspects.append(
-                make_dataset_description_mce(
-                    dataset_name=datasetName,
-                    description=dataset_description,
-                    customProperties=properties,
-                    )
-                )
-
-                dataset_snapshot.aspects.append(make_ownership_mce(actor=requestor, dataset_urn=datasetName))
-                dataset_snapshot.aspects.append(make_browsepath_mce(dataset_urn=datasetName, path=[browsePath]))
                 
-                current_field = {}
-                current_field["fieldPath"] = item.dict().get('Field_Name')
-                #need to know if this is important [field_type]
-                current_field["field_type"] = "boolean"
-                if "Description" not in item:
+              #need help formatting this
+                current_field={}
+                current_field.update(existing_field.dict())          
+                current_field["fieldPath"]  = current_field.pop("field_name")
+                if "field_description" not in current_field:
                     current_field["field_description"] = ""
-                else: 
-                    current_field["field_description"] = item.dict().get("Description")
                 field_params.append(current_field)
-                
-               
+            all_mce.append(make_schema_mce(dataset_urn = datasetName,
+                                            platformName = platformName,
+                                            actor = requestor,
+                                            fields = field_params,
+                                            ))  
         try:
             emitter = DatahubRestEmitter(rest_endpoint)
 
@@ -205,24 +198,12 @@ def getresult(Editeditems: List[EditedItem]):
 #     print(editedtags[0])
 #     return(Editeditems)
 
-@app.get('/originalresult')
-def originaldata():
-    URL ="http://172.104.42.65:8080/entities/urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_deleted,PROD)"
-    headers = {
-    'Content-Type': 'application/json',
-    'X-RestLi-Protocol-Version': '2.0.0'
-    }
-    global originalgmsdata
-  
-    response = requests.request("GET", URL, headers=headers)
-   
-    originalgmsdata =response.json()
-    
-    
-   
-    return originalgmsdata["value"]["com.linkedin.metadata.snapshot.DatasetSnapshot"]["aspects"]["com.linkedin.schema.SchemaMetadata"]
-    
-
+@app.post('/originalresult')
+def orginaldata(Originalitems: List[OriginalItem]):
+    global orignaldatafromgms
+    orignaldatafromgms = Originalitems
+    return orignaldatafromgms #switch the return to something else after everything working
+    #print(Originalitems)
     
 
 

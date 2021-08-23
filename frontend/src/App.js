@@ -44,6 +44,7 @@ class App extends React.Component {
   
     const finalrowsholder=[]
 
+
     var finaleditedholder=[]
 
     var tempfieldnameholder=[]
@@ -267,20 +268,6 @@ class App extends React.Component {
       }
 
     )
-    // send to FASTAPI, sorted original data to compare against edited later in FASTAPI
-    axios.post('http://localhost:8000/originalresult',
-  
-    
-    finalrowsholder
-    
-  ,{
-        headers: {
-          // Overwrite Axios's automatically set Content-Type
-          'Content-Type': 'application/json'
-        }
-      }
-    )
-    .then(res =>  console.log("Response from what originalresult endpoint received: ", res.data))
 
  
  //Iterate thru all row and compare original data vs edited, if edited, add to array (finaleditedholder) to be sent to endpoint
