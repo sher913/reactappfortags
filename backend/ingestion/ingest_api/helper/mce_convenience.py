@@ -1,16 +1,14 @@
 """Convenience functions for creating MCEs"""
-import time
 import datetime
 import json
 import logging
-from pathlib import Path
-from typing import List, Optional, Type, TypeVar, Union, Dict
+import os
+import time
+from typing import Dict, List, Optional, Type, TypeVar, Union
 
 from datahub.ingestion.api import RecordEnvelope
-from datahub.ingestion.source.metadata_common import MetadataWorkUnit
+from datahub.ingestion.api.workunit import MetadataWorkUnit
 from datahub.metadata.schema_classes import *
-
-
 
 log = logging.getLogger(__name__)
 
@@ -19,80 +17,75 @@ DEFAULT_FLOW_CLUSTER = "prod"
 
 T = TypeVar("T")
 
+
 def get_sys_time() -> int:
     return int(time.time() * 1000)
+
 
 def make_dataset_urn(platform: str, name: str, env: str = DEFAULT_ENV) -> str:
     return f"urn:li:dataset:(urn:li:dataPlatform:{platform},{name},{env})"
 
-def make_path(platform: str, name: str, env:str = DEFAULT_FLOW_CLUSTER) -> str:
+
+def make_path(platform: str, name: str, env: str = DEFAULT_FLOW_CLUSTER) -> str:
     return f"/{env}/{platform}/{name}"
 
-def make_platform(platform:str) -> str:
+
+def make_platform(platform: str) -> str:
     return f"urn:li:dataPlatform:{platform}"
+
 
 def make_user_urn(username: str) -> str:
     return f"urn:li:corpuser:{username}"
+
 
 def make_tag_urn(tag: str) -> str:
     return f"urn:li:tag:{tag}"
 
 def make_institutionalmemory_mce(
-    dataset_urn: str,
-    input_url: List[str],
-    input_description: List[str],
-    actor: str 
-) -> MetadataChangeEventClass:
+    dataset_urn: str, input_url: List[str], input_description: List[str], actor: str
+) -> InstitutionalMemoryClass:
     """
-    returns a list of Documents    
+    returns a list of Documents
     """
     sys_time = get_sys_time()
     actor = make_user_urn(actor)
-    mce = MetadataChangeEventClass(
-        proposedSnapshot=DatasetSnapshotClass(
-        urn=dataset_urn,
-        aspects=[
-                InstitutionalMemoryClass(
-                    elements=[
-                        InstitutionalMemoryMetadataClass(
-                            url=url,
-                            description=description,
-                            createStamp=AuditStampClass(
-                                time=sys_time,
-                                actor=actor,
-                            )
-                        )
-                        for url, description in zip(input_url, input_description)                        
-                    ]
-                )                
-            ],    
-    ))
+    mce = InstitutionalMemoryClass(
+            elements=[
+                InstitutionalMemoryMetadataClass(
+                    url=url,
+                    description=description,
+                    createStamp=AuditStampClass(
+                        time=sys_time,
+                        actor=actor,
+                    ),
+                )
+                for url, description in zip(input_url, input_description)
+            ]
+        )
+
     return mce
 
 def make_browsepath_mce(
     dataset_urn: str,
-    path:List[str],        
-) -> MetadataChangeEventClass:
+    path: List[str],
+) -> BrowsePathsClass:
     """
-    Creates browsepath for dataset. By default, if not specified, Datahub assigns it to /prod/platform/datasetname    
+    Creates browsepath for dataset. By default, if not specified, Datahub assigns it to /prod/platform/datasetname
     """
     sys_time = get_sys_time()
-    mce = MetadataChangeEventClass(
-        proposedSnapshot=DatasetSnapshotClass(
-        urn=dataset_urn,
-        aspects=[
-                BrowsePathsClass(
-                    paths = path            
-                )                
-            ],    
-    ))
+    mce = BrowsePathsClass(paths=path)
     return mce
+
 
 def make_lineage_mce(
     upstream_urns: List[str],
     downstream_urn: str,
     actor: str,
-    lineage_type: str = Union[DatasetLineageTypeClass.TRANSFORMED, DatasetLineageTypeClass.COPY, DatasetLineageTypeClass.VIEW] 
+    lineage_type: str = Union[
+        DatasetLineageTypeClass.TRANSFORMED,
+        DatasetLineageTypeClass.COPY,
+        DatasetLineageTypeClass.VIEW,
+    ],
 ) -> MetadataChangeEventClass:
     """
     Specifies Upstream Datasets relative to this dataset. Downstream is always referring to current dataset
@@ -123,44 +116,35 @@ def make_lineage_mce(
     )
     return mce
 
+
 def make_dataset_description_mce(
     dataset_name: str,
-    #edited this -sher
-    description: Optional[str] =None,
-    externalUrl: str = None, 
-    #edited this -sher
-    tags: List[Optional[str]] =None,
-    customProperties: Optional[Dict[str, str]]=None
-) -> MetadataChangeEventClass:
+    description: str,
+    externalUrl: str = None,
+    tags: List[str] = [],
+    customProperties: Optional[Dict[str, str]] = None,
+) -> DatasetPropertiesClass:
     """
-    Tags and externalUrl doesnt seem to have any impact on UI. 
+    Tags and externalUrl doesnt seem to have any impact on UI.
     """
-    return MetadataChangeEventClass(
-        proposedSnapshot=DatasetSnapshotClass(
-            urn=dataset_name,
-            aspects=[
-                DatasetPropertiesClass(
+    return DatasetPropertiesClass(
                     description=description,
-                    externalUrl = externalUrl,
-                    customProperties = customProperties,
-                    #edited this -sher
-                    tags = [make_tag_urn(tag) for tag in tags]
+                    externalUrl=externalUrl,
+                    customProperties=customProperties
                 )
-            ],
-        )
-    )
+            
 def make_schema_mce(
     dataset_urn: str,
-    platformName:str,
-    actor : str,
+    platformName: str,
+    actor: str,
     fields: List[Dict[str, str]],
-    primaryKeys : List[str] = None,  
+    primaryKeys: List[str] = None,
     foreignKeysSpecs: List[str] = None,
-    system_time: int = None  
+    system_time: int = None,
 ) -> MetadataChangeEventClass:
     if system_time:
         try:
-            datetime.datetime.fromtimestamp(system_time/1000)
+            datetime.datetime.fromtimestamp(system_time / 1000)
             sys_time = system_time
         except ValueError as e:
             log.error("specified_time is out of range")
@@ -169,107 +153,90 @@ def make_schema_mce(
         sys_time = get_sys_time()
 
     for item in fields:
-        item["field_type"] = {"bool":  BooleanTypeClass(), 
-                        "fixed": FixedTypeClass(), 
-                        "string":StringTypeClass(),
-                        "byte":  BytesTypeClass(),
-                        "num":   NumberTypeClass(),
-                        "date":  DateTypeClass(),
-                        "time":  TimeTypeClass(),
-                        "enum":  EnumTypeClass(),
-                        "null":  NullTypeClass(),
-                        "map":   MapTypeClass(),
-                        "array": ArrayTypeClass(),
-                        "union": UnionTypeClass(),
-                        "record":RecordTypeClass()
-                        }.get(item["field_type"])           
-        
-    mce = MetadataChangeEventClass(
-        proposedSnapshot=DatasetSnapshotClass(
-        urn=dataset_urn,
-        aspects=[
-            SchemaMetadataClass(
-                schemaName = "OtherSchema",
-                platform = platformName,
-                version = 0,
-                created = AuditStampClass(
-                                time=sys_time,
-                                actor=actor),
-                lastModified = AuditStampClass(
-                                time=sys_time,
-                                actor=actor),
-                hash ="",
-                platformSchema = OtherSchemaClass(rawSchema=""),                
-                fields = [SchemaFieldClass(fieldPath=item["fieldPath"], 
-                                            type=SchemaFieldDataTypeClass(type=item["field_type"]), 
-                                            nativeDataType=item.get("nativeType",""),
-                                            description=item.get("field_description",""),
-                                            nullable=item.get('nullable', None)) for item in fields],
-                primaryKeys = primaryKeys, #no visual impact in UI
-                foreignKeysSpecs = None,                 
+        item["nativeType"] = item.get("field_type", "")
+        item["field_type"] = {
+            "boolean": BooleanTypeClass(),
+            "string": StringTypeClass(),
+            "bool": BooleanTypeClass(),
+            "byte": BytesTypeClass(),
+            "number": NumberTypeClass(),
+            "num": NumberTypeClass(),
+            "integer": NumberTypeClass(),
+            "date": DateTypeClass(),
+            "time": TimeTypeClass(),
+            "enum": EnumTypeClass(),
+            "null": NullTypeClass(),
+            "object": RecordTypeClass(),
+            "array": ArrayTypeClass(),
+            "union": UnionTypeClass(),
+            "map": MapTypeClass(),
+            "fixed": FixedTypeClass(),
+        }.get(item["field_type"])
+
+    mce = SchemaMetadataClass(
+        schemaName="OtherSchema",
+        platform=platformName,
+        version=0,
+        created=AuditStampClass(time=sys_time, actor=actor),
+        lastModified=AuditStampClass(time=sys_time, actor=actor),
+        hash="",
+        platformSchema=OtherSchemaClass(rawSchema=""),
+        fields=[
+            SchemaFieldClass(
+                fieldPath=item["fieldPath"],
+                type=SchemaFieldDataTypeClass(type=item["field_type"]),
+                nativeDataType=item.get("nativeType", ""),
+                description=item.get("field_description", ""),
+                nullable=item.get("nullable", None),
             )
-        ],    
-    ))
+            for item in fields
+        ],
+        primaryKeys=primaryKeys,  # no visual impact in UI
+        foreignKeysSpecs=None,
+    )
     return mce
 
-def make_ownership_mce(
-    actor: str,
-    dataset_urn:str
-    ) -> MetadataChangeEventClass:
-    return MetadataChangeEventClass(
-        proposedSnapshot=DatasetSnapshotClass(
-            urn=dataset_urn,
-            aspects=[
-                OwnershipClass(
-                    owners=[
-                        OwnerClass(
-                            owner=actor,
-                            type=OwnershipTypeClass.DATAOWNER,
-                        )                        
-                    ],
-                    lastModified=AuditStampClass(
-                        time=int(time.time() * 1000),
-                        actor=make_user_urn(actor),
-                    ),
-                )
-            ],
-        )
-    )
-
-def generate_json_output(mces: List[MetadataChangeEventClass], file_loc:str)->None:
+def make_ownership_mce(actor: str, dataset_urn: str) -> OwnershipClass:
+    return OwnershipClass(
+                owners=[
+                    OwnerClass(
+                        owner=actor,
+                        type=OwnershipTypeClass.DATAOWNER,
+                    )
+                ],
+                lastModified=AuditStampClass(
+                    time=int(time.time() * 1000),
+                    actor=make_user_urn(actor),
+                ),
+            )
+            
+def generate_json_output(mce: MetadataChangeEventClass, file_loc: str) -> None:
     """
     Generates the json MCE files that can be ingested via CLI. For debugging
     """    
-    path = Path(file_loc)
-    mce_objs = [item.to_obj() for item in mces]
-    
-    with open(path, 'w') as f:
-        json.dump(mce_objs, f, indent=4)
+    mce_obj = mce.to_obj()
+    file_name = mce.proposedSnapshot.urn.replace("urn:li:dataset:(urn:li:dataPlatform:", "").split(",")[1]
+    path = os.path.join(file_loc, f"{file_name}.json")
+
+    with open(path, "w") as f:
+        json.dump(mce_obj, f, indent=4)
+
 
 def make_delete_mce(
-    dataset_name:str,
-    ) -> MetadataChangeEventClass:
+    dataset_name: str,
+) -> MetadataChangeEventClass:
     return MetadataChangeEventClass(
         proposedSnapshot=DatasetSnapshotClass(
-            urn=dataset_name,
-            aspects=[
-                StatusClass(
-                    removed = True
-                )
-            ]
+            urn=dataset_name, aspects=[StatusClass(removed=True)]
         )
-    ) 
+    )
+
 
 def make_recover_mce(
-    dataset_name:str,
-    ) -> MetadataChangeEventClass:
+    dataset_name: str,
+) -> MetadataChangeEventClass:
     return MetadataChangeEventClass(
         proposedSnapshot=DatasetSnapshotClass(
-            urn=dataset_name,
-            aspects=[
-                StatusClass(
-                    removed = False
-                )
-            ]
+            urn=dataset_name, aspects=[StatusClass(removed=False)]
         )
-    ) 
+    )

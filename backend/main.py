@@ -1,23 +1,26 @@
-from requests.api import request
-import uvicorn
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI, Request, Response, status
-from starlette.datastructures import URL
-import requests
-from starlette.responses import JSONResponse
-from pydantic import BaseModel
-import datetime
-from typing import List, Optional
-import json
-import socket
-socket.getaddrinfo('localhost', 8080)
-from logging.handlers import TimedRotatingFileHandler
+import os
+from os import environ
 import logging
-from ingestion.ingest_api.helper.models import FieldParam, create_dataset_params, dataset_status_params, determine_type
-from ingestion.ingest_api.helper.mce_convenience import make_delete_mce, make_schema_mce, make_dataset_urn, \
-                    make_user_urn, make_dataset_description_mce, make_recover_mce, \
-                    make_browsepath_mce, make_ownership_mce, make_platform, get_sys_time 
+from logging.handlers import TimedRotatingFileHandler
+
+import uvicorn
 from datahub.emitter.rest_emitter import DatahubRestEmitter
+from fastapi import FastAPI, Response
+from fastapi.middleware.cors import CORSMiddleware
+from datahub.metadata.com.linkedin.pegasus2avro.metadata.snapshot import DatasetSnapshot
+from datahub.metadata.com.linkedin.pegasus2avro.mxe import MetadataChangeEvent
+from ingestion.ingest_api.helper.mce_convenience import (generate_json_output,
+                                               get_sys_time,
+                                               make_browsepath_mce,
+                                               make_dataset_description_mce,
+                                               make_dataset_urn,
+                                               make_delete_mce,
+                                               make_ownership_mce,
+                                               make_platform, make_recover_mce,
+                                               make_schema_mce, make_user_urn)
+from ingestion.ingest_api.helper.models import (FieldParam, create_dataset_params,
+                                      dataset_status_params, determine_type)
+
 
 app = FastAPI()
 
