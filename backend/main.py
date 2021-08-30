@@ -2,6 +2,7 @@ import os
 from os import environ
 import logging
 from logging.handlers import TimedRotatingFileHandler
+from datahub.metadata.schema_classes import DatasetSnapshotClass
 
 
 from requests.api import request
@@ -127,8 +128,10 @@ def main():
 #print(datafromGMS)  
 
 
-@app.post('/getresult')
+@app.get('/getresult')
 def getresult(Editeditems: List[EditedItem]):
+    originaldata()
+    rest_endpoint = "http://172.104.42.65:8080"   
     datasetEdited=[]
     for item in Editeditems:
         #extracts all edited unique datasets to use as for loops
@@ -185,18 +188,20 @@ def getresult(Editeditems: List[EditedItem]):
                 field_params.append(current_field)
                 
                
-        try:
-            emitter = DatahubRestEmitter(rest_endpoint)
+        # try:
+        #     emitter = DatahubRestEmitter(rest_endpoint)
 
-            for mce in all_mce:
-                emitter.emit_mce(mce)   
-            emitter._session.close()
-        except Exception as e:
-            rootLogger.debug(e)
-            return Response("Dataset was not created because upstream has encountered an error {}".format(e), status_code=502)
-        rootLogger.info("Make_dataset_request_completed_for {} requested_by {}".format(item.dataset_name, item.dataset_owner))      
-        return Response(content = "dataset can be found at {}/dataset/{}".format(datahub_url, make_dataset_urn(item.dataset_type, item.dataset_name)),
-                        status_code = 205) 
+        #     for mce in all_mce:
+        #         emitter.emit_mce(mce)   
+        #     emitter._session.close()
+        # except Exception as e:
+        #     rootLogger.debug(e)
+        #     return Response("Dataset was not created because upstream has encountered an error {}".format(e), status_code=502)
+        # rootLogger.info("Make_dataset_request_completed_for {} requested_by {}".format(item.dataset_name, item.dataset_owner))      
+        # return Response(content = "dataset can be found at {}/dataset/{}".format(datahub_url, make_dataset_urn(item.dataset_type, item.dataset_name)),
+        #                 status_code = 205) 
+             
+   
     
 #    #empty orginal tags are == ''
 #     print(Editeditems[0].Original_Tags== '')
@@ -217,10 +222,20 @@ def originaldata():
     response = requests.request("GET", URL, headers=headers)
    
     originalgmsdata =response.json()
-    
-    
+    # originalgmsdata=originalgmsdata["value"]
+    # originalgmsdata.update(DatasetSnapshotClass.dict())
+    for s in range (len(originalgmsdata["value"]["com.linkedin.metadata.snapshot.DatasetSnapshot"]["aspects"])):
+        if "com.linkedin.schema.SchemaMetadata" in originalgmsdata["value"]["com.linkedin.metadata.snapshot.DatasetSnapshot"]["aspects"][s]:
+            originalschemadata= originalgmsdata["value"]["com.linkedin.metadata.snapshot.DatasetSnapshot"]["aspects"][s]
+        else:
+            continue
+
    
-    return originalgmsdata["value"]["com.linkedin.metadata.snapshot.DatasetSnapshot"]["aspects"]["com.linkedin.schema.SchemaMetadata"]
+    # originalschemadata = tuple(originalschemadata)
+    for i in originalschemadata:
+        print(i)
+    return originalschemadata
+    
     
 
     
@@ -228,6 +243,9 @@ def originaldata():
 
 if __name__ == "__main__":
     uvicorn.run(app, host="localhost", port=8000)
+
+
+
 
 
 
