@@ -2,6 +2,7 @@ import os
 from os import environ
 import logging
 from logging.handlers import TimedRotatingFileHandler
+from avro.schema import NULL
 from datahub.metadata.schema_classes import DatasetSnapshotClass
 
 
@@ -29,7 +30,7 @@ from ingestion.ingest_api.helper.mce_convenience import (generate_json_output,
                                                make_delete_mce,
                                                make_ownership_mce,
                                                make_platform, make_recover_mce,
-                                               make_schema_mce, make_user_urn)
+                                               make_schema_mce, make_user_urn,make_tag_urn)
 from ingestion.ingest_api.helper.models import (FieldParam, create_dataset_params,
                                       dataset_status_params, determine_type)
 from datahub.emitter.rest_emitter import DatahubRestEmitter
@@ -128,9 +129,9 @@ def main():
 #print(datafromGMS)  
 
 
-@app.get('/getresult')
+@app.post('/getresult')
 def getresult(Editeditems: List[EditedItem]):
-    originaldata()
+    
     rest_endpoint = "http://172.104.42.65:8080"   
     datasetEdited=[]
     for item in Editeditems:
@@ -141,52 +142,68 @@ def getresult(Editeditems: List[EditedItem]):
         #makes the edited tags into a list for a fields
         item.Editable_Tags= item.Editable_Tags.replace(" ", "")
         item.Editable_Tags= item.Editable_Tags.split(",")
+        item.Original_Tags= item.Original_Tags.replace(" ", "")
+        item.Original_Tags= item.Original_Tags.split(",")
     print(datasetEdited)
     print(Editeditems[0].Editable_Tags)
+    print(Editeditems[0].Original_Tags)
     for dataset in datasetEdited:
+        
+        
+        datasetName = make_dataset_urn(item.Platform_Name, item.Dataset_Name)
+        platformName = make_platform(item.Platform_Name)  
+        browsePath = "/{}/{}".format(item.Platform_Name, item.Dataset_Name) 
+        originaldata(datasetName)
+        
+        requestor = make_user_urn("datahub")
+
+        
+
+        properties = {
+        "dataset_origin": "Copied from XL's ingest API, need check how to use this",
+        "dataset_location": "Copied from XL's ingest API, need check how to use this"}
+
+        dataset_description = ""
+
+        dataset_snapshot = DatasetSnapshot(
+        urn=datasetName,
+        aspects=[],
+        )
+
+        dataset_snapshot.aspects.append(
+        make_dataset_description_mce(
+            dataset_name=datasetName,
+            description=dataset_description,
+            customProperties=properties,
+            )
+        )
+
+        dataset_snapshot.aspects.append(make_ownership_mce(actor=requestor, dataset_urn=datasetName))
+        dataset_snapshot.aspects.append(make_browsepath_mce(dataset_urn=datasetName, path=[browsePath]))
         field_params = []
-        for item in Editeditems:
-            if item.Dataset_Name == dataset:
-                datasetName = make_dataset_urn(item.Platform_Name, item.Dataset_Name)
-                platformName = make_platform(item.Platform_Name)  
-                browsePath = "/{}/{}".format(item.Platform_Name, item.Dataset_Name) 
-
-                requestor = make_user_urn("datahub")
-
+        for existing_field in originalfields:
+            current_field = {}
+            tags = []
+            current_field["fieldPath"] = existing_field["fieldPath"]
+            #need to know if this is important [field_type]
+            current_field["field_type"] = existing_field["nativeDataType"]
+            if "description" not in existing_field:
+                current_field["field_description"] = ""
+                
+            else: 
+                current_field["field_description"] = existing_field["description"]
+                
+            for item in Editeditems:
+                if item.Field_Name == existing_field["fieldPath"]:
+                    for tag in item.Original_Tags:
+                        if tag != '':
+                            tags.append({"tag": make_tag_urn(tag)})
+            if tags != []:
+                current_field["tags"]=tags
+            field_params.append(current_field)
+        print(field_params)
+        
                
-
-                properties = {
-                "dataset_origin": "Copied from XL's ingest API, need check how to use this",
-                "dataset_location": "Copied from XL's ingest API, need check how to use this"}
-
-                dataset_description = ""
-
-                dataset_snapshot = DatasetSnapshot(
-                urn=datasetName,
-                aspects=[],
-                )
-
-                dataset_snapshot.aspects.append(
-                make_dataset_description_mce(
-                    dataset_name=datasetName,
-                    description=dataset_description,
-                    customProperties=properties,
-                    )
-                )
-
-                dataset_snapshot.aspects.append(make_ownership_mce(actor=requestor, dataset_urn=datasetName))
-                dataset_snapshot.aspects.append(make_browsepath_mce(dataset_urn=datasetName, path=[browsePath]))
-                
-                current_field = {}
-                current_field["fieldPath"] = item.dict().get('Field_Name')
-                #need to know if this is important [field_type]
-                current_field["field_type"] = "boolean"
-                if "Description" not in item:
-                    current_field["field_description"] = ""
-                else: 
-                    current_field["field_description"] = item.dict().get("Description")
-                field_params.append(current_field)
-                
                
         # try:
         #     emitter = DatahubRestEmitter(rest_endpoint)
@@ -211,13 +228,14 @@ def getresult(Editeditems: List[EditedItem]):
 #     return(Editeditems)
 
 @app.get('/originalresult')
-def originaldata():
-    URL ="http://172.104.42.65:8080/entities/urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_deleted,PROD)"
+def originaldata(urn):
+    URL ="http://172.104.42.65:8080/entities/"+urn
     headers = {
     'Content-Type': 'application/json',
     'X-RestLi-Protocol-Version': '2.0.0'
     }
     global originalgmsdata
+    global originalfields
   
     response = requests.request("GET", URL, headers=headers)
    
@@ -227,15 +245,14 @@ def originaldata():
     # originalgmsdata.update(DatasetSnapshotClass.dict())
     for s in range (len(originalgmsdata["value"]["com.linkedin.metadata.snapshot.DatasetSnapshot"]["aspects"])):
         if "com.linkedin.schema.SchemaMetadata" in originalgmsdata["value"]["com.linkedin.metadata.snapshot.DatasetSnapshot"]["aspects"][s]:
-            originalschemadata= originalgmsdata["value"]["com.linkedin.metadata.snapshot.DatasetSnapshot"]["aspects"][s]
+            originalschemadata= originalgmsdata["value"]["com.linkedin.metadata.snapshot.DatasetSnapshot"]["aspects"][s]["com.linkedin.schema.SchemaMetadata"]
         else:
             continue
-
+    originalfields = originalschemadata["fields"]
    
     # originalschemadata = tuple(originalschemadata) doesnt work, its in a unhashable list
-    for i in originalschemadata:
-        print(i)
-    return originalgmsdata["value"]["com.linkedin.metadata.snapshot.DatasetSnapshot"]["aspects"][3]["com.linkedin.schema.SchemaMetadata"]["fields"]
+   
+    return originalschemadata
     
     
 

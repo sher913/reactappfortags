@@ -9,6 +9,7 @@ from typing import Dict, List, Optional, Type, TypeVar, Union
 from datahub.ingestion.api import RecordEnvelope
 from datahub.ingestion.api.workunit import MetadataWorkUnit
 from datahub.metadata.schema_classes import *
+from requests.api import options
 
 log = logging.getLogger(__name__)
 
@@ -141,6 +142,7 @@ def make_schema_mce(
     primaryKeys: List[str] = None,
     foreignKeysSpecs: List[str] = None,
     system_time: int = None,
+    
 ) -> MetadataChangeEventClass:
     if system_time:
         try:
@@ -188,6 +190,8 @@ def make_schema_mce(
                 nativeDataType=item.get("nativeType", ""),
                 description=item.get("field_description", ""),
                 nullable=item.get("nullable", None),
+                #wrote the globaltags -sher
+                globalTags=item.get("tags", None)
             )
             for item in fields
         ],
