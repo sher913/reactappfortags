@@ -93,7 +93,7 @@ class OriginalItem(BaseModel):
     
     
 
-
+    
 
 
 
@@ -222,6 +222,7 @@ def originaldata():
     response = requests.request("GET", URL, headers=headers)
    
     originalgmsdata =response.json()
+   
     # originalgmsdata=originalgmsdata["value"]
     # originalgmsdata.update(DatasetSnapshotClass.dict())
     for s in range (len(originalgmsdata["value"]["com.linkedin.metadata.snapshot.DatasetSnapshot"]["aspects"])):
@@ -231,10 +232,10 @@ def originaldata():
             continue
 
    
-    # originalschemadata = tuple(originalschemadata)
+    # originalschemadata = tuple(originalschemadata) doesnt work, its in a unhashable list
     for i in originalschemadata:
         print(i)
-    return originalschemadata
+    return originalgmsdata["value"]["com.linkedin.metadata.snapshot.DatasetSnapshot"]["aspects"][3]["com.linkedin.schema.SchemaMetadata"]["fields"]
     
     
 

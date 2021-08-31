@@ -52,6 +52,15 @@ class App extends React.Component {
     var elements
    
     var testholder 
+    axios.get('http://localhost:8000/originalresult', {
+      headers: {
+        'Content-Type': 'application/json',
+        'X-RestLi-Protocol-Version': '2.0.0'
+        }
+    }).then(res => 
+    { //pushing datasets data to 'elements' varaiable
+      console.log("HEREHERE:",res)})
+
     // on here, nid to make Python FASTAPI as middleware to bypass CORS, then axios.get(http://localhost/FASTAPI)
     axios.get('http://localhost:8000/getdatasets', {
       headers: {
@@ -60,6 +69,7 @@ class App extends React.Component {
       }
     }).then(res => 
     { //pushing datasets data to 'elements' varaiable
+      console.log("HEREHERE2:",res)
       elements = (res["data"]["elements"])
       let count =0
     //For loop for all fields in dataset, compare with editableSchema fields; if exist, push both to first element of each array, thus index positions of both edited Schema
