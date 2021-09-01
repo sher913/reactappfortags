@@ -133,11 +133,33 @@ def make_dataset_description_mce(
                     externalUrl=externalUrl,
                     customProperties=customProperties
                 )
-            
+
+def make_schemaglobaltags_mce(
+     tags: List[str],
+)  -> GlobalTagsClass:
+
+    return GlobalTagsClass(
+        tags= tags
+
+    )
+
+
 def make_schema_mce(
     dataset_urn: str,
     platformName: str,
-    actor: str,
+    schemaName: str,
+
+    platformSchema: str,
+    #how to do str = None
+    documentSchema: str,
+    tableSchema: str,
+    rawSchema: str,
+    schema: str,
+    keySchema: str,
+    valueSchema: str,
+
+    creatoractor: str,
+    lastmodifiedactor: str,
     fields: List[Dict[str, str]],
     primaryKeys: List[str] = None,
     foreignKeysSpecs: List[str] = None,
@@ -146,7 +168,6 @@ def make_schema_mce(
 ) -> MetadataChangeEventClass:
     if system_time:
         try:
-            datetime.datetime.fromtimestamp(system_time / 1000)
             sys_time = system_time
         except ValueError as e:
             log.error("specified_time is out of range")
@@ -156,42 +177,57 @@ def make_schema_mce(
 
     for item in fields:
         item["nativeType"] = item.get("field_type", "")
-        item["field_type"] = {
-            "boolean": BooleanTypeClass(),
-            "string": StringTypeClass(),
-            "bool": BooleanTypeClass(),
-            "byte": BytesTypeClass(),
-            "number": NumberTypeClass(),
-            "num": NumberTypeClass(),
-            "integer": NumberTypeClass(),
-            "date": DateTypeClass(),
-            "time": TimeTypeClass(),
-            "enum": EnumTypeClass(),
-            "null": NullTypeClass(),
-            "object": RecordTypeClass(),
-            "array": ArrayTypeClass(),
-            "union": UnionTypeClass(),
-            "map": MapTypeClass(),
-            "fixed": FixedTypeClass(),
-        }.get(item["field_type"])
+        item["type"] = {
+            "com.linkedin.schema.BooleanType": BooleanTypeClass(),
+            "com.linkedin.schema.StringType": StringTypeClass(),
+            "com.linkedin.schema.FixedType": FixedTypeClass(),
+            "com.linkedin.schema.BytesType": BytesTypeClass(),
+            "com.linkedin.schema.NumberType": NumberTypeClass(),
+            "com.linkedin.schema.DateType": DateTypeClass(),
+            "com.linkedin.schema.TimeType": TimeTypeClass(),
+            "com.linkedin.schema.EnumType": EnumTypeClass(),
+            "com.linkedin.schema.NullType": NullTypeClass(),
+            "com.linkedin.schema.MapType": MapTypeClass(),
+            "com.linkedin.schema.ArrayType": ArrayTypeClass(),
+            "com.linkedin.schema.UnionType": UnionTypeClass(),
+            "com.linkedin.schema.RecordType": RecordTypeClass()           
+        }.get(item["type"])
+
+
+    platformSchema = {
+            "com.linkedin.schema.KafkaSchema": KafkaSchemaClass(documentSchema = documentSchema)
+            # "com.linkedin.schema.EspressoSchema": FixedTypeClass(documentSchema = documentSchema, tableSchema = tableSchema),
+            # "com.linkedin.schema.OracleDDL": OracleDDLClass(tableSchema = tableSchema),
+            # "com.linkedin.schema.MySqlDDL": MySqlDDLClass(tableSchema = tableSchema),
+            # "com.linkedin.schema.PrestoDDL": PrestoDDLClass(rawSchema = rawSchema),
+            # "com.linkedin.schema.BinaryJsonSchema": BinaryJsonSchemaClass(schema = schema),
+            # "com.linkedin.schema.OrcSchema": OrcSchemaClass(schema = schema),
+            # "com.linkedin.schema.Schemaless": SchemalessClass(),
+            # "com.linkedin.schema.KeyValueSchema": KeyValueSchemaClass(keySchema = keySchema, valueSchema = valueSchema),
+            # "com.linkedin.schema.OtherSchema": OtherSchemaClass(rawSchema = rawSchema),            
+        }.get(platformSchema)
+
 
     mce = SchemaMetadataClass(
-        schemaName="OtherSchema",
+        schemaName,
         platform=platformName,
         version=0,
-        created=AuditStampClass(time=sys_time, actor=actor),
-        lastModified=AuditStampClass(time=sys_time, actor=actor),
+        created=AuditStampClass(time=sys_time, actor=creatoractor),
+        lastModified=AuditStampClass(time=sys_time, actor=lastmodifiedactor),
         hash="",
-        platformSchema=OtherSchemaClass(rawSchema=""),
+        platformSchema=platformSchema,
         fields=[
             SchemaFieldClass(
                 fieldPath=item["fieldPath"],
-                type=SchemaFieldDataTypeClass(type=item["field_type"]),
+                type=SchemaFieldDataTypeClass(type=item["type"]),
                 nativeDataType=item.get("nativeType", ""),
                 description=item.get("field_description", ""),
                 nullable=item.get("nullable", None),
                 #wrote the globaltags -sher
-                globalTags=item.get("tags", None)
+                #stuck here, need to not submit to globaltagsclass if item.tags dont exist
+                globalTags=GlobalTagsClass(tags=item.get("tags")),
+                #wrote recusrive line -sher
+                recursive = item.get("recursive", None),
             )
             for item in fields
         ],

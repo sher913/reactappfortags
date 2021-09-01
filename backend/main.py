@@ -30,7 +30,7 @@ from ingestion.ingest_api.helper.mce_convenience import (generate_json_output,
                                                make_delete_mce,
                                                make_ownership_mce,
                                                make_platform, make_recover_mce,
-                                               make_schema_mce, make_user_urn,make_tag_urn)
+                                               make_schema_mce, make_user_urn,make_tag_urn, make_schemaglobaltags_mce)
 from ingestion.ingest_api.helper.models import (FieldParam, create_dataset_params,
                                       dataset_status_params, determine_type)
 from datahub.emitter.rest_emitter import DatahubRestEmitter
@@ -125,8 +125,7 @@ def main():
     
     return datasetobject
 
-#datafromGMS=main() #to get orignial json data from gms
-#print(datafromGMS)  
+
 
 
 @app.post('/getresult')
@@ -144,42 +143,107 @@ def getresult(Editeditems: List[EditedItem]):
         item.Editable_Tags= item.Editable_Tags.split(",")
         item.Original_Tags= item.Original_Tags.replace(" ", "")
         item.Original_Tags= item.Original_Tags.split(",")
-    print(datasetEdited)
-    print(Editeditems[0].Editable_Tags)
-    print(Editeditems[0].Original_Tags)
+    # print(datasetEdited)
+    # print(Editeditems[0].Editable_Tags)
+    # print(Editeditems[0].Original_Tags)
     for dataset in datasetEdited:
-        
-        
-        datasetName = make_dataset_urn(item.Platform_Name, item.Dataset_Name)
-        platformName = make_platform(item.Platform_Name)  
-        browsePath = "/{}/{}".format(item.Platform_Name, item.Dataset_Name) 
+
+        for item in Editeditems:
+            if item.Dataset_Name == dataset:
+                datasetName = make_dataset_urn(item.Platform_Name, item.Dataset_Name)
+               
         originaldata(datasetName)
-        
-        requestor = make_user_urn("datahub")
+        platformName = originalplatformname
+            
+ 
 
         
+        
+        creatoractor = originalschemadata["created"]["actor"]
+        lastmodifiedactor = originalschemadata["lastModified"]["actor"]
+        
 
-        properties = {
-        "dataset_origin": "Copied from XL's ingest API, need check how to use this",
-        "dataset_location": "Copied from XL's ingest API, need check how to use this"}
+        schemaName= originalschemadata["schemaName"]
+        timeforschemametadata = originalschemadata["lastModified"]["time"]
+        platformSchema = list(originalschemadata["platformSchema"].keys())[0]
 
-        dataset_description = ""
+        #putting '' as str, want to know if can use None
+        documentSchema= ''
+        tableSchema= ''
+        rawSchema= ''
+        schema= ''
+        keySchema= ''
+        valueSchema= ''
+       
+        
+        #KafkaSchemaClass has 2 attr, documentSchema and keySchema, keySchema is optional
+        if platformSchema == "com.linkedin.schema.KafkaSchema":
+            documentSchema = originalschemadata["platformSchema"][platformSchema]["documentSchema"]
+            
+
+        
+        #EspressoSchemaClass has 2 attr, documentSchema and tableSchema, both is required
+        if platformSchema == "com.linkedin.schema.EspressoSchema":
+            documentSchema = originalschemadata["platformSchema"][platformSchema]["documentSchema"]
+            tableSchema = originalschemadata["platformSchema"][platformSchema]["tableSchema"]
+                  
+
+
+        #OracleDDLClass has 1 attr, tableSchema
+        if platformSchema == "com.linkedin.schema.OracleDDL":
+            tableSchema = originalschemadata["platformSchema"][platformSchema]["tableSchema"]
+            
+
+
+        #MySqlDDLClass has 1 attr, tableSchema
+        if platformSchema == "com.linkedin.schema.MySqlDDL":
+            tableSchema = originalschemadata["platformSchema"][platformSchema]["tableSchema"]
+       
+        
+        #PrestoDDLClass has 1 attr, rawSchema
+        if platformSchema == "com.linkedin.schema.PrestoDDL":
+            rawSchema = originalschemadata["platformSchema"][platformSchema]["rawSchema"]
+        
+            
+        
+        #BinaryJsonSchemaClass has 1 attr, schema
+        if platformSchema == "com.linkedin.schema.BinaryJsonSchema":
+            schema = originalschemadata["platformSchema"][platformSchema]["schema"]            
+
+
+        #OrcSchemaClass has 1 attr, schema
+        if platformSchema == "com.linkedin.schema.OrcSchema":
+            schema = originalschemadata["platformSchema"][platformSchema]["schema"]
+
+
+        #SchemalessClass has no attr    
+
+
+        #KeyValueSchemaClass has 2 attr, keySchema and valueSchema, both is required
+        if platformSchema == "com.linkedin.schema.KeyValueSchema":
+            keySchema = originalschemadata["platformSchema"][platformSchema]["keySchema"]
+            valueSchema = originalschemadata["platformSchema"][platformSchema]["valueSchema"]
+            
+
+
+        #OtherSchemaClass has 1 attr, rawSchema
+        if platformSchema == "com.linkedin.schema.OtherSchema":
+            rawSchema = originalschemadata["platformSchema"][platformSchema]["rawSchema"]
+            
+
+
+   
 
         dataset_snapshot = DatasetSnapshot(
         urn=datasetName,
         aspects=[],
         )
-
         dataset_snapshot.aspects.append(
-        make_dataset_description_mce(
-            dataset_name=datasetName,
-            description=dataset_description,
-            customProperties=properties,
+            make_schemaglobaltags_mce(
+                tags = originalglobaltagsdata["tags"]
             )
         )
-
-        dataset_snapshot.aspects.append(make_ownership_mce(actor=requestor, dataset_urn=datasetName))
-        dataset_snapshot.aspects.append(make_browsepath_mce(dataset_urn=datasetName, path=[browsePath]))
+        
         field_params = []
         for existing_field in originalfields:
             current_field = {}
@@ -187,6 +251,13 @@ def getresult(Editeditems: List[EditedItem]):
             current_field["fieldPath"] = existing_field["fieldPath"]
             #need to know if this is important [field_type]
             current_field["field_type"] = existing_field["nativeDataType"]
+
+            if "nullable" in existing_field:
+                current_field["nullable"]=existing_field["nullable"]
+            
+            if "recursive" in existing_field:
+                current_field["recursive"]=existing_field["recursive"]
+
             if "description" not in existing_field:
                 current_field["field_description"] = ""
                 
@@ -200,8 +271,45 @@ def getresult(Editeditems: List[EditedItem]):
                             tags.append({"tag": make_tag_urn(tag)})
             if tags != []:
                 current_field["tags"]=tags
+            current_field["type"]= list(existing_field["type"]['type'].keys())[0]
             field_params.append(current_field)
-        print(field_params)
+       
+      
+
+        dataset_snapshot.aspects.append(
+            make_schema_mce(
+            dataset_urn=datasetName,
+            platformName=platformName,
+
+            platformSchema = platformSchema,
+            documentSchema = documentSchema,
+            schemaName=schemaName,
+            tableSchema= tableSchema,
+            rawSchema=rawSchema,
+            schema=schema,
+            keySchema = keySchema,
+            valueSchema=valueSchema,
+
+            creatoractor=creatoractor,
+            lastmodifiedactor=lastmodifiedactor,
+            fields=field_params,
+            system_time=timeforschemametadata
+        )
+    )
+
+        
+        metadata_record = MetadataChangeEvent(proposedSnapshot=dataset_snapshot)
+        print(metadata_record)
+        # for mce in metadata_record.proposedSnapshot.aspects:
+        #     if not mce.validate():
+        #         rootLogger.error(
+        #             f"{mce.__class__} is not defined properly"
+        #         )
+        #         return Response(
+        #             f"Dataset was not created because dataset definition has encountered an error for {mce.proposedSnapshot.aspects[0].__class__}",
+        #             status_code=400,
+        #         )
+        
         
                
                
@@ -218,14 +326,9 @@ def getresult(Editeditems: List[EditedItem]):
         # return Response(content = "dataset can be found at {}/dataset/{}".format(datahub_url, make_dataset_urn(item.dataset_type, item.dataset_name)),
         #                 status_code = 205) 
              
-   
     
-#    #empty orginal tags are == ''
-#     print(Editeditems[0].Original_Tags== '')
+    
 
-    
-#     print(editedtags[0])
-#     return(Editeditems)
 
 @app.get('/originalresult')
 def originaldata(urn):
@@ -235,8 +338,10 @@ def originaldata(urn):
     'X-RestLi-Protocol-Version': '2.0.0'
     }
     global originalgmsdata
+    global originalschemadata
     global originalfields
-  
+    global originalglobaltagsdata
+    global originalplatformname
     response = requests.request("GET", URL, headers=headers)
    
     originalgmsdata =response.json()
@@ -246,13 +351,18 @@ def originaldata(urn):
     for s in range (len(originalgmsdata["value"]["com.linkedin.metadata.snapshot.DatasetSnapshot"]["aspects"])):
         if "com.linkedin.schema.SchemaMetadata" in originalgmsdata["value"]["com.linkedin.metadata.snapshot.DatasetSnapshot"]["aspects"][s]:
             originalschemadata= originalgmsdata["value"]["com.linkedin.metadata.snapshot.DatasetSnapshot"]["aspects"][s]["com.linkedin.schema.SchemaMetadata"]
-        else:
-            continue
+
+        if "com.linkedin.common.GlobalTags" in originalgmsdata["value"]["com.linkedin.metadata.snapshot.DatasetSnapshot"]["aspects"][s]:
+            originalglobaltagsdata= originalgmsdata["value"]["com.linkedin.metadata.snapshot.DatasetSnapshot"]["aspects"][s]["com.linkedin.common.GlobalTags"]
+
+        if "com.linkedin.metadata.key.DatasetKey" in originalgmsdata["value"]["com.linkedin.metadata.snapshot.DatasetSnapshot"]["aspects"][s]:
+            originalplatformname= originalgmsdata["value"]["com.linkedin.metadata.snapshot.DatasetSnapshot"]["aspects"][s]["com.linkedin.metadata.key.DatasetKey"]["platform"]
+
     originalfields = originalschemadata["fields"]
    
     # originalschemadata = tuple(originalschemadata) doesnt work, its in a unhashable list
    
-    return originalschemadata
+    
     
     
 
