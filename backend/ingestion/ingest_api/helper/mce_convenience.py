@@ -195,23 +195,24 @@ def make_schema_mce(
 
 
     platformSchema = {
-            "com.linkedin.schema.KafkaSchema": KafkaSchemaClass(documentSchema = documentSchema)
-            # "com.linkedin.schema.EspressoSchema": FixedTypeClass(documentSchema = documentSchema, tableSchema = tableSchema),
-            # "com.linkedin.schema.OracleDDL": OracleDDLClass(tableSchema = tableSchema),
-            # "com.linkedin.schema.MySqlDDL": MySqlDDLClass(tableSchema = tableSchema),
-            # "com.linkedin.schema.PrestoDDL": PrestoDDLClass(rawSchema = rawSchema),
-            # "com.linkedin.schema.BinaryJsonSchema": BinaryJsonSchemaClass(schema = schema),
-            # "com.linkedin.schema.OrcSchema": OrcSchemaClass(schema = schema),
-            # "com.linkedin.schema.Schemaless": SchemalessClass(),
-            # "com.linkedin.schema.KeyValueSchema": KeyValueSchemaClass(keySchema = keySchema, valueSchema = valueSchema),
-            # "com.linkedin.schema.OtherSchema": OtherSchemaClass(rawSchema = rawSchema),            
-        }.get(platformSchema)
+            "com.linkedin.schema.KafkaSchema": KafkaSchemaClass(documentSchema = documentSchema),
+            "com.linkedin.schema.EspressoSchema": EspressoSchemaClass(documentSchema = documentSchema, tableSchema = tableSchema),
+            "com.linkedin.schema.OracleDDL": OracleDDLClass(tableSchema = tableSchema),
+            "com.linkedin.schema.MySqlDDL": MySqlDDLClass(tableSchema = tableSchema),
+            "com.linkedin.schema.PrestoDDL": PrestoDDLClass(rawSchema = rawSchema),
+            "com.linkedin.schema.BinaryJsonSchema": BinaryJsonSchemaClass(schema = schema),
+            "com.linkedin.schema.OrcSchema": OrcSchemaClass(schema = schema),
+            "com.linkedin.schema.Schemaless": SchemalessClass(),
+            "com.linkedin.schema.KeyValueSchema": KeyValueSchemaClass(keySchema = keySchema, valueSchema = valueSchema),
+            "com.linkedin.schema.OtherSchema": OtherSchemaClass(rawSchema = rawSchema)            
+        }[platformSchema]
 
 
     mce = SchemaMetadataClass(
         schemaName,
         platform=platformName,
         version=0,
+        #Modfied to record both last modified actor and creator
         created=AuditStampClass(time=sys_time, actor=creatoractor),
         lastModified=AuditStampClass(time=sys_time, actor=lastmodifiedactor),
         hash="",
@@ -225,7 +226,7 @@ def make_schema_mce(
                 nullable=item.get("nullable", None),
                 #wrote the globaltags -sher
                 #stuck here, need to not submit to globaltagsclass if item.tags dont exist
-                # globalTags=GlobalTagsClass(tags=item.get("tags")),
+                globalTags=GlobalTagsClass(tags=item.get("tags")) if item.get("tags") else None,
                 #wrote recusrive line -sher
                 recursive = item.get("recursive", None),
             )

@@ -296,10 +296,11 @@ def getresult(Editeditems: List[EditedItem]):
             system_time=timeforschemametadata
         )
     )
+        
 
         
         metadata_record = MetadataChangeEvent(proposedSnapshot=dataset_snapshot)
-       
+        print(metadata_record)
         for mce in metadata_record.proposedSnapshot.aspects:
             if not mce.validate():
                 rootLogger.error(
