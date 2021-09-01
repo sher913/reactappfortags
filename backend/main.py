@@ -299,32 +299,42 @@ def getresult(Editeditems: List[EditedItem]):
 
         
         metadata_record = MetadataChangeEvent(proposedSnapshot=dataset_snapshot)
-        print(metadata_record)
-        # for mce in metadata_record.proposedSnapshot.aspects:
-        #     if not mce.validate():
-        #         rootLogger.error(
-        #             f"{mce.__class__} is not defined properly"
-        #         )
-        #         return Response(
-        #             f"Dataset was not created because dataset definition has encountered an error for {mce.proposedSnapshot.aspects[0].__class__}",
-        #             status_code=400,
-        #         )
+       
+        for mce in metadata_record.proposedSnapshot.aspects:
+            if not mce.validate():
+                rootLogger.error(
+                    f"{mce.__class__} is not defined properly"
+                )
+                return Response(
+                    f"Dataset was not created because dataset definition has encountered an error for {mce.proposedSnapshot.aspects[0].__class__}",
+                    status_code=400,
+                )
         
         
                
                
-        # try:
-        #     emitter = DatahubRestEmitter(rest_endpoint)
-
-        #     for mce in all_mce:
-        #         emitter.emit_mce(mce)   
-        #     emitter._session.close()
-        # except Exception as e:
-        #     rootLogger.debug(e)
-        #     return Response("Dataset was not created because upstream has encountered an error {}".format(e), status_code=502)
-        # rootLogger.info("Make_dataset_request_completed_for {} requested_by {}".format(item.dataset_name, item.dataset_owner))      
-        # return Response(content = "dataset can be found at {}/dataset/{}".format(datahub_url, make_dataset_urn(item.dataset_type, item.dataset_name)),
-        #                 status_code = 205) 
+        try:
+            rootLogger.error(metadata_record)
+            emitter = DatahubRestEmitter(rest_endpoint)
+            emitter.emit_mce(metadata_record)
+            emitter._session.close()
+        except Exception as e:
+            rootLogger.debug(e)
+            return Response(
+                "Dataset was not created because upstream has encountered an error {}".format(e),
+                status_code=500,
+        )
+        rootLogger.info(
+            "Make_dataset_request_completed_for {} requested_by {}".format(
+                datasetName, lastmodifiedactor
+        )
+    )
+        return Response(
+            "dataset can be found at /dataset/{}".format(
+                datasetName
+            ),
+            status_code=201,
+    )
              
     
     

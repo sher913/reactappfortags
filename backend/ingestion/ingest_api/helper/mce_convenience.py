@@ -225,7 +225,7 @@ def make_schema_mce(
                 nullable=item.get("nullable", None),
                 #wrote the globaltags -sher
                 #stuck here, need to not submit to globaltagsclass if item.tags dont exist
-                globalTags=GlobalTagsClass(tags=item.get("tags")),
+                # globalTags=GlobalTagsClass(tags=item.get("tags")),
                 #wrote recusrive line -sher
                 recursive = item.get("recursive", None),
             )
