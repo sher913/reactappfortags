@@ -135,11 +135,12 @@ def make_dataset_description_mce(
                 )
 
 def make_schemaglobaltags_mce(
-     tags: List[str],
+     tags: List[str]= None,
 )  -> GlobalTagsClass:
+    
 
     return GlobalTagsClass(
-        tags= tags
+        tags=tags
 
     )
 

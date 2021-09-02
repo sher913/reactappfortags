@@ -143,7 +143,9 @@ def getresult(Editeditems: List[EditedItem]):
         item.Editable_Tags= item.Editable_Tags.split(",")
         item.Original_Tags= item.Original_Tags.replace(" ", "")
         item.Original_Tags= item.Original_Tags.split(",")
-    # print(datasetEdited)
+        item.Global_Tags= item.Global_Tags.replace(" ", "")
+        item.Global_Tags= item.Global_Tags.split(",")
+    print(datasetEdited)
     # print(Editeditems[0].Editable_Tags)
     # print(Editeditems[0].Original_Tags)
     for dataset in datasetEdited:
@@ -238,16 +240,12 @@ def getresult(Editeditems: List[EditedItem]):
         urn=datasetName,
         aspects=[],
         )
-        dataset_snapshot.aspects.append(
-            make_schemaglobaltags_mce(
-                tags = originalglobaltagsdata["tags"]
-            )
-        )
-        
+       
         field_params = []
         for existing_field in originalfields:
             current_field = {}
-            tags = []
+            schemametadatatags = []
+            globaltags=[]
             current_field["fieldPath"] = existing_field["fieldPath"]
             #need to know if this is important [field_type]
             current_field["field_type"] = existing_field["nativeDataType"]
@@ -265,17 +263,30 @@ def getresult(Editeditems: List[EditedItem]):
                 current_field["field_description"] = existing_field["description"]
                 
             for item in Editeditems:
-                if item.Field_Name == existing_field["fieldPath"]:
+                if item.Field_Name == existing_field["fieldPath"] and item.Dataset_Name == dataset:
+
+                    for globaltag in item.Global_Tags:
+                        if globaltag != '':
+                            globaltags.append({"tag": make_tag_urn(globaltag)})
+
                     for tag in item.Original_Tags:
                         if tag != '':
-                            tags.append({"tag": make_tag_urn(tag)})
-            if tags != []:
-                current_field["tags"]=tags
+                            schemametadatatags.append({"tag": make_tag_urn(tag)})
+            if schemametadatatags != []:
+                current_field["tags"]=schemametadatatags
             current_field["type"]= list(existing_field["type"]['type'].keys())[0]
             field_params.append(current_field)
        
-      
-
+        
+        dataset_snapshot.aspects.append(
+            make_schemaglobaltags_mce(
+                
+                tags = globaltags
+            )
+        )
+        
+        
+        
         dataset_snapshot.aspects.append(
             make_schema_mce(
             dataset_urn=datasetName,
@@ -295,12 +306,12 @@ def getresult(Editeditems: List[EditedItem]):
             fields=field_params,
             system_time=timeforschemametadata
         )
-    )
+        )
         
 
         
         metadata_record = MetadataChangeEvent(proposedSnapshot=dataset_snapshot)
-        print(metadata_record)
+        # print(metadata_record)
         for mce in metadata_record.proposedSnapshot.aspects:
             if not mce.validate():
                 rootLogger.error(
@@ -321,21 +332,13 @@ def getresult(Editeditems: List[EditedItem]):
             emitter._session.close()
         except Exception as e:
             rootLogger.debug(e)
-            return Response(
-                "Dataset was not created because upstream has encountered an error {}".format(e),
-                status_code=500,
-        )
+            
         rootLogger.info(
             "Make_dataset_request_completed_for {} requested_by {}".format(
                 datasetName, lastmodifiedactor
         )
-    )
-        return Response(
-            "dataset can be found at /dataset/{}".format(
-                datasetName
-            ),
-            status_code=201,
-    )
+        )
+        
              
     
     

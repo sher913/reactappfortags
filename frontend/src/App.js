@@ -47,7 +47,7 @@ class App extends React.Component {
 
     var finaleditedholder=[]
 
-    var tempfieldnameholder=[]
+    var tempIDnameholder=[]
     var tempdatasetnameholder=[]
     var elements
    
@@ -306,16 +306,16 @@ class App extends React.Component {
       console.log("First iteration:", finaleditedholder)
      //Extracts the field names and dataset names from array which contain edits and store in temp arrays
       for(let j=0; j< finaleditedholder.length; j++){
-        tempfieldnameholder.push(finaleditedholder[j]["Field_Name"])
+        tempIDnameholder.push(finaleditedholder[j]["ID"])
         tempdatasetnameholder.push(finaleditedholder[j]["Dataset_Name"])
       }
-     
+      
       editedrowsholder= {}
       //iterate thru every row in table, check if row cell values(dataset name and field name) exist in temp arrays or not
       //If condition (dataset exist, field name does not exist, came from editable schema ===true) is fuifilled, 
       //Takes the row and insert above the row containing the same dataset name in finaleditedholder
       example.rows().every(function(){
-        if((tempdatasetnameholder.includes(this.data()[2]) && !tempfieldnameholder.includes(this.data()[4]) && this.data()[9]==="Yes")===true){
+        if((tempdatasetnameholder.includes(this.data()[2]) && !tempIDnameholder.includes(parseInt(this.data()[0])))===true){
           let date = new Date();
           Object.assign(editedrowsholder,({"ID": parseInt(this.data()[0]), "Origin": this.data()[10], "Platform_Name": this.data()[1], "Dataset_Name": this.data()[2],
           "Global_Tags": ($(example.cell(this.index(), 3).node()).find('input').val()), "Field_Name": this.data()[4], 
@@ -333,7 +333,7 @@ class App extends React.Component {
           }
     });
 
-      tempfieldnameholder=[]
+      tempIDnameholder=[]
       tempdatasetnameholder=[]
       console.log("Second iteration:", finaleditedholder) 
       
