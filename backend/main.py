@@ -2,6 +2,7 @@ import os
 from os import environ
 import logging
 from logging.handlers import TimedRotatingFileHandler
+import re
 from avro.schema import NULL
 from datahub.metadata.schema_classes import DatasetSnapshotClass
 
@@ -30,7 +31,7 @@ from ingestion.ingest_api.helper.mce_convenience import (generate_json_output,
                                                make_delete_mce,
                                                make_ownership_mce,
                                                make_platform, make_recover_mce,
-                                               make_schema_mce, make_user_urn,make_tag_urn, make_schemaglobaltags_mce)
+                                               make_schema_mce, make_user_urn,make_tag_urn, make_schemaglobaltags_mce, make_editableschema_mce)
 from ingestion.ingest_api.helper.models import (FieldParam, create_dataset_params,
                                       dataset_status_params, determine_type)
 from datahub.emitter.rest_emitter import DatahubRestEmitter
@@ -145,14 +146,29 @@ def getresult(Editeditems: List[EditedItem]):
         item.Original_Tags= item.Original_Tags.split(",")
         item.Global_Tags= item.Global_Tags.replace(" ", "")
         item.Global_Tags= item.Global_Tags.split(",")
-    print(datasetEdited)
+    # print(datasetEdited)
     # print(Editeditems[0].Editable_Tags)
     # print(Editeditems[0].Original_Tags)
+    requestor=make_user_urn("datahub")
     for dataset in datasetEdited:
 
+        editablefield_params = []
         for item in Editeditems:
             if item.Dataset_Name == dataset:
                 datasetName = make_dataset_urn(item.Platform_Name, item.Dataset_Name)
+                editable_field = {}
+                editabletags = []
+                editable_field["fieldPath"] = item.Field_Name
+                editable_field["field_description"] = item.Description
+                for editabletag in item.Editable_Tags:
+                    if editabletag != '':
+                        editabletags.append({"tag": make_tag_urn(editabletag)})
+
+                
+                editable_field["tags"]=editabletags
+            
+            editablefield_params.append(editable_field)
+            
                
         originaldata(datasetName)
         platformName = originalplatformname
@@ -307,6 +323,19 @@ def getresult(Editeditems: List[EditedItem]):
             system_time=timeforschemametadata
         )
         )
+
+
+
+        
+        dataset_snapshot.aspects.append(
+            make_editableschema_mce(
+            #using datahub as requestor, change varaiable requestor if you are another user
+            requestor=requestor,
+            editablefields= editablefield_params
+
+        )
+        )
+
         
 
         
@@ -318,7 +347,7 @@ def getresult(Editeditems: List[EditedItem]):
                     f"{mce.__class__} is not defined properly"
                 )
                 return Response(
-                    f"Dataset was not created because dataset definition has encountered an error for {mce.proposedSnapshot.aspects[0].__class__}",
+                    f"Dataset was not created because dataset definition has encountered an error for {mce.__class__}",
                     status_code=400,
                 )
         
@@ -332,11 +361,29 @@ def getresult(Editeditems: List[EditedItem]):
             emitter._session.close()
         except Exception as e:
             rootLogger.debug(e)
+            return Response(
+            "Dataset was not created because upstream has encountered an error {}".format(e),
+            status_code=500,
+        )
             
         rootLogger.info(
             "Make_dataset_request_completed_for {} requested_by {}".format(
-                datasetName, lastmodifiedactor
+                datasetName, requestor
         )
+        )
+    if(datasetEdited!=[]):
+        return Response(
+            "Datasets updated: {}\n\nrequested by: {}".format(
+                datasetEdited, requestor
+            ),
+            status_code=201,
+        )
+    else:
+        return Response(
+            "No datasets were updated\n\nrequested by: {}".format(
+               requestor
+            ),
+            status_code=201,
         )
         
              

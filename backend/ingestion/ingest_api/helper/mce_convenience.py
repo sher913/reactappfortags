@@ -3,6 +3,7 @@ import datetime
 import json
 import logging
 import os
+import re
 import time
 from typing import Dict, List, Optional, Type, TypeVar, Union
 
@@ -145,6 +146,38 @@ def make_schemaglobaltags_mce(
     )
 
 
+def make_editableschema_mce(
+    
+
+    requestor: str,
+    editablefields: List[Dict[str, str]]
+    
+    
+) -> MetadataChangeEventClass:
+    sys_time = get_sys_time()
+    mce = EditableSchemaMetadataClass(
+        #using datahub as requestor, change varaiable requestor in main.py(FASTAPI) if you are another user
+        created=AuditStampClass(time=sys_time, actor=requestor),
+        lastModified=AuditStampClass(time=sys_time, actor=requestor),
+        editableSchemaFieldInfo=[
+            EditableSchemaFieldInfoClass(
+                fieldPath = field["fieldPath"],
+                description= field["field_description"],
+                globalTags=GlobalTagsClass(tags=field.get("tags"))
+            )
+            for field in editablefields
+        ]
+
+
+    )
+    return mce
+
+
+
+
+
+
+
 def make_schema_mce(
     dataset_urn: str,
     platformName: str,
@@ -225,10 +258,7 @@ def make_schema_mce(
                 nativeDataType=item.get("nativeType", ""),
                 description=item.get("field_description", ""),
                 nullable=item.get("nullable", None),
-                #wrote the globaltags -sher
-                #stuck here, need to not submit to globaltagsclass if item.tags dont exist
                 globalTags=GlobalTagsClass(tags=item.get("tags")) if item.get("tags") else None,
-                #wrote recusrive line -sher
                 recursive = item.get("recursive", None),
             )
             for item in fields

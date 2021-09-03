@@ -50,8 +50,7 @@ class App extends React.Component {
     var tempIDnameholder=[]
     var tempdatasetnameholder=[]
     var elements
-   
-    var testholder 
+    
     axios.get('http://localhost:8000/originalresult', {
       headers: {
         'Content-Type': 'application/json',
@@ -127,8 +126,10 @@ class App extends React.Component {
         //Field in editableSchemaMetadata has to match fields in schemaMetadata
         if(elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]!==undefined
         && elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["fieldPath"] === elements[i]["schemaMetadata"]["fields"][j]["fieldPath"])
-        
-        {let tagsholder= []
+        { let tagsholder= []
+          if(elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"] !== undefined)
+          {
+          
           if(elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"].length ===0){
           tagsholder.push(' ')
         }else{
@@ -139,6 +140,7 @@ class App extends React.Component {
             tagsholder.push((elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"][l]["tag"].split(':').pop()))
         }
       }
+    }
     }
         Object.assign(rowsholder, ({"Editable_Tags": tagsholder}))
         Object.assign(rowsholder, ({"From_EditableSchema": "Yes"}))
@@ -248,7 +250,7 @@ class App extends React.Component {
     console.log("Column Headers:",colsholder)
   
    
-    testholder = finalrowsholder
+    
     console.log("Data to feed columns:",finalrowsholder)
     this.setState({rows: finalrowsholder, cols: colsholder});
        }); 
@@ -353,10 +355,25 @@ class App extends React.Component {
         }
       }
     )
-    .then(res =>  console.log("Response from what getresult endpoint received: ", res.data))
+    .then(res =>  
+      
+      
+    {
+      
+      // if(!alert(res.data)){window.location.reload();}
+      window.alert(res.data)
+      window.location.reload();
+      
+    
+  })
+  .catch(error => {
+    window.alert("Error, Try refresh first and try again\r\n\r\nIf not " +error.response.data)
+    window.location.reload(); //Logs a string: Error: Request failed with status code 404
+  
+  });
      
     
-    window.location.reload()
+  
 
    
     
