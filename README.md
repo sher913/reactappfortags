@@ -23,7 +23,6 @@ REACT APP:
 frontend/App.js
 
 
-To run:
 root folder is datahub by linkedin
 Installation for first time:
     1. cd 'datahub tagging ui'
@@ -41,3 +40,5 @@ Secondly, initialize REACT via yarn:
     1. cd 'datahub tagging ui'
     2. cd frontend
     3. yarn start
+    
+Of course, you have to have datahub by linkedin running and correct endpoint address.
