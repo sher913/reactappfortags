@@ -259,7 +259,7 @@ class App extends React.Component {
         responsive: true,
      
         
-        "lengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+        "lengthMenu": [[10, 20, 100, -1], [10, 20, 100, "All"]],
         columnDefs : [
           { "type": "html-input", targets: [3,5,6,7],
             render: function (rows, type, row) {
@@ -304,14 +304,14 @@ class App extends React.Component {
   
       });
       console.log("First iteration:", finaleditedholder)
-     //Extracts the field names and dataset names from array which contain edits and store in temp arrays
+     //Extracts the unique ID and dataset names from array which contain edits and store in temp arrays
       for(let j=0; j< finaleditedholder.length; j++){
         tempIDnameholder.push(finaleditedholder[j]["ID"])
         tempdatasetnameholder.push(finaleditedholder[j]["Dataset_Name"])
       }
       
       editedrowsholder= {}
-      //iterate thru every row in table, check if row cell values(dataset name and field name) exist in temp arrays or not
+      //iterate thru every row in table, check if row cell values(dataset name and ID) exist in temp arrays or not
       //If condition (dataset exist, field name does not exist, came from editable schema ===true) is fuifilled, 
       //Takes the row and insert above the row containing the same dataset name in finaleditedholder
       example.rows().every(function(){
@@ -356,7 +356,7 @@ class App extends React.Component {
     .then(res =>  console.log("Response from what getresult endpoint received: ", res.data))
      
     
-    
+    window.location.reload()
 
    
     
