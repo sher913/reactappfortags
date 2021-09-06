@@ -110,21 +110,118 @@ class OriginalItem(BaseModel):
 
 @app.get('/getdatasets')
 def main():
-    URL ="http://172.104.42.65:8080/datasets"
+    elements=[]
+    URL ="http://172.104.42.65:8080/entities"
     headers = {
     'Content-Type': 'application/json',
-    'X-RestLi-Protocol-Version': '2.0.0',
-            'X-RestLi-Method': 'finder'
+    'X-RestLi-Protocol-Version': '2.0.0'
+            
     }
-    parameters = {'q':'search',
-                    'input':'*'}
+    parameters = {'action':'search'}
+
+    data = '{ "input": "*", "entity": "dataset", "start": 0, "count": 10}'
   
-    response = requests.request("GET", URL, headers=headers, params = parameters)
-   
+    response = requests.request("POST", URL, headers=headers, params = parameters, data=data)
+
+
     datasetobject =response.json()
-   
+    datasets = datasetobject["value"]["metadata"]["urns"]
+    for dataset in datasets:
+        keys_to_remove=[]
+        aspect=getdatasetviaurn(dataset)
+
+        for null_field in aspect:
+            if not aspect[null_field]:
+                keys_to_remove.append(null_field)
+
+        for key in keys_to_remove:
+            aspect.pop(key)
+
+        elements.append(aspect)
+    # for j in range (len(elements)):
+    #     if "editableSchemaFieldInfo" in elements[j]["editableSchemaMetadata"]:
+    #         print(True)
     
-    return datasetobject
+    
+    return elements
+
+def getdatasetviaurn(dataset):
+        URL ="http://172.104.42.65:8080/entities/" +dataset
+        headers = {
+        'Content-Type': 'application/json',
+        'X-RestLi-Protocol-Version': '2.0.0'
+        }
+        response = requests.request("GET", URL, headers=headers)
+        newdatasetsnapshot=[]
+        newdatasetsnapshot=dict.fromkeys(["DatasetKey","InstitutionalMemory","Ownership","UpstreamLineage","BrowsePaths","GlobalTags","editableSchemaMetadata","schemaMetadata", "DatasetProperties"])
+        datasetsnapshot =response.json()
+        datasetsnapshot=datasetsnapshot['value']['com.linkedin.metadata.snapshot.DatasetSnapshot']
+        # datasetsnapshot['aspects'].pop(0)
+        datasetsnapshotAspects=datasetsnapshot['aspects']
+        
+        
+        for s in range (len(datasetsnapshotAspects)):
+
+           
+            
+            #For DatasetKey
+            if "com.linkedin.metadata.key.DatasetKey" in datasetsnapshotAspects[s]:
+                newdatasetsnapshot["DatasetKey"]=datasetsnapshotAspects[s]["com.linkedin.metadata.key.DatasetKey"]
+
+            #For InstitutionalMemory              
+            if "com.linkedin.common.InstitutionalMemory" in datasetsnapshotAspects[s]:
+                newdatasetsnapshot["InstitutionalMemory"]=datasetsnapshotAspects[s]["com.linkedin.common.InstitutionalMemory"]
+                
+                
+            #For Ownership
+            if "com.linkedin.common.Ownership" in datasetsnapshotAspects[s]:
+                newdatasetsnapshot["Ownership"]=datasetsnapshotAspects[s]["com.linkedin.common.Ownership"]
+
+            #For UpstreamLineage
+            if "com.linkedin.dataset.UpstreamLineage" in datasetsnapshotAspects[s]:
+                newdatasetsnapshot["UpstreamLineage"]=datasetsnapshotAspects[s]["com.linkedin.dataset.UpstreamLineage"]
+
+            #For BrowsePaths
+            if "com.linkedin.common.BrowsePaths" in datasetsnapshotAspects[s]:
+                newdatasetsnapshot["BrowsePaths"]=datasetsnapshotAspects[s]["com.linkedin.common.BrowsePaths"]
+
+
+            #For GlobalTags
+            if "com.linkedin.common.GlobalTags" in datasetsnapshotAspects[s]:
+                newdatasetsnapshot["GlobalTags"]=datasetsnapshotAspects[s]["com.linkedin.common.GlobalTags"]
+
+
+            #For EditableSchemaMetadata
+            if "com.linkedin.schema.EditableSchemaMetadata" in datasetsnapshotAspects[s]:
+                newdatasetsnapshot["editableSchemaMetadata"]=datasetsnapshotAspects[s]["com.linkedin.schema.EditableSchemaMetadata"]
+
+
+            #For schemaMetadata
+            if "com.linkedin.schema.SchemaMetadata" in datasetsnapshotAspects[s]:
+                newdatasetsnapshot["schemaMetadata"]=datasetsnapshotAspects[s]["com.linkedin.schema.SchemaMetadata"]
+
+            #For DatasetProperties
+            if "com.linkedin.dataset.DatasetProperties" in datasetsnapshotAspects[s]:
+                newdatasetsnapshot["DatasetProperties"]=datasetsnapshotAspects[s]["com.linkedin.dataset.DatasetProperties"]
+
+           
+
+            
+        
+        return newdatasetsnapshot
+
+       
+
+       
+        
+
+
+
+
+
+    
+
+
 
 
 

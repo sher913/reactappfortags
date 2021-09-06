@@ -50,27 +50,22 @@ class App extends React.Component {
     var tempIDnameholder=[]
     var tempdatasetnameholder=[]
     var elements
-    
-    axios.get('http://localhost:8000/originalresult', {
-      headers: {
-        'Content-Type': 'application/json',
-        'X-RestLi-Protocol-Version': '2.0.0'
-        }
-    }).then(res => 
-    { //pushing datasets data to 'elements' varaiable
-      console.log("HEREHERE:",res)})
+
+
+
 
     // on here, nid to make Python FASTAPI as middleware to bypass CORS, then axios.get(http://localhost/FASTAPI)
     axios.get('http://localhost:8000/getdatasets', {
       headers: {
-          'X-RestLi-Protocol-Version': '2.0.0',
-          'X-RestLi-Method': 'finder'      
+          'X-RestLi-Protocol-Version': '2.0.0'
       }
     }).then(res => 
     { //pushing datasets data to 'elements' varaiable
-      console.log("HEREHERE2:",res)
-      elements = (res["data"]["elements"])
+      
+      elements = (res["data"])
       let count =0
+      // aspectSchemaMetadata=['aspects']+['com.linkedin.schema.SchemaMetadata']
+      
     //For loop for all fields in dataset, compare with editableSchema fields; if exist, push both to first element of each array, thus index positions of both edited Schema
     // and Schemameta(original) will match 
     for(let i=0; i< elements.length; i++){
@@ -80,6 +75,7 @@ class App extends React.Component {
             if(elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][a]["fieldPath"] === elements[i]["schemaMetadata"]["fields"][j]["fieldPath"]){
               moveArrayItemToNewIndex(elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"],a,0)
               moveArrayItemToNewIndex(elements[i]["schemaMetadata"]["fields"],j,0)
+              
             }   
       }
     }
@@ -93,26 +89,26 @@ class App extends React.Component {
         Object.assign(rowsholder,{"ID": count});
         count+=1
         //for loop for platform and table name of datasets, always add key and value pair when pushing to array so aDataSort can refrence later
-        Object.assign(rowsholder,{"Origin": elements[i]["origin"]});
-        Object.assign(rowsholder, {"Platform_Name": (elements[i]["platform"]).split(':').pop()});
-        Object.assign(rowsholder,{"Dataset_Name": elements[i]["name"]});
+        Object.assign(rowsholder,{"Origin": elements[i]["DatasetKey"]["origin"]});
+        Object.assign(rowsholder, {"Platform_Name": (elements[i]["DatasetKey"]["platform"]).split(':').pop()});
+        Object.assign(rowsholder,{"Dataset_Name": elements[i]["DatasetKey"]["name"]});
         
         //For elements with global tags, if they not equal to undefined, push the tags to array, else push ' ' to array
-        if(elements[i]["globalTags"]!==undefined){
+        if(elements[i]["GlobalTags"]!==undefined){
           let globaltagholder= []
           
         
-          for(let k=0; k< elements[i]["globalTags"]["tags"].length; k++){
+          for(let k=0; k< elements[i]["GlobalTags"]["tags"].length; k++){
             if(k>0){
-              globaltagholder.push(', '+ elements[i]["globalTags"]["tags"][k]["tag"].split(':').pop())
+              globaltagholder.push(', '+ elements[i]["GlobalTags"]["tags"][k]["tag"].split(':').pop())
             }
             else{
-        globaltagholder.push(elements[i]["globalTags"]["tags"][k]["tag"].split(':').pop())
+        globaltagholder.push(elements[i]["GlobalTags"]["tags"][k]["tag"].split(':').pop())
     }
-  }
-    Object.assign(rowsholder, ({"Global_Tags": globaltagholder}))
- 
-  }     else{
+      }
+        Object.assign(rowsholder, ({"Global_Tags": globaltagholder}))
+    
+      }     else{
           let globaltagholder= []
           globaltagholder.push(' ')
           Object.assign(rowsholder, ({"Global_Tags": globaltagholder}))
@@ -221,32 +217,8 @@ class App extends React.Component {
   //Columns header defintion #important
     colsholder.push("#", "Platform_Name", "Dataset_Name","Global_Tags", "Field_Name", "Editable_Tags","Original_Tags", "Description", "Date_Modified","From_EditableSchema","Origin")
    
-      // testing
-      //console.log(elements)
-      // console.log("Platform name:", (elements[0]["platform"]).split(':').pop())
-      // console.log("table name:", elements[0]["name"])
-      // console.log("Global Tags:", elements[0]["globalTags"]["tags"])
-      // console.log("Field name:", elements[0]["schemaMetadata"]["fields"][0]["fieldPath"])
-      // console.log("Tag name for field:", (elements[0]["editableSchemaMetadata"]["editableSchemaFieldInfo"][0]["globalTags"]["tags"][0]["tag"].split(':').pop()))
-      // console.log("Description:", elements[0]["schemaMetadata"]["fields"][0]["description"])
-      // if((elements[0]["editableSchemaMetadata"])=== undefined || (elements[0]["editableSchemaMetadata"]) ==0)
-      // {
-      //   console.log("Last Modified:", Date(elements[0]["schemaMetadata"]["lastModified"]["time"]).toLocaleString())
-      // } else{
-      //   console.log("Last Modified:", Date(elements[0]["editableSchemaMetadata"]["lastModified"]["time"]).toLocaleString())
-      // }
-      
-      
-      
-      //Storing users detail in state array object
-      //for(let i = 0; i < res.data.response[0].length; i++){
-      // colsholder.push(res.data.response[0][i]['Field']) 
-      //}
     
-      //for(let i = 0; i < res.data.response[1].length; i++){
-     // rowsholder =(res.data.response[1][i]) 
-     //}
-     console.log("Sorted fields of data retrived from GMS:",elements)
+    console.log("Sorted fields of data retrived from GMS:",elements)
     console.log("Column Headers:",colsholder)
   
    
