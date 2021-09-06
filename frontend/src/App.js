@@ -19,9 +19,6 @@ class App extends React.Component {
         rows: [],
         cols:[]
               }
-
-
-              
       }
 
  
@@ -215,131 +212,135 @@ class App extends React.Component {
       }
       finalrowsholder.push(rowsholder)
       rowsholder = {}
+      
     }
-    
+  
   }
   //Columns header defintion #important
     colsholder.push("#", "Platform_Name", "Dataset_Name","Global_Tags", "Field_Name", "Editable_Tags","Original_Tags", "Description", "Date_Modified","From_EditableSchema","Origin")
    
+   
     
+        
     console.log("Sorted fields of data retrived from GMS:",elements)
     console.log("Column Headers:",colsholder)
   
     console.log("Data to feed columns:",finalrowsholder)
     this.setState({rows: finalrowsholder, cols: colsholder});
        }); 
+   
     //init Datatable, #example is the table element id
     setTimeout(()=>{                        
-    var example =$('#example').DataTable(
-      {order: [[ 0, "asc" ]],
-        responsive: true,
-     
-        
-        "lengthMenu": [[10, 20, 100, -1], [10, 20, 100, "All"]],
-        columnDefs : [
-          { "type": "html-input", targets: [3,5,6,7],
-            render: function (rows, type, row) {
+      var example =$('#example').DataTable(
+        {order: [[ 0, "asc" ]],
+          responsive: true,
+       
+       
+          "lengthMenu": [[10, 20, 100, -1], [10, 20, 100, "All"]],
+          columnDefs : [
+            { "type": "html-input", targets: [3,5,6,7],
+              render: function (rows, type, row) {
+            
+                return '<input class="form-control" type="text"  value ="'+ rows + '" style= "width:auto">';
+              
+              }
+              
+            }, {
+              "targets": [0,9,10],
+              "visible": false,
+              "searchable": false
+          }
+          ]
           
-              return '<input class="form-control" type="text"  value ="'+ rows + '" style= "width:auto">';
-            
-            }
-            
-          }, {
-            "targets": [0,9,10],
-            "visible": false,
-            "searchable": false
         }
-        ]
-        
-      }
-
-    )
+  
+      )
 
  //Iterate thru all row and compare original data vs edited, if edited, add to array (finaleditedholder) to be sent to endpoint
-  // $('#test').click(function () {
-  //   let editedrowsholder = {};
-  //   finaleditedholder=[];
-  //   example.rows().every(function(){
+  $('#test').click(function () {
+    let editedrowsholder = {};
+    finaleditedholder=[];
+    example.rows().every(function(){
     
-      
-  //     if(this.data()[3] !== ($(example.cell(this.index(), 3).node()).find('input').val()) 
-  //     ||this.data()[5] !== ($(example.cell(this.index(), 5).node()).find('input').val())
-  //     ||this.data()[6] !== ($(example.cell(this.index(), 6).node()).find('input').val())
-  //     ||this.data()[7] !== ($(example.cell(this.index(), 7).node()).find('input').val())
-  //     ){
-  //       let date = new Date();
-  //       Object.assign(editedrowsholder,({"ID": parseInt(this.data()[0]),"Origin": this.data()[10], "Platform_Name": this.data()[1], "Dataset_Name": this.data()[2],
-  //       "Global_Tags": ($(example.cell(this.index(), 3).node()).find('input').val()), "Field_Name": this.data()[4], 
-  //       "Editable_Tags": ($(example.cell(this.index(), 5).node()).find('input').val()),
-  //       "Original_Tags": ($(example.cell(this.index(), 6).node()).find('input').val()),
-  //       "Description": ($(example.cell(this.index(), 7).node()).find('input').val()), "Date_Modified": Date.parse(date.toLocaleString())}))
-  //       finaleditedholder.push(editedrowsholder)
-  //       editedrowsholder={}
-  //       }
+    
+      if(this.data()[3] !== ($(example.cell(this.index(), 3).node()).find('input').val()) 
+      ||this.data()[5] !== ($(example.cell(this.index(), 5).node()).find('input').val())
+      ||this.data()[6] !== ($(example.cell(this.index(), 6).node()).find('input').val())
+      ||this.data()[7] !== ($(example.cell(this.index(), 7).node()).find('input').val())
+      ){
+        let date = new Date();
+        Object.assign(editedrowsholder,({"ID": parseInt(this.data()[0]),"Origin": this.data()[10], "Platform_Name": this.data()[1], "Dataset_Name": this.data()[2],
+        "Global_Tags": ($(example.cell(this.index(), 3).node()).find('input').val()), "Field_Name": this.data()[4], 
+        "Editable_Tags": ($(example.cell(this.index(), 5).node()).find('input').val()),
+        "Original_Tags": ($(example.cell(this.index(), 6).node()).find('input').val()),
+        "Description": ($(example.cell(this.index(), 7).node()).find('input').val()), "Date_Modified": Date.parse(date.toLocaleString())}))
+        finaleditedholder.push(editedrowsholder)
+        editedrowsholder={}
+        }
   
   
-  //     });
-  //     console.log("First iteration:", finaleditedholder)
-  //    //Extracts the unique ID and dataset names from array which contain edits and store in temp arrays
-  //     for(let j=0; j< finaleditedholder.length; j++){
-  //       tempIDnameholder.push(finaleditedholder[j]["ID"])
-  //       tempdatasetnameholder.push(finaleditedholder[j]["Dataset_Name"])
-  //     }
+      });
+      console.log("First iteration:", finaleditedholder)
+     //Extracts the unique ID and dataset names from array which contain edits and store in temp arrays
+      for(let j=0; j< finaleditedholder.length; j++){
+        tempIDnameholder.push(finaleditedholder[j]["ID"])
+        tempdatasetnameholder.push(finaleditedholder[j]["Dataset_Name"])
+      }
       
-  //     editedrowsholder= {}
-  //     //iterate thru every row in table, check if row cell values(dataset name and ID) exist in temp arrays or not
-  //     //If condition (dataset exist, field name does not exist, came from editable schema ===true) is fuifilled, 
-  //     //Takes the row and insert above the row containing the same dataset name in finaleditedholder
-  //     example.rows().every(function(){
-  //       if((tempdatasetnameholder.includes(this.data()[2]) && !tempIDnameholder.includes(parseInt(this.data()[0])))===true){
-  //         let date = new Date();
-  //         Object.assign(editedrowsholder,({"ID": parseInt(this.data()[0]), "Origin": this.data()[10], "Platform_Name": this.data()[1], "Dataset_Name": this.data()[2],
-  //         "Global_Tags": ($(example.cell(this.index(), 3).node()).find('input').val()), "Field_Name": this.data()[4], 
-  //         "Editable_Tags": ($(example.cell(this.index(), 5).node()).find('input').val()),
-  //         "Original_Tags": ($(example.cell(this.index(), 6).node()).find('input').val()),
-  //         "Description": ($(example.cell(this.index(), 7).node()).find('input').val()), "Date_Modified": Date.parse(date.toLocaleString())}))
-  //         //If row id of row with same dataset name of edited array is > current selected row, insert row from temp array before, else insert after
-  //         if(finaleditedholder[tempdatasetnameholder.indexOf(this.data()[2])]["ID"] > this.data()[0]){
-  //           insertAt(finaleditedholder, tempdatasetnameholder.indexOf(this.data()[2]), editedrowsholder)
-  //         }else{
-  //           insertAt(finaleditedholder, tempdatasetnameholder.indexOf(this.data()[2]) +1, editedrowsholder)
-  //         }
+      editedrowsholder= {}
+      //iterate thru every row in table, check if row cell values(dataset name and ID) exist in temp arrays or not
+      //If condition (dataset exist, field name does not exist, came from editable schema ===true) is fuifilled, 
+      //Takes the row and insert above the row containing the same dataset name in finaleditedholder
+      example.rows().every(function(){
+        if((tempdatasetnameholder.includes(this.data()[2]) && !tempIDnameholder.includes(parseInt(this.data()[0])))===true){
+          let date = new Date();
+          Object.assign(editedrowsholder,({"ID": parseInt(this.data()[0]), "Origin": this.data()[10], "Platform_Name": this.data()[1], "Dataset_Name": this.data()[2],
+          "Global_Tags": ($(example.cell(this.index(), 3).node()).find('input').val()), "Field_Name": this.data()[4], 
+          "Editable_Tags": ($(example.cell(this.index(), 5).node()).find('input').val()),
+          "Original_Tags": ($(example.cell(this.index(), 6).node()).find('input').val()),
+          "Description": ($(example.cell(this.index(), 7).node()).find('input').val()), "Date_Modified": Date.parse(date.toLocaleString())}))
+          //If row id of row with same dataset name of edited array is > current selected row, insert row from temp array before, else insert after
+          if(finaleditedholder[tempdatasetnameholder.indexOf(this.data()[2])]["ID"] > this.data()[0]){
+            insertAt(finaleditedholder, tempdatasetnameholder.indexOf(this.data()[2]), editedrowsholder)
+          }else{
+            insertAt(finaleditedholder, tempdatasetnameholder.indexOf(this.data()[2]) +1, editedrowsholder)
+          }
           
-  //         editedrowsholder={}
-  //         }
-  //   });
+          editedrowsholder={}
+          }
+    });
 
-  //     tempIDnameholder=[]
-  //     tempdatasetnameholder=[]
-  //     console.log("Second iteration:", finaleditedholder) 
+      tempIDnameholder=[]
+      tempdatasetnameholder=[]
+      console.log("Second iteration:", finaleditedholder) 
       
 
     
 
     
-  //   axios.post('http://localhost:8000/getresult',
+    axios.post('http://localhost:8000/getresult',
   
     
-  //   finaleditedholder
+    finaleditedholder
     
-  // ,{
-  //       headers: {
-  //         // Overwrite Axios's automatically set Content-Type
-  //         'Content-Type': 'application/json'
-  //       }
-  //     }
-  //   )
-  //   .then(res =>  
+  ,{
+        headers: {
+          // Overwrite Axios's automatically set Content-Type
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+    .then(res =>  
       
       
-  //   {
+    {
       
-  //     // if(!alert(res.data)){window.location.reload();}
-  //     window.alert(res.data)
-  //     window.location.reload();
+      // if(!alert(res.data)){window.location.reload();}
+      // window.alert(res.data)
+      // window.location.reload();
       
     
-  // })
+  })
   // .catch(error => {
   //   window.alert("Error, Try refresh first and try again\r\n\r\nIf not " +error.response.data)
   //   window.location.reload(); //Logs a string: Error: Request failed with status code 404
@@ -351,19 +352,13 @@ class App extends React.Component {
 
    
     
-  // });
+  });
 
   
 
-  }, 100);
+}, 100);
   
   
-  
-  
-
-
- 
-
  }
 
  
