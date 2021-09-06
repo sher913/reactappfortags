@@ -75,12 +75,12 @@ class App extends React.Component {
             if(elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][a]["fieldPath"] === elements[i]["schemaMetadata"]["fields"][j]["fieldPath"]){
               moveArrayItemToNewIndex(elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"],a,0)
               moveArrayItemToNewIndex(elements[i]["schemaMetadata"]["fields"],j,0)
-              
             }   
       }
     }
   }
 }
+
 //for loop for total datasets iteration
     for(let i=0; i< elements.length; i++){
       for(let j=0; j< elements[i]["schemaMetadata"]["fields"].length; j++){
@@ -96,19 +96,23 @@ class App extends React.Component {
         //For elements with global tags, if they not equal to undefined, push the tags to array, else push ' ' to array
         if(elements[i]["GlobalTags"]!==undefined){
           let globaltagholder= []
-          
         
+          if(elements[i]["GlobalTags"]["tags"].length===0){
+            globaltagholder.push(' ')
+          }
+          else{
           for(let k=0; k< elements[i]["GlobalTags"]["tags"].length; k++){
+            
             if(k>0){
               globaltagholder.push(', '+ elements[i]["GlobalTags"]["tags"][k]["tag"].split(':').pop())
             }
             else{
         globaltagholder.push(elements[i]["GlobalTags"]["tags"][k]["tag"].split(':').pop())
     }
-      }
+      }}
         Object.assign(rowsholder, ({"Global_Tags": globaltagholder}))
     
-      }     else{
+      }  else{
           let globaltagholder= []
           globaltagholder.push(' ')
           Object.assign(rowsholder, ({"Global_Tags": globaltagholder}))
@@ -221,8 +225,6 @@ class App extends React.Component {
     console.log("Sorted fields of data retrived from GMS:",elements)
     console.log("Column Headers:",colsholder)
   
-   
-    
     console.log("Data to feed columns:",finalrowsholder)
     this.setState({rows: finalrowsholder, cols: colsholder});
        }); 
@@ -253,103 +255,103 @@ class App extends React.Component {
 
     )
 
- 
  //Iterate thru all row and compare original data vs edited, if edited, add to array (finaleditedholder) to be sent to endpoint
-  $('#test').click(function () {
-    let editedrowsholder = {};
-    finaleditedholder=[];
-    example.rows().every(function(){
+  // $('#test').click(function () {
+  //   let editedrowsholder = {};
+  //   finaleditedholder=[];
+  //   example.rows().every(function(){
     
-      if(this.data()[3] !== ($(example.cell(this.index(), 3).node()).find('input').val()) 
-      ||this.data()[5] !== ($(example.cell(this.index(), 5).node()).find('input').val())
-      ||this.data()[6] !== ($(example.cell(this.index(), 6).node()).find('input').val())
-      ||this.data()[7] !== ($(example.cell(this.index(), 7).node()).find('input').val())
-      ){
-        let date = new Date();
-        Object.assign(editedrowsholder,({"ID": parseInt(this.data()[0]),"Origin": this.data()[10], "Platform_Name": this.data()[1], "Dataset_Name": this.data()[2],
-        "Global_Tags": ($(example.cell(this.index(), 3).node()).find('input').val()), "Field_Name": this.data()[4], 
-        "Editable_Tags": ($(example.cell(this.index(), 5).node()).find('input').val()),
-        "Original_Tags": ($(example.cell(this.index(), 6).node()).find('input').val()),
-        "Description": ($(example.cell(this.index(), 7).node()).find('input').val()), "Date_Modified": Date.parse(date.toLocaleString())}))
-        finaleditedholder.push(editedrowsholder)
-        editedrowsholder={}
-        }
-  
-  
-      });
-      console.log("First iteration:", finaleditedholder)
-     //Extracts the unique ID and dataset names from array which contain edits and store in temp arrays
-      for(let j=0; j< finaleditedholder.length; j++){
-        tempIDnameholder.push(finaleditedholder[j]["ID"])
-        tempdatasetnameholder.push(finaleditedholder[j]["Dataset_Name"])
-      }
       
-      editedrowsholder= {}
-      //iterate thru every row in table, check if row cell values(dataset name and ID) exist in temp arrays or not
-      //If condition (dataset exist, field name does not exist, came from editable schema ===true) is fuifilled, 
-      //Takes the row and insert above the row containing the same dataset name in finaleditedholder
-      example.rows().every(function(){
-        if((tempdatasetnameholder.includes(this.data()[2]) && !tempIDnameholder.includes(parseInt(this.data()[0])))===true){
-          let date = new Date();
-          Object.assign(editedrowsholder,({"ID": parseInt(this.data()[0]), "Origin": this.data()[10], "Platform_Name": this.data()[1], "Dataset_Name": this.data()[2],
-          "Global_Tags": ($(example.cell(this.index(), 3).node()).find('input').val()), "Field_Name": this.data()[4], 
-          "Editable_Tags": ($(example.cell(this.index(), 5).node()).find('input').val()),
-          "Original_Tags": ($(example.cell(this.index(), 6).node()).find('input').val()),
-          "Description": ($(example.cell(this.index(), 7).node()).find('input').val()), "Date_Modified": Date.parse(date.toLocaleString())}))
-          //If row id of row with same dataset name of edited array is > current selected row, insert row from temp array before, else insert after
-          if(finaleditedholder[tempdatasetnameholder.indexOf(this.data()[2])]["ID"] > this.data()[0]){
-            insertAt(finaleditedholder, tempdatasetnameholder.indexOf(this.data()[2]), editedrowsholder)
-          }else{
-            insertAt(finaleditedholder, tempdatasetnameholder.indexOf(this.data()[2]) +1, editedrowsholder)
-          }
+  //     if(this.data()[3] !== ($(example.cell(this.index(), 3).node()).find('input').val()) 
+  //     ||this.data()[5] !== ($(example.cell(this.index(), 5).node()).find('input').val())
+  //     ||this.data()[6] !== ($(example.cell(this.index(), 6).node()).find('input').val())
+  //     ||this.data()[7] !== ($(example.cell(this.index(), 7).node()).find('input').val())
+  //     ){
+  //       let date = new Date();
+  //       Object.assign(editedrowsholder,({"ID": parseInt(this.data()[0]),"Origin": this.data()[10], "Platform_Name": this.data()[1], "Dataset_Name": this.data()[2],
+  //       "Global_Tags": ($(example.cell(this.index(), 3).node()).find('input').val()), "Field_Name": this.data()[4], 
+  //       "Editable_Tags": ($(example.cell(this.index(), 5).node()).find('input').val()),
+  //       "Original_Tags": ($(example.cell(this.index(), 6).node()).find('input').val()),
+  //       "Description": ($(example.cell(this.index(), 7).node()).find('input').val()), "Date_Modified": Date.parse(date.toLocaleString())}))
+  //       finaleditedholder.push(editedrowsholder)
+  //       editedrowsholder={}
+  //       }
+  
+  
+  //     });
+  //     console.log("First iteration:", finaleditedholder)
+  //    //Extracts the unique ID and dataset names from array which contain edits and store in temp arrays
+  //     for(let j=0; j< finaleditedholder.length; j++){
+  //       tempIDnameholder.push(finaleditedholder[j]["ID"])
+  //       tempdatasetnameholder.push(finaleditedholder[j]["Dataset_Name"])
+  //     }
+      
+  //     editedrowsholder= {}
+  //     //iterate thru every row in table, check if row cell values(dataset name and ID) exist in temp arrays or not
+  //     //If condition (dataset exist, field name does not exist, came from editable schema ===true) is fuifilled, 
+  //     //Takes the row and insert above the row containing the same dataset name in finaleditedholder
+  //     example.rows().every(function(){
+  //       if((tempdatasetnameholder.includes(this.data()[2]) && !tempIDnameholder.includes(parseInt(this.data()[0])))===true){
+  //         let date = new Date();
+  //         Object.assign(editedrowsholder,({"ID": parseInt(this.data()[0]), "Origin": this.data()[10], "Platform_Name": this.data()[1], "Dataset_Name": this.data()[2],
+  //         "Global_Tags": ($(example.cell(this.index(), 3).node()).find('input').val()), "Field_Name": this.data()[4], 
+  //         "Editable_Tags": ($(example.cell(this.index(), 5).node()).find('input').val()),
+  //         "Original_Tags": ($(example.cell(this.index(), 6).node()).find('input').val()),
+  //         "Description": ($(example.cell(this.index(), 7).node()).find('input').val()), "Date_Modified": Date.parse(date.toLocaleString())}))
+  //         //If row id of row with same dataset name of edited array is > current selected row, insert row from temp array before, else insert after
+  //         if(finaleditedholder[tempdatasetnameholder.indexOf(this.data()[2])]["ID"] > this.data()[0]){
+  //           insertAt(finaleditedholder, tempdatasetnameholder.indexOf(this.data()[2]), editedrowsholder)
+  //         }else{
+  //           insertAt(finaleditedholder, tempdatasetnameholder.indexOf(this.data()[2]) +1, editedrowsholder)
+  //         }
           
-          editedrowsholder={}
-          }
-    });
+  //         editedrowsholder={}
+  //         }
+  //   });
 
-      tempIDnameholder=[]
-      tempdatasetnameholder=[]
-      console.log("Second iteration:", finaleditedholder) 
+  //     tempIDnameholder=[]
+  //     tempdatasetnameholder=[]
+  //     console.log("Second iteration:", finaleditedholder) 
       
 
     
 
     
-    axios.post('http://localhost:8000/getresult',
+  //   axios.post('http://localhost:8000/getresult',
   
     
-    finaleditedholder
+  //   finaleditedholder
     
-  ,{
-        headers: {
-          // Overwrite Axios's automatically set Content-Type
-          'Content-Type': 'application/json'
-        }
-      }
-    )
-    .then(res =>  
+  // ,{
+  //       headers: {
+  //         // Overwrite Axios's automatically set Content-Type
+  //         'Content-Type': 'application/json'
+  //       }
+  //     }
+  //   )
+  //   .then(res =>  
       
       
-    {
+  //   {
       
-      // if(!alert(res.data)){window.location.reload();}
-      window.alert(res.data)
-      window.location.reload();
+  //     // if(!alert(res.data)){window.location.reload();}
+  //     window.alert(res.data)
+  //     window.location.reload();
       
     
-  })
-  .catch(error => {
-    window.alert("Error, Try refresh first and try again\r\n\r\nIf not " +error.response.data)
-    window.location.reload(); //Logs a string: Error: Request failed with status code 404
+  // })
+  // .catch(error => {
+  //   window.alert("Error, Try refresh first and try again\r\n\r\nIf not " +error.response.data)
+  //   window.location.reload(); //Logs a string: Error: Request failed with status code 404
   
-  });
+  // });
      
     
   
 
    
     
-  });
+  // });
 
   
 
