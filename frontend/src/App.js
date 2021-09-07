@@ -25,7 +25,7 @@ class App extends React.Component {
   componentDidMount() {
     function insertAt(array, index, ...elementsArray) {
       array.splice(index, 0, ...elementsArray);
-  }
+  };
     function moveArrayItemToNewIndex(arr, old_index, new_index) {
       if (new_index >= arr.length) {
           var k = new_index - arr.length + 1;
@@ -87,7 +87,7 @@ class App extends React.Component {
         count+=1
         //for loop for platform and table name of datasets, always add key and value pair when pushing to array so aDataSort can refrence later
         Object.assign(rowsholder,{"Origin": elements[i]["DatasetKey"]["origin"]});
-        Object.assign(rowsholder, {"Platform_Name": (elements[i]["DatasetKey"]["platform"]).split(':').pop()});
+        Object.assign(rowsholder, {"Platform_Name": elements[i]["DatasetKey"]["platform"].split(':').pop()});
         Object.assign(rowsholder,{"Dataset_Name": elements[i]["DatasetKey"]["name"]});
         
         //For elements with global tags, if they not equal to undefined, push the tags to array, else push ' ' to array
@@ -105,8 +105,9 @@ class App extends React.Component {
             }
             else{
         globaltagholder.push(elements[i]["GlobalTags"]["tags"][k]["tag"].split(':').pop())
-    }
-      }}
+      }
+      }
+      }
         Object.assign(rowsholder, ({"Global_Tags": globaltagholder}))
     
       }  else{
@@ -184,7 +185,7 @@ class App extends React.Component {
         if (elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]!==undefined 
         && elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["fieldPath"] === elements[i]["schemaMetadata"]["fields"][j]["fieldPath"] 
         && elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["description"]!==undefined)
-        {
+        { 
           Object.assign(rowsholder,({"Description": elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["description"]}))
          
       } else if(elements[i]["schemaMetadata"]["fields"][j]["description"]!==undefined)
@@ -210,6 +211,7 @@ class App extends React.Component {
         let date = new Date (elements[i]["editableSchemaMetadata"]["lastModified"]["time"])
         Object.assign(rowsholder,({ "Date_Modified": date.toLocaleString()}))
       }
+      
       finalrowsholder.push(rowsholder)
       rowsholder = {}
       
@@ -335,17 +337,17 @@ class App extends React.Component {
       
     {
       
-      // if(!alert(res.data)){window.location.reload();}
-      // window.alert(res.data)
-      // window.location.reload();
+      
+      window.alert(res.data)
+      window.location.reload();
       
     
   })
-  // .catch(error => {
-  //   window.alert("Error, Try refresh first and try again\r\n\r\nIf not " +error.response.data)
-  //   window.location.reload(); //Logs a string: Error: Request failed with status code 404
+  .catch(error => {
+    window.alert("Error, Try refresh first and try again\r\n\r\nIf not " +error.response.data)
+    window.location.reload(); //Logs a string: Error: Request failed with status code 404
   
-  // });
+  });
      
     
   
@@ -355,8 +357,8 @@ class App extends React.Component {
   });
 
   
-
-}, 100);
+// this number is the timeout timer setting, IMPORTANT IF UR RECORDS TAKE LONGER, SET A LONGER TIMEOUT
+}, 250);
   
   
  }

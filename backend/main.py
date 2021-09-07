@@ -451,37 +451,37 @@ def getresult(Editeditems: List[EditedItem]):
         
                
                
-    #     try:
-    #         rootLogger.error(metadata_record)
-    #         emitter = DatahubRestEmitter(rest_endpoint)
-    #         emitter.emit_mce(metadata_record)
-    #         emitter._session.close()
-    #     except Exception as e:
-    #         rootLogger.debug(e)
-    #         return Response(
-    #         "Dataset was not created because upstream has encountered an error {}".format(e),
-    #         status_code=500,
-    #     )
+        try:
+            rootLogger.error(metadata_record)
+            emitter = DatahubRestEmitter(rest_endpoint)
+            emitter.emit_mce(metadata_record)
+            emitter._session.close()
+        except Exception as e:
+            rootLogger.debug(e)
+            return Response(
+            "Dataset was not created because upstream has encountered an error {}".format(e),
+            status_code=500,
+        )
             
-    #     rootLogger.info(
-    #         "Make_dataset_request_completed_for {} requested_by {}".format(
-    #             datasetName, requestor
-    #     )
-    #     )
-    # if(datasetEdited!=[]):
-    #     return Response(
-    #         "Datasets updated: {}\n\nrequested by: {}".format(
-    #             datasetEdited, requestor
-    #         ),
-    #         status_code=201,
-    #     )
-    # else:
-    #     return Response(
-    #         "No datasets were updated\n\nrequested by: {}".format(
-    #            requestor
-    #         ),
-    #         status_code=201,
-    #     )
+        rootLogger.info(
+            "Make_dataset_request_completed_for {} requested_by {}".format(
+                datasetName, requestor
+        )
+        )
+    if(datasetEdited!=[]):
+        return Response(
+            "Datasets updated: {}\n\nrequested by: {}".format(
+                datasetEdited, requestor
+            ),
+            status_code=201,
+        )
+    else:
+        return Response(
+            "No datasets were updated\n\nrequested by: {}".format(
+               requestor
+            ),
+            status_code=201,
+        )
         
              
     

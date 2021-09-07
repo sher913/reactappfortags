@@ -4,3 +4,16 @@
 2021-09-07 00:33:57,952;INFO;started!
 2021-09-07 00:35:16,643;INFO;started!
 2021-09-07 00:35:24,262;INFO;started!
+2021-09-07 09:42:29,183;INFO;started!
+2021-09-07 09:51:00,545;INFO;started!
+2021-09-07 09:52:23,533;INFO;started!
+2021-09-07 09:52:36,176;INFO;started!
+2021-09-07 09:52:55,223;INFO;started!
+2021-09-07 09:53:43,164;INFO;started!
+2021-09-07 09:55:21,520;INFO;started!
+2021-09-07 09:55:38,960;INFO;started!
+2021-09-07 09:55:46,573;INFO;started!
+2021-09-07 09:56:20,465;INFO;started!
+2021-09-07 10:52:14,529;INFO;started!
+2021-09-07 10:52:23,204;ERROR;MetadataChangeEventClass({'auditHeader': None, 'proposedSnapshot': DatasetSnapshotClass({'urn': 'urn:li:dataset:(urn:li:dataPlatform:csv,dataset_name_1630504353977,PROD)', 'aspects': [GlobalTagsClass({'tags': []}), SchemaMetadataClass({'schemaName': 'OtherSchema', 'platform': 'urn:li:dataPlatform:csv', 'version': 0, 'created': AuditStampClass({'time': 1630504353997, 'actor': 'urn:li:corpuser:34552', 'impersonator': None}), 'lastModified': AuditStampClass({'time': 1630504353997, 'actor': 'urn:li:corpuser:34552', 'impersonator': None}), 'deleted': None, 'dataset': None, 'cluster': None, 'hash': '', 'platformSchema': OtherSchemaClass({'rawSchema': ''}), 'fields': [SchemaFieldClass({'fieldPath': 'field1', 'jsonPath': None, 'nullable': False, 'description': 'col1', 'type': SchemaFieldDataTypeClass({'type': StringTypeClass({})}), 'nativeDataType': 'string', 'recursive': False, 'globalTags': None, 'glossaryTerms': None})], 'primaryKeys': None, 'foreignKeysSpecs': None}), EditableSchemaMetadataClass({'created': AuditStampClass({'time': 1630983143204, 'actor': 'urn:li:corpuser:datahub', 'impersonator': None}), 'lastModified': AuditStampClass({'time': 1630983143204, 'actor': 'urn:li:corpuser:datahub', 'impersonator': None}), 'deleted': None, 'editableSchemaFieldInfo': [EditableSchemaFieldInfoClass({'fieldPath': 'field1', 'description': 'col1', 'globalTags': GlobalTagsClass({'tags': [{'tag': 'urn:li:tag:asd'}, {'tag': 'urn:li:tag:asd'}]})})]})]}), 'proposedDelta': None})
+2021-09-07 10:52:23,255;INFO;Make_dataset_request_completed_for urn:li:dataset:(urn:li:dataPlatform:csv,dataset_name_1630504353977,PROD) requested_by urn:li:corpuser:datahub
