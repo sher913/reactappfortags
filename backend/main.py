@@ -248,13 +248,12 @@ def getresult(Editeditems: List[EditedItem]):
     # print(Editeditems[0].Original_Tags)
     requestor=make_user_urn("datahub")
     for dataset in datasetEdited:
-
         editablefield_params = []
         for item in Editeditems:
             if item.Dataset_Name == dataset:
-                datasetName = make_dataset_urn(item.Platform_Name, item.Dataset_Name)
                 editable_field = {}
                 editabletags = []
+                datasetName = make_dataset_urn(item.Platform_Name, item.Dataset_Name)
                 editable_field["fieldPath"] = item.Field_Name
                 editable_field["field_description"] = item.Description
                 for editabletag in item.Editable_Tags:
@@ -264,7 +263,10 @@ def getresult(Editeditems: List[EditedItem]):
                 
                 editable_field["tags"]=editabletags
             
-            editablefield_params.append(editable_field)
+                editablefield_params.append(editable_field)
+                #Clearing the fields is needed after appending, idk why the above for loop not clearing the fields
+                editable_field={}
+                editabletags = []
             
                
         originaldata(datasetName)
