@@ -68,13 +68,11 @@ def make_institutionalmemory_mce(
     return mce
 
 def make_browsepath_mce(
-    dataset_urn: str,
     path: List[str],
 ) -> BrowsePathsClass:
     """
     Creates browsepath for dataset. By default, if not specified, Datahub assigns it to /prod/platform/datasetname
     """
-    sys_time = get_sys_time()
     mce = BrowsePathsClass(paths=path)
     return mce
 

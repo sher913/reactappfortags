@@ -47,7 +47,7 @@ class App extends React.Component {
     var tempIDnameholder=[]
     var tempdatasetnameholder=[]
     var elements
-
+    var BrowsePathsholder=[]
 
 
 
@@ -211,6 +211,29 @@ class App extends React.Component {
         let date = new Date (elements[i]["editableSchemaMetadata"]["lastModified"]["time"])
         Object.assign(rowsholder,({ "Date_Modified": date.toLocaleString()}))
       }
+      //for dataset Browsepaths
+      if(elements[i]["BrowsePaths"] !== undefined){
+        let BrowsePathsholder=[]
+   
+        if(elements[i]["BrowsePaths"]["paths"]!==[]){
+          for(let j=0; j< elements[i]["BrowsePaths"]["paths"].length; j++){
+            if(j>0){
+            BrowsePathsholder.push(', ',elements[i]["BrowsePaths"]["paths"][j])
+          }else{
+            BrowsePathsholder.push(elements[i]["BrowsePaths"]["paths"][j])
+          }}
+        
+        }else{
+          BrowsePathsholder=[]
+          BrowsePathsholder.push(' ')
+        }
+        Object.assign(rowsholder,({ "Dataset_BrowsePath": BrowsePathsholder}))
+      }else{
+        BrowsePathsholder=[]
+        BrowsePathsholder.push(' ')
+        Object.assign(rowsholder,({ "Dataset_BrowsePath": BrowsePathsholder}))
+      }
+      
       
       finalrowsholder.push(rowsholder)
       rowsholder = {}
@@ -219,7 +242,7 @@ class App extends React.Component {
   
   }
   //Columns header defintion #important
-    colsholder.push("#", "Platform_Name", "Dataset_Name","Global_Tags", "Field_Name", "Editable_Tags","Original_Tags", "Description", "Date_Modified","From_EditableSchema","Origin")
+    colsholder.push("#", "Platform_Name", "Dataset_Name","Global_Tags", "Field_Name", "Editable_Tags","Original_Tags", "Description", "Date_Modified","From_EditableSchema","Origin", "Dataset_BrowsePath")
    
    
     
@@ -240,7 +263,7 @@ class App extends React.Component {
        
           "lengthMenu": [[10, 20, 100, -1], [10, 20, 100, "All"]],
           columnDefs : [
-            { "type": "html-input", targets: [3,5,6,7],
+            { "type": "html-input", targets: [3,5,6,7,11],
               render: function (rows, type, row) {
             
                 return '<input class="form-control" type="text"  value ="'+ rows + '" style= "width:auto">';
@@ -269,13 +292,17 @@ class App extends React.Component {
       ||this.data()[5] !== ($(example.cell(this.index(), 5).node()).find('input').val())
       ||this.data()[6] !== ($(example.cell(this.index(), 6).node()).find('input').val())
       ||this.data()[7] !== ($(example.cell(this.index(), 7).node()).find('input').val())
+      ||this.data()[11] !== ($(example.cell(this.index(), 11).node()).find('input').val())
       ){
         let date = new Date();
         Object.assign(editedrowsholder,({"ID": parseInt(this.data()[0]),"Origin": this.data()[10], "Platform_Name": this.data()[1], "Dataset_Name": this.data()[2],
         "Global_Tags": ($(example.cell(this.index(), 3).node()).find('input').val()), "Field_Name": this.data()[4], 
         "Editable_Tags": ($(example.cell(this.index(), 5).node()).find('input').val()),
         "Original_Tags": ($(example.cell(this.index(), 6).node()).find('input').val()),
-        "Description": ($(example.cell(this.index(), 7).node()).find('input').val()), "Date_Modified": Date.parse(date.toLocaleString())}))
+        "Description": ($(example.cell(this.index(), 7).node()).find('input').val()), 
+        "Date_Modified": Date.parse(date.toLocaleString()),
+        "Browse_Path": ($(example.cell(this.index(), 11).node()).find('input').val())
+      }))
         finaleditedholder.push(editedrowsholder)
         editedrowsholder={}
         }
@@ -300,7 +327,10 @@ class App extends React.Component {
           "Global_Tags": ($(example.cell(this.index(), 3).node()).find('input').val()), "Field_Name": this.data()[4], 
           "Editable_Tags": ($(example.cell(this.index(), 5).node()).find('input').val()),
           "Original_Tags": ($(example.cell(this.index(), 6).node()).find('input').val()),
-          "Description": ($(example.cell(this.index(), 7).node()).find('input').val()), "Date_Modified": Date.parse(date.toLocaleString())}))
+          "Description": ($(example.cell(this.index(), 7).node()).find('input').val()), 
+          "Date_Modified": Date.parse(date.toLocaleString()),
+          "Browse_Path": ($(example.cell(this.index(), 11).node()).find('input').val())
+        }))
           //If row id of row with same dataset name of edited array is > current selected row, insert row from temp array before, else insert after
           if(finaleditedholder[tempdatasetnameholder.indexOf(this.data()[2])]["ID"] > this.data()[0]){
             insertAt(finaleditedholder, tempdatasetnameholder.indexOf(this.data()[2]), editedrowsholder)
@@ -374,7 +404,7 @@ class App extends React.Component {
       
       <div className="container" >
           
-      <table id="example" class="table table-striped table-bordered table-sm row-border hover mb-5">
+      <table id="example" class="table table-striped table-bordered table-sm row-border hover mb-5"> 
           <thead>
             <tr>
             {this.state.cols.map((result) => {
@@ -402,6 +432,7 @@ class App extends React.Component {
                   <td>{result.Date_Modified}</td>
                   <td>{result.From_EditableSchema}</td>
                   <td>{result.Origin}</td>
+                  <td>{result.Dataset_BrowsePath}</td>
                 </tr>
           )
           })}

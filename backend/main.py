@@ -80,33 +80,8 @@ class EditedItem(BaseModel):
     Editable_Tags: Optional[str]= None
     Original_Tags: Optional[str]= None
     Description: Optional[str]= None
+    Browse_Path: Optional[str]= None
     
-
-class OriginalItem(BaseModel):
-    ID: int
-    Origin: str
-    Platform_Name: str
-    Dataset_Name: str
-    Global_Tags: List[Optional[str]]= None
-    Field_Name: str
-    Editable_Tags: List[Optional[str]]= None
-    Original_Tags: List[Optional[str]]= None
-    Description: Optional[str]= None
-    
-    
-
-    
-
-
-
-
-
-
-
-
-
-
-
 
 @app.get('/getdatasets')
 def main():
@@ -222,10 +197,6 @@ def getdatasetviaurn(dataset):
     
 
 
-
-
-
-
 @app.post('/getresult')
 def getresult(Editeditems: List[EditedItem]):
     
@@ -236,13 +207,15 @@ def getresult(Editeditems: List[EditedItem]):
         if item.Dataset_Name not in datasetEdited:
             datasetEdited.append(item.Dataset_Name)
        
-        #makes the edited tags into a list for a fields
+        #makes the edited tags into a list for a fields and for BrowsePaths
         item.Editable_Tags= item.Editable_Tags.replace(" ", "")
         item.Editable_Tags= item.Editable_Tags.split(",")
         item.Original_Tags= item.Original_Tags.replace(" ", "")
         item.Original_Tags= item.Original_Tags.split(",")
         item.Global_Tags= item.Global_Tags.replace(" ", "")
         item.Global_Tags= item.Global_Tags.split(",")
+        item.Browse_Path=item.Browse_Path.replace(" ", "")
+        item.Browse_Path=item.Browse_Path.split(",")
     # print(datasetEdited)
     # print(Editeditems[0].Editable_Tags)
     # print(Editeditems[0].Original_Tags)
@@ -253,6 +226,7 @@ def getresult(Editeditems: List[EditedItem]):
             if item.Dataset_Name == dataset:
                 editable_field = {}
                 editabletags = []
+                browsePath=item.Browse_Path
                 datasetName = make_dataset_urn(item.Platform_Name, item.Dataset_Name)
                 editable_field["fieldPath"] = item.Field_Name
                 editable_field["field_description"] = item.Description
@@ -355,6 +329,8 @@ def getresult(Editeditems: List[EditedItem]):
         urn=datasetName,
         aspects=[],
         )
+
+        
        
         field_params = []
         for existing_field in originalfields:
@@ -392,6 +368,7 @@ def getresult(Editeditems: List[EditedItem]):
             current_field["type"]= list(existing_field["type"]['type'].keys())[0]
             field_params.append(current_field)
        
+        dataset_snapshot.aspects.append(make_browsepath_mce(path=browsePath))
         
         dataset_snapshot.aspects.append(
             make_schemaglobaltags_mce(

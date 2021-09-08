@@ -36,3 +36,16 @@
     transform: rotate(360deg);
   }
 }
+
+
+
+div.dataTables_wrapper {
+  margin: 0 auto;
+
+  position: absolute;
+ 
+  left: 50%;
+  margin-right: -50%;
+  transform: translate(-50%)
+}
+
