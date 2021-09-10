@@ -43,6 +43,11 @@ origins = [
     "localhost:3000/"
 ]
 
+#Change this endpoint depeding on ur datahub endpoint
+datahub_gms_endpoint ="http://172.104.42.65:8080"
+
+
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -86,7 +91,7 @@ class EditedItem(BaseModel):
 @app.get('/getdatasets')
 def main():
     elements=[]
-    URL ="http://172.104.42.65:8080/entities"
+    URL =datahub_gms_endpoint+"/entities"
     headers = {
     'Content-Type': 'application/json',
     'X-RestLi-Protocol-Version': '2.0.0'
@@ -121,7 +126,7 @@ def main():
     return elements
 
 def getdatasetviaurn(dataset):
-        URL ="http://172.104.42.65:8080/entities/" +dataset
+        URL = datahub_gms_endpoint +"/entities/" +dataset
         headers = {
         'Content-Type': 'application/json',
         'X-RestLi-Protocol-Version': '2.0.0'
@@ -200,7 +205,6 @@ def getdatasetviaurn(dataset):
 @app.post('/getresult')
 def getresult(Editeditems: List[EditedItem]):
     
-    rest_endpoint = "http://172.104.42.65:8080"   
     datasetEdited=[]
     for item in Editeditems:
         #extracts all edited unique datasets to use as for loops
@@ -432,7 +436,7 @@ def getresult(Editeditems: List[EditedItem]):
                
         try:
             rootLogger.error(metadata_record)
-            emitter = DatahubRestEmitter(rest_endpoint)
+            emitter = DatahubRestEmitter(datahub_gms_endpoint)
             emitter.emit_mce(metadata_record)
             emitter._session.close()
         except Exception as e:
@@ -469,7 +473,7 @@ def getresult(Editeditems: List[EditedItem]):
 
 @app.get('/originalresult')
 def originaldata(urn):
-    URL ="http://172.104.42.65:8080/entities/"+urn
+    URL =datahub_gms_endpoint+"/entities/"+urn
     headers = {
     'Content-Type': 'application/json',
     'X-RestLi-Protocol-Version': '2.0.0'

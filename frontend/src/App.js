@@ -388,7 +388,7 @@ class App extends React.Component {
 
   
 // this number is the timeout timer setting, IMPORTANT IF UR RECORDS TAKE LONGER, SET A LONGER TIMEOUT
-}, 250);
+}, 350);
   
   
  }
