@@ -133,6 +133,14 @@ def make_dataset_description_mce(
                     customProperties=customProperties
                 )
 
+def make_TagProperties_mce(
+    name= str
+) ->TagPropertiesClass:
+
+    return TagPropertiesClass(
+        name = name
+    )
+
 def make_schemaglobaltags_mce(
      tags: List[str]= None,
 )  -> GlobalTagsClass:

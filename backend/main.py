@@ -22,6 +22,7 @@ import socket
 socket.getaddrinfo('localhost', 8080)
 
 from datahub.metadata.com.linkedin.pegasus2avro.metadata.snapshot import DatasetSnapshot
+from datahub.metadata.com.linkedin.pegasus2avro.metadata.snapshot import TagSnapshot
 from datahub.metadata.com.linkedin.pegasus2avro.mxe import MetadataChangeEvent
 from ingestion.ingest_api.helper.mce_convenience import (generate_json_output,
                                                get_sys_time,
@@ -31,7 +32,7 @@ from ingestion.ingest_api.helper.mce_convenience import (generate_json_output,
                                                make_delete_mce,
                                                make_ownership_mce,
                                                make_platform, make_recover_mce,
-                                               make_schema_mce, make_user_urn,make_tag_urn, make_schemaglobaltags_mce, make_editableschema_mce)
+                                               make_schema_mce, make_user_urn,make_tag_urn, make_schemaglobaltags_mce, make_editableschema_mce,make_TagProperties_mce)
 from ingestion.ingest_api.helper.models import (FieldParam, create_dataset_params,
                                       dataset_status_params, determine_type)
 from datahub.emitter.rest_emitter import DatahubRestEmitter
@@ -237,6 +238,7 @@ def getresult(Editeditems: List[EditedItem]):
                 for editabletag in item.Editable_Tags:
                     if editabletag != '':
                         editabletags.append({"tag": make_tag_urn(editabletag)})
+                        istagindataset(editabletag)
 
                 
                 editable_field["tags"]=editabletags
@@ -363,10 +365,12 @@ def getresult(Editeditems: List[EditedItem]):
                     for globaltag in item.Global_Tags:
                         if globaltag != '':
                             globaltags.append({"tag": make_tag_urn(globaltag)})
+                            istagindataset(globaltag)
 
                     for tag in item.Original_Tags:
                         if tag != '':
                             schemametadatatags.append({"tag": make_tag_urn(tag)})
+                            istagindataset(tag)
             if schemametadatatags != []:
                 current_field["tags"]=schemametadatatags
             current_field["type"]= list(existing_field["type"]['type'].keys())[0]
@@ -500,7 +504,65 @@ def originaldata(urn):
             originalplatformname= originalgmsdata["value"]["com.linkedin.metadata.snapshot.DatasetSnapshot"]["aspects"][s]["com.linkedin.metadata.key.DatasetKey"]["platform"]
 
     originalfields = originalschemadata["fields"]
-   
+
+def istagindataset(tag):
+    URL =datahub_gms_endpoint+"/entities"
+    headers = {
+    'Content-Type': 'application/json',
+    'X-RestLi-Protocol-Version': '2.0.0'
+            
+    }
+    parameters = {'action':'search'}
+
+    data = '{ "input": "'+tag+'", "entity": "tag", "start": 0, "count": 10}'
+  
+    payload = requests.request("POST", URL, headers=headers, params = parameters, data=data)
+    payload=payload.json()
+
+    if(not payload["value"]['numEntities'] >= 1):
+        tag_snapshot = TagSnapshot(
+        urn=make_tag_urn(tag),
+        aspects=[],
+        )
+
+        tag_snapshot.aspects.append(
+            make_TagProperties_mce(
+                name=tag
+            )
+        )
+        tag_metadata_record = MetadataChangeEvent(proposedSnapshot=tag_snapshot)
+        # print(metadata_record)
+        for mce in tag_metadata_record.proposedSnapshot.aspects:
+            if not mce.validate():
+                rootLogger.error(
+                    f"{mce.__class__} is not defined properly"
+                )
+                return Response(
+                    f"Dataset was not created because dataset definition has encountered an error for {mce.__class__}",
+                    status_code=400,
+                )  
+        try:
+            rootLogger.error(tag_metadata_record)
+            emitter = DatahubRestEmitter(datahub_gms_endpoint)
+            emitter.emit_mce(tag_metadata_record)
+            emitter._session.close()
+        except Exception as e:
+            rootLogger.debug(e)
+            return Response(
+            "Dataset was not created because upstream has encountered an error {}".format(e),
+            status_code=500,
+        )
+            
+        rootLogger.info(
+            "Make_tag_request_completed_for {} requested_by {}".format(
+                tag, "datahub"
+        )
+        )
+    
+
+        
+    
+  
     
    
     
