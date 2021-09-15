@@ -142,9 +142,6 @@ def getdatasetviaurn(dataset):
         
         
         for s in range (len(datasetsnapshotAspects)):
-
-           
-            
             #For DatasetKey
             if "com.linkedin.metadata.key.DatasetKey" in datasetsnapshotAspects[s]:
                 newdatasetsnapshot["DatasetKey"]=datasetsnapshotAspects[s]["com.linkedin.metadata.key.DatasetKey"]
@@ -184,10 +181,6 @@ def getdatasetviaurn(dataset):
             #For DatasetProperties
             if "com.linkedin.dataset.DatasetProperties" in datasetsnapshotAspects[s]:
                 newdatasetsnapshot["DatasetProperties"]=datasetsnapshotAspects[s]["com.linkedin.dataset.DatasetProperties"]
-
-           
-
-            
         
         return newdatasetsnapshot
 
@@ -566,11 +559,6 @@ def istagindataset(tag):
     
    
     
-    
-    
-
-    
-
 
 if __name__ == "__main__":
     uvicorn.run(app, host="localhost", port=8000)

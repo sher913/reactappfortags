@@ -9,6 +9,12 @@ import "datatables.net-dt/css/jquery.dataTables.min.css";
 import $ from 'jquery'; 
 //For API Requests
 import axios from 'axios';
+//For tab panes
+import Tabs from 'react-bootstrap/Tabs'
+import Tab from 'react-bootstrap/Tab'
+import TabContainer from 'react-bootstrap/TabContainer'
+import TabContent from 'react-bootstrap/TabContent'
+import TabPane from 'react-bootstrap/TabPane'
 class App extends React.Component {
   
   
@@ -280,6 +286,30 @@ class App extends React.Component {
         }
   
       )
+      var example2 =$('#example2').DataTable(
+        {order: [[ 0, "asc" ]],
+          responsive: true,
+       
+       
+          "lengthMenu": [[10, 20, 100, -1], [10, 20, 100, "All"]],
+          columnDefs : [
+            { "type": "html-input", targets: [3,5,6,7,11],
+              render: function (rows, type, row) {
+            
+                return '<input class="form-control" type="text"  value ="'+ rows + '" style= "width:auto">';
+              
+              }
+              
+            }, {
+              "targets": [0,9,10],
+              "visible": false,
+              "searchable": false
+          }
+          ]
+          
+        }
+  
+      )
 
  //Iterate thru all row and compare original data vs edited, if edited, add to array (finaleditedholder) to be sent to endpoint
   $('#test').click(function () {
@@ -388,7 +418,7 @@ class App extends React.Component {
 
   
 // this number is the timeout timer setting, IMPORTANT IF UR RECORDS TAKE LONGER, SET A LONGER TIMEOUT
-}, 350);
+}, 500);
   
   
  }
@@ -401,47 +431,97 @@ class App extends React.Component {
       <div class="jumbotron text-center">
           <h3>Datahub Tagging UI</h3>
       </div>
-      
-      <div className="container" >
+  <div className="container" >
+  <Tabs fill defaultActiveKey="Datasets"  id="uncontrolled-tab-example" className="mb-3">
+    <Tab eventKey="Datasets" title="Datasets">
+    
+    
           
-      <table id="example" class="table table-striped table-bordered table-sm row-border hover mb-5"> 
-          <thead>
-            <tr>
-            {this.state.cols.map((result) => {
-            return (
-              <th>{result}</th>
-          )
-          })}
-              
-              
-            </tr>
-          </thead>
-          <tbody>
-          {this.state.rows.map((result) => {
-            return (
-              <tr class="table-success">
-     
-                  <td>{result.ID}</td>
-                  <td>{result.Platform_Name}</td>
-                  <td>{result.Dataset_Name}</td>
-                  <td>{result.Global_Tags}</td>
-                  <td>{result.Field_Name}</td>
-                  <td>{result.Editable_Tags}</td>
-                  <td>{result.Original_Tags}</td>
-                  <td>{result.Description}</td>
-                  <td>{result.Date_Modified}</td>
-                  <td>{result.From_EditableSchema}</td>
-                  <td>{result.Origin}</td>
-                  <td>{result.Dataset_BrowsePath}</td>
-                </tr>
-          )
-          })}
+    <table id="example2" class="table table-striped table-bordered table-sm row-border hover mb-5"> 
+        <thead>
+          <tr>
+          {this.state.cols.map((result) => {
+          return (
+            <th>{result}</th>
+        )
+        })}
             
+            
+          </tr>
+        </thead>
+        <tbody>
+        {this.state.rows.map((result) => {
+          return (
+            <tr class="table-success">
+   
+                <td>{result.ID}</td>
+                <td>{result.Platform_Name}</td>
+                <td>{result.Dataset_Name}</td>
+                <td>{result.Global_Tags}</td>
+                <td>{result.Field_Name}</td>
+                <td>{result.Editable_Tags}</td>
+                <td>{result.Original_Tags}</td>
+                <td>{result.Description}</td>
+                <td>{result.Date_Modified}</td>
+                <td>{result.From_EditableSchema}</td>
+                <td>{result.Origin}</td>
+                <td>{result.Dataset_BrowsePath}</td>
+              </tr>
+        )
+        })}
           
-          </tbody>
-        </table>
-         
-        </div>
+        
+        </tbody>
+      </table>
+    
+    </Tab>
+    <Tab eventKey="Fields" title="Fields">
+  
+ 
+          
+    <table id="example" class="table table-striped table-bordered table-sm row-border hover mb-5"> 
+        <thead>
+          <tr>
+          {this.state.cols.map((result) => {
+          return (
+            <th>{result}</th>
+        )
+        })}
+            
+            
+          </tr>
+        </thead>
+        <tbody>
+        {this.state.rows.map((result) => {
+          return (
+            <tr class="table-success">
+   
+                <td>{result.ID}</td>
+                <td>{result.Platform_Name}</td>
+                <td>{result.Dataset_Name}</td>
+                <td>{result.Global_Tags}</td>
+                <td>{result.Field_Name}</td>
+                <td>{result.Editable_Tags}</td>
+                <td>{result.Original_Tags}</td>
+                <td>{result.Description}</td>
+                <td>{result.Date_Modified}</td>
+                <td>{result.From_EditableSchema}</td>
+                <td>{result.Origin}</td>
+                <td>{result.Dataset_BrowsePath}</td>
+              </tr>
+        )
+        })}
+          
+        
+        </tbody>
+      </table>
+       
+    
+    </Tab>
+   
+    
+  </Tabs>
+  </div>
       </div>
   );
 }
