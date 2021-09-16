@@ -134,7 +134,7 @@ def getdatasetviaurn(dataset):
         }
         response = requests.request("GET", URL, headers=headers)
         newdatasetsnapshot=[]
-        newdatasetsnapshot=dict.fromkeys(["DatasetKey","InstitutionalMemory","Ownership","UpstreamLineage","BrowsePaths","GlobalTags","editableSchemaMetadata","schemaMetadata", "DatasetProperties"])
+        newdatasetsnapshot=dict.fromkeys(["DatasetKey","InstitutionalMemory","Ownership","UpstreamLineage","BrowsePaths","GlobalTags","editableSchemaMetadata","schemaMetadata", "DatasetProperties", "editableDatasetProperties"])
         datasetsnapshot =response.json()
         datasetsnapshot=datasetsnapshot['value']['com.linkedin.metadata.snapshot.DatasetSnapshot']
         # datasetsnapshot['aspects'].pop(0)
@@ -181,6 +181,10 @@ def getdatasetviaurn(dataset):
             #For DatasetProperties
             if "com.linkedin.dataset.DatasetProperties" in datasetsnapshotAspects[s]:
                 newdatasetsnapshot["DatasetProperties"]=datasetsnapshotAspects[s]["com.linkedin.dataset.DatasetProperties"]
+
+            #For EditableDatasetProperties
+            if "com.linkedin.dataset.EditableDatasetProperties" in datasetsnapshotAspects[s]:
+                newdatasetsnapshot["editableDatasetProperties"]=datasetsnapshotAspects[s]["com.linkedin.dataset.EditableDatasetProperties"]
         
         return newdatasetsnapshot
 
