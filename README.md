@@ -6,7 +6,7 @@ For now i am using a datahub's restendpoint on a VM, if you do not have access t
 
 Features:
 Able to use this react UI to update information on datasets within Datahub through GMS
-![Image of data table](https://user-images.githubusercontent.com/60865228/131979630-40cbc3b5-2f1f-4e86-ac6f-6537acddcfaf.png)
+![Image of data table](https://user-images.githubusercontent.com/60865228/133769051-49a21991-77ed-4d6e-a2c8-81b44fc7c775.gif)
 
 This is Datahub's UI running on localhost
 ![Image of datahub UI edited](https://user-images.githubusercontent.com/60865228/131979923-ebe9efec-f11d-4da3-870b-c9a6294de6a0.png)
