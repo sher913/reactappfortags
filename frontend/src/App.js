@@ -6,7 +6,7 @@ import 'jquery/dist/jquery.min.js';
 //Datatable Modules
 import "datatables.net-dt/js/dataTables.dataTables";
 import "datatables.net-dt/css/jquery.dataTables.min.css";
-import $ from 'jquery'; 
+import $, { isEmptyObject } from 'jquery'; 
 //For API Requests
 import axios from 'axios';
 //For tab panes
@@ -54,8 +54,6 @@ class App extends React.Component {
 
     var finaleditedholder=[]
 
-    var tempIDnameholder=[]
-    var tempdatasetnameholder=[]
     var elements
     var BrowsePathsholder=[]
 
@@ -277,7 +275,7 @@ class App extends React.Component {
   
   }
   //Columns header defintion #important
-    fieldcolsholder.push("#", "Platform_Name", "Dataset_Name","Global_Tags", "Field_Name", "Editable_Tags","Original_Tags", "Description", "Date_Modified","Origin", "Dataset_BrowsePath")
+    fieldcolsholder.push("#", "Platform_Name", "Dataset_Name", "Field_Name", "Editable_Tags","Original_Tags", "Description", "Date_Modified")
     datasetcolsholder.push("Platform_Name", "Dataset_Name", "Dataset_BrowsePath", "Global_Tags","Dataset_Description", "Date_Modified","Origin")
    
     const datasetrowsholder= []
@@ -309,7 +307,7 @@ class App extends React.Component {
        
           "lengthMenu": [[10, 20, 100, -1], [10, 20, 100, "All"]],
           columnDefs : [
-            { "type": "html-input", targets: [3,5,6,7,10],
+            { "type": "html-input", targets: [4,5,6],
               render: function (rows, type, row) {
             
                 return '<input class="form-control" type="text"  value ="'+ rows + '" style= "width:auto">';
@@ -317,7 +315,7 @@ class App extends React.Component {
               }
               
             }, {
-              "targets": [0,9],
+              "targets": [0],
               "visible": false,
               "searchable": false
           }
@@ -354,70 +352,81 @@ class App extends React.Component {
  //Iterate thru all row and compare original data vs edited, if edited, add to array (finaleditedholder) to be sent to endpoint
   $('#test').click(function () {
     let editedrowsholder = {};
-    finaleditedholder=[];
-    example.rows().every(function(){
-    
-    
-      if(this.data()[3] !== ($(example.cell(this.index(), 3).node()).find('input').val()) 
+    let tempIDnameholder=[];
+    let tempdatasetnameholder=[];
+    let finaleditedholder=[];
+
+    function anyChangesfromFields() {example.rows().every(function(){
+      if(this.data()[4] !== ($(example.cell(this.index(), 4).node()).find('input').val()) 
       ||this.data()[5] !== ($(example.cell(this.index(), 5).node()).find('input').val())
       ||this.data()[6] !== ($(example.cell(this.index(), 6).node()).find('input').val())
-      ||this.data()[7] !== ($(example.cell(this.index(), 7).node()).find('input').val())
-      ||this.data()[10] !== ($(example.cell(this.index(), 10).node()).find('input').val())
       ){
-        let date = new Date();
-        Object.assign(editedrowsholder,({"ID": parseInt(this.data()[0]),"Origin": this.data()[9], "Platform_Name": this.data()[1], "Dataset_Name": this.data()[2],
-        "Global_Tags": ($(example.cell(this.index(), 3).node()).find('input').val()), "Field_Name": this.data()[4], 
-        "Editable_Tags": ($(example.cell(this.index(), 5).node()).find('input').val()),
-        "Original_Tags": ($(example.cell(this.index(), 6).node()).find('input').val()),
-        "Description": ($(example.cell(this.index(), 7).node()).find('input').val()), 
-        "Date_Modified": Date.parse(date.toLocaleString()),
-        "Browse_Path": ($(example.cell(this.index(), 10).node()).find('input').val())
-      }))
-        finaleditedholder.push(editedrowsholder)
-        editedrowsholder={}
+        //Extracts the edited dataset names from array which contain edits and store in temp arrays
+        tempdatasetnameholder.push(this.data()[2])
+      }})};
+    function anyChangesfromDatasets() {example2.rows().every(function(){
+      if(this.data()[2] !== ($(example2.cell(this.index(), 2).node()).find('input').val())
+      ||this.data()[3] !== ($(example2.cell(this.index(), 3).node()).find('input').val())
+      ||this.data()[4] !== ($(example2.cell(this.index(), 4).node()).find('input').val())
+      ){
+        if(!tempdatasetnameholder.includes(this.data()[1])){
+        tempdatasetnameholder.push(this.data()[1])
         }
-  
-  
-      });
-      console.log("First iteration:", finaleditedholder)
-     //Extracts the unique ID and dataset names from array which contain edits and store in temp arrays
-      for(let j=0; j< finaleditedholder.length; j++){
-        tempIDnameholder.push(finaleditedholder[j]["ID"])
-        tempdatasetnameholder.push(finaleditedholder[j]["Dataset_Name"])
       }
-      
-      editedrowsholder= {}
+    })}
+
       //iterate thru every row in table, check if row cell values(dataset name and ID) exist in temp arrays or not
-      //If condition (dataset exist, field name does not exist, came from editable schema ===true) is fuifilled, 
-      //Takes the row and insert above the row containing the same dataset name in finaleditedholder
-      example.rows().every(function(){
+      //If condition (dataset exist, Unique ID does not exist) is fuifilled, 
+      //Takes the row and insert in finaleditedholder
+      function addAllFieldsfromDataset() {example.rows().every(function(){
         if((tempdatasetnameholder.includes(this.data()[2]) && !tempIDnameholder.includes(parseInt(this.data()[0])))===true){
           let date = new Date();
-          Object.assign(editedrowsholder,({"ID": parseInt(this.data()[0]), "Origin": this.data()[9], "Platform_Name": this.data()[1], "Dataset_Name": this.data()[2],
-          "Global_Tags": ($(example.cell(this.index(), 3).node()).find('input').val()), "Field_Name": this.data()[4], 
-          "Editable_Tags": ($(example.cell(this.index(), 5).node()).find('input').val()),
-          "Original_Tags": ($(example.cell(this.index(), 6).node()).find('input').val()),
-          "Description": ($(example.cell(this.index(), 7).node()).find('input').val()), 
+          Object.assign(editedrowsholder,({"ID": parseInt(this.data()[0]), "Platform_Name": this.data()[1], "Dataset_Name": this.data()[2],
+          "Field_Name": this.data()[3], 
+          "Editable_Tags": ($(example.cell(this.index(), 4).node()).find('input').val()),
+          "Original_Tags": ($(example.cell(this.index(), 5).node()).find('input').val()),
+          "Description": ($(example.cell(this.index(), 6).node()).find('input').val()), 
           "Date_Modified": Date.parse(date.toLocaleString()),
-          "Browse_Path": ($(example.cell(this.index(), 10).node()).find('input').val())
+       
         }))
           //If row id of row with same dataset name of edited array is > current selected row, insert row from temp array before, else insert after
-          if(finaleditedholder[tempdatasetnameholder.indexOf(this.data()[2])]["ID"] > this.data()[0]){
-            insertAt(finaleditedholder, tempdatasetnameholder.indexOf(this.data()[2]), editedrowsholder)
-          }else{
-            insertAt(finaleditedholder, tempdatasetnameholder.indexOf(this.data()[2]) +1, editedrowsholder)
-          }
+          finaleditedholder.push(editedrowsholder)
           
           editedrowsholder={}
           }
-    });
-
-      tempIDnameholder=[]
-      tempdatasetnameholder=[]
-      console.log("Second iteration:", finaleditedholder) 
+    })};
+      //Adds the dataset level properties to each field objects
+      function addDatasetProperties() {example2.rows().every(function(){
+        for(let j=0; j< finaleditedholder.length; j++){
+          if((this.data()[0])=== finaleditedholder[j].Platform_Name && (this.data()[1])=== finaleditedholder[j].Dataset_Name){
+            Object.assign(finaleditedholder[j],({
+              "Browse_Path": ($(example2.cell(this.index(), 2).node()).find('input').val()),
+              "Global_Tags": ($(example2.cell(this.index(), 3).node()).find('input').val()),
+              // finaleditedholder[j]["Dataset_Description"] = ($(example2.cell(this.index(), 4).node()).find('input').val()),
+              "Origin": this.data()[6]
       
+            }))
+            
+          
+          }
+         
+        }
+      }
+      
+      )};
 
+    //Checks for changes in fields table, add dataset to tempdatasetArray
+    anyChangesfromFields();
+    //Checks for changes in dataset table, add dataset to tempdatasetArray if not in Array
+    anyChangesfromDatasets();
+    // Assigns all fields with changes or not to an object base on Tempdatasetholder and TempIdholder
+    addAllFieldsfromDataset();
+    //Adds dataset level properties to the fields assigned to the object
+    addDatasetProperties();
+    console.log("Payload to send to FASTAPI: ",finaleditedholder)
     
+
+ 
 
     
     axios.post('http://localhost:8000/getresult',
@@ -458,7 +467,7 @@ class App extends React.Component {
 
   
 // this number is the timeout timer setting, IMPORTANT IF UR RECORDS TAKE LONGER, SET A LONGER TIMEOUT
-}, 500);
+}, 550);
   
   
  }
@@ -535,14 +544,11 @@ class App extends React.Component {
                 <td>{result.ID}</td>
                 <td>{result.Platform_Name}</td>
                 <td>{result.Dataset_Name}</td>
-                <td>{result.Global_Tags}</td>
                 <td>{result.Field_Name}</td>
                 <td>{result.Editable_Tags}</td>
                 <td>{result.Original_Tags}</td>
                 <td>{result.Description}</td>
                 <td>{result.Date_Modified}</td>
-                <td>{result.Origin}</td>
-                <td>{result.Dataset_BrowsePath}</td>
               </tr>
         )
         })}
