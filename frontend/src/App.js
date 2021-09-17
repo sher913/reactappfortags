@@ -349,7 +349,7 @@ class App extends React.Component {
   
       )
 
- //Iterate thru all row and compare original data vs edited, if edited, add to array (finaleditedholder) to be sent to endpoint
+ //Iterate thru field and dataset table, add edited dataset to a tempArray then use it to add fields' properties and dataset properties to an object and send to Fast API
   $('#test').click(function () {
     let editedrowsholder = {};
     let tempIDnameholder=[];
