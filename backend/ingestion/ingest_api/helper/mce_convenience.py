@@ -133,6 +133,20 @@ def make_dataset_description_mce(
                     customProperties=customProperties
                 )
 
+def make_dataset_editable_description_mce(
+    requestor: str,
+    description: str,
+)-> EditableDatasetPropertiesClass:
+    sys_time = get_sys_time()
+
+    return EditableDatasetPropertiesClass(
+        description=description,
+        created=AuditStampClass(time=sys_time, actor=requestor),
+        lastModified=AuditStampClass(time=sys_time, actor=requestor)
+
+    )
+
+
 def make_TagProperties_mce(
     name= str
 ) ->TagPropertiesClass:

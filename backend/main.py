@@ -32,7 +32,8 @@ from ingestion.ingest_api.helper.mce_convenience import (generate_json_output,
                                                make_delete_mce,
                                                make_ownership_mce,
                                                make_platform, make_recover_mce,
-                                               make_schema_mce, make_user_urn,make_tag_urn, make_schemaglobaltags_mce, make_editableschema_mce,make_TagProperties_mce)
+                                               make_schema_mce, make_user_urn,make_tag_urn, make_schemaglobaltags_mce, 
+                                               make_editableschema_mce,make_TagProperties_mce,make_dataset_editable_description_mce)
 from ingestion.ingest_api.helper.models import (FieldParam, create_dataset_params,
                                       dataset_status_params, determine_type)
 from datahub.emitter.rest_emitter import DatahubRestEmitter
@@ -87,6 +88,7 @@ class EditedItem(BaseModel):
     Original_Tags: Optional[str]= None
     Description: Optional[str]= None
     Browse_Path: Optional[str]= None
+    Dataset_Description: Optional[str]= None
     
 
 @app.get('/getdatasets')
@@ -229,6 +231,7 @@ def getresult(Editeditems: List[EditedItem]):
                 editable_field = {}
                 editabletags = []
                 browsePath=item.Browse_Path
+                dataset_Description =item.Dataset_Description
                 datasetName = make_dataset_urn(item.Platform_Name, item.Dataset_Name)
                 editable_field["fieldPath"] = item.Field_Name
                 editable_field["field_description"] = item.Description
@@ -244,6 +247,7 @@ def getresult(Editeditems: List[EditedItem]):
                 #Clearing the fields is needed after appending, idk why the above for loop not clearing the fields
                 editable_field={}
                 editabletags = []
+
             
                
         originaldata(datasetName)
@@ -373,7 +377,13 @@ def getresult(Editeditems: List[EditedItem]):
             current_field["type"]= list(existing_field["type"]['type'].keys())[0]
             field_params.append(current_field)
        
-        dataset_snapshot.aspects.append(make_browsepath_mce(path=browsePath))
+        dataset_snapshot.aspects.append(
+            make_browsepath_mce(
+                path=browsePath
+                )
+                )
+
+
         
         dataset_snapshot.aspects.append(
             make_schemaglobaltags_mce(
@@ -405,6 +415,12 @@ def getresult(Editeditems: List[EditedItem]):
         )
         )
 
+        dataset_snapshot.aspects.append(
+            make_dataset_editable_description_mce(
+                 requestor=requestor,
+                 description= dataset_Description
+            )
+        )
 
 
         

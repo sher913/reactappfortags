@@ -298,9 +298,9 @@ class App extends React.Component {
     this.setState({datasetrows: datasetrowsholder,rows: finalrowsholder, fieldcols: fieldcolsholder, datasetcols: datasetcolsholder});
        }); 
    
-    //init Datatable, #example is the table element id
+    //init Datatable, #fieldTable #datasetTable are the table element ids
     setTimeout(()=>{                        
-      var example =$('#example').DataTable(
+      var fieldTable =$('#fieldTable').DataTable(
         {order: [[ 0, "asc" ]],
           responsive: true,
        
@@ -324,7 +324,7 @@ class App extends React.Component {
         }
   
       )
-      var example2 =$('#example2').DataTable(
+      var datasetTable =$('#datasetTable').DataTable(
         {order: [[ 0, "asc" ]],
           responsive: true,
        
@@ -356,18 +356,18 @@ class App extends React.Component {
     let tempdatasetnameholder=[];
     let finaleditedholder=[];
 
-    function anyChangesfromFields() {example.rows().every(function(){
-      if(this.data()[4] !== ($(example.cell(this.index(), 4).node()).find('input').val()) 
-      ||this.data()[5] !== ($(example.cell(this.index(), 5).node()).find('input').val())
-      ||this.data()[6] !== ($(example.cell(this.index(), 6).node()).find('input').val())
+    function anyChangesfromFields() {fieldTable.rows().every(function(){
+      if(this.data()[4] !== ($(fieldTable.cell(this.index(), 4).node()).find('input').val()) 
+      ||this.data()[5] !== ($(fieldTable.cell(this.index(), 5).node()).find('input').val())
+      ||this.data()[6] !== ($(fieldTable.cell(this.index(), 6).node()).find('input').val())
       ){
         //Extracts the edited dataset names from array which contain edits and store in temp arrays
         tempdatasetnameholder.push(this.data()[2])
       }})};
-    function anyChangesfromDatasets() {example2.rows().every(function(){
-      if(this.data()[2] !== ($(example2.cell(this.index(), 2).node()).find('input').val())
-      ||this.data()[3] !== ($(example2.cell(this.index(), 3).node()).find('input').val())
-      ||this.data()[4] !== ($(example2.cell(this.index(), 4).node()).find('input').val())
+    function anyChangesfromDatasets() {datasetTable.rows().every(function(){
+      if(this.data()[2] !== ($(datasetTable.cell(this.index(), 2).node()).find('input').val())
+      ||this.data()[3] !== ($(datasetTable.cell(this.index(), 3).node()).find('input').val())
+      ||this.data()[4] !== ($(datasetTable.cell(this.index(), 4).node()).find('input').val())
       ){
         if(!tempdatasetnameholder.includes(this.data()[1])){
         tempdatasetnameholder.push(this.data()[1])
@@ -378,14 +378,14 @@ class App extends React.Component {
       //iterate thru every row in table, check if row cell values(dataset name and ID) exist in temp arrays or not
       //If condition (dataset exist, Unique ID does not exist) is fuifilled, 
       //Takes the row and insert in finaleditedholder
-      function addAllFieldsfromDataset() {example.rows().every(function(){
+      function addAllFieldsfromDataset() {fieldTable.rows().every(function(){
         if((tempdatasetnameholder.includes(this.data()[2]) && !tempIDnameholder.includes(parseInt(this.data()[0])))===true){
           let date = new Date();
           Object.assign(editedrowsholder,({"ID": parseInt(this.data()[0]), "Platform_Name": this.data()[1], "Dataset_Name": this.data()[2],
           "Field_Name": this.data()[3], 
-          "Editable_Tags": ($(example.cell(this.index(), 4).node()).find('input').val()),
-          "Original_Tags": ($(example.cell(this.index(), 5).node()).find('input').val()),
-          "Description": ($(example.cell(this.index(), 6).node()).find('input').val()), 
+          "Editable_Tags": ($(fieldTable.cell(this.index(), 4).node()).find('input').val()),
+          "Original_Tags": ($(fieldTable.cell(this.index(), 5).node()).find('input').val()),
+          "Description": ($(fieldTable.cell(this.index(), 6).node()).find('input').val()), 
           "Date_Modified": Date.parse(date.toLocaleString()),
        
         }))
@@ -396,13 +396,13 @@ class App extends React.Component {
           }
     })};
       //Adds the dataset level properties to each field objects
-      function addDatasetProperties() {example2.rows().every(function(){
+      function addDatasetProperties() {datasetTable.rows().every(function(){
         for(let j=0; j< finaleditedholder.length; j++){
           if((this.data()[0])=== finaleditedholder[j].Platform_Name && (this.data()[1])=== finaleditedholder[j].Dataset_Name){
             Object.assign(finaleditedholder[j],({
-              "Browse_Path": ($(example2.cell(this.index(), 2).node()).find('input').val()),
-              "Global_Tags": ($(example2.cell(this.index(), 3).node()).find('input').val()),
-              // finaleditedholder[j]["Dataset_Description"] = ($(example2.cell(this.index(), 4).node()).find('input').val()),
+              "Browse_Path": ($(datasetTable.cell(this.index(), 2).node()).find('input').val()),
+              "Global_Tags": ($(datasetTable.cell(this.index(), 3).node()).find('input').val()),
+              "Dataset_Description": ($(datasetTable.cell(this.index(), 4).node()).find('input').val()),
               "Origin": this.data()[6]
       
             }))
@@ -486,7 +486,7 @@ class App extends React.Component {
     
     
           
-    <table id="example2" class="table table-striped table-bordered table-sm row-border hover mb-5"> 
+    <table id="datasetTable" class="table table-striped table-bordered table-sm row-border hover mb-5"> 
         <thead>
           <tr>
           {this.state.datasetcols.map((result) => {
@@ -524,7 +524,7 @@ class App extends React.Component {
   
  
           
-    <table id="example" class="table table-striped table-bordered table-sm row-border hover mb-5"> 
+    <table id="fieldTable" class="table table-striped table-bordered table-sm row-border hover mb-5"> 
         <thead>
           <tr>
           {this.state.fieldcols.map((result) => {
