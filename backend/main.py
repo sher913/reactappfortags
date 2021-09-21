@@ -362,21 +362,61 @@ def getresult(Editeditems: List[EditedItem]):
                 
             for item in Editeditems:
                 if item.Field_Name == existing_field["fieldPath"] and item.Dataset_Name == dataset:
-
+                    #globaltag is not actually under schemadata aspect, it has its own aspect
                     for globaltag in item.Global_Tags:
                         if globaltag != '':
                             globaltags.append({"tag": make_tag_urn(globaltag)})
                             istagindataset(globaltag)
-
+                    #for schemametadata aspects
                     for tag in item.Original_Tags:
                         if tag != '':
                             schemametadatatags.append({"tag": make_tag_urn(tag)})
                             istagindataset(tag)
             if schemametadatatags != []:
                 current_field["tags"]=schemametadatatags
+            #Boonlean to check if tags for schemametadata has been edited, tags are the only varaiable editable for schemametadata
+            isSchemaMetadataChanged = True
+            if 'globalTags' in existing_field.keys():
+                if 'tags' in current_field.keys():
+                    if existing_field['globalTags']['tags']==current_field['tags']:
+                        isSchemaMetadataChanged = False
+            elif 'tags' not in current_field.keys():
+                isSchemaMetadataChanged = False
+                
+            print("exsiting:", existing_field)
+            print(current_field)    
             current_field["type"]= list(existing_field["type"]['type'].keys())[0]
             field_params.append(current_field)
-       
+        
+        OriDatasetAspects = getdatasetviaurn(datasetName)
+    
+        b=OriDatasetAspects["schemaMetadata"]["fields"]
+
+        
+        if isSchemaMetadataChanged == True:
+            dataset_snapshot.aspects.append(
+                make_schema_mce(
+                dataset_urn=datasetName,
+                platformName=platformName,
+
+                platformSchema = platformSchema,
+                documentSchema = documentSchema,
+                schemaName=schemaName,
+                tableSchema= tableSchema,
+                rawSchema=rawSchema,
+                schema=schema,
+                keySchema = keySchema,
+                valueSchema=valueSchema,
+
+                creatoractor=creatoractor,
+                lastmodifiedactor=lastmodifiedactor,
+                fields=field_params,
+                system_time=timeforschemametadata
+            )
+            )
+        
+        
+        
         dataset_snapshot.aspects.append(
             make_browsepath_mce(
                 path=browsePath
@@ -394,34 +434,18 @@ def getresult(Editeditems: List[EditedItem]):
         
         
         
-        dataset_snapshot.aspects.append(
-            make_schema_mce(
-            dataset_urn=datasetName,
-            platformName=platformName,
-
-            platformSchema = platformSchema,
-            documentSchema = documentSchema,
-            schemaName=schemaName,
-            tableSchema= tableSchema,
-            rawSchema=rawSchema,
-            schema=schema,
-            keySchema = keySchema,
-            valueSchema=valueSchema,
-
-            creatoractor=creatoractor,
-            lastmodifiedactor=lastmodifiedactor,
-            fields=field_params,
-            system_time=timeforschemametadata
-        )
-        )
-
-        dataset_snapshot.aspects.append(
-            make_dataset_editable_description_mce(
-                 requestor=requestor,
-                 description= dataset_Description
-            )
-        )
-
+        
+        
+      
+        if OriDatasetAspects['editableDatasetProperties'] is not None:
+            if OriDatasetAspects['editableDatasetProperties']['description'] is not None:
+                if not OriDatasetAspects['editableDatasetProperties']['description']==dataset_Description:
+                    dataset_snapshot.aspects.append(
+                        make_dataset_editable_description_mce(
+                            requestor=requestor,
+                            description= dataset_Description
+                        )
+                    )
 
         
         dataset_snapshot.aspects.append(
@@ -432,11 +456,13 @@ def getresult(Editeditems: List[EditedItem]):
 
         )
         )
+       
 
         
 
         
         metadata_record = MetadataChangeEvent(proposedSnapshot=dataset_snapshot)
+    
         # print(metadata_record)
         for mce in metadata_record.proposedSnapshot.aspects:
             if not mce.validate():

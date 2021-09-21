@@ -139,12 +139,13 @@ def make_dataset_editable_description_mce(
 )-> EditableDatasetPropertiesClass:
     sys_time = get_sys_time()
 
-    return EditableDatasetPropertiesClass(
+    mce= EditableDatasetPropertiesClass(
         description=description,
         created=AuditStampClass(time=sys_time, actor=requestor),
         lastModified=AuditStampClass(time=sys_time, actor=requestor)
 
     )
+    return mce
 
 
 def make_TagProperties_mce(
@@ -268,7 +269,7 @@ def make_schema_mce(
         version=0,
         #Modfied to record both last modified actor and creator
         created=AuditStampClass(time=sys_time, actor=creatoractor),
-        lastModified=AuditStampClass(time=sys_time, actor=lastmodifiedactor),
+        lastModified=AuditStampClass(time=get_sys_time(), actor=lastmodifiedactor),
         hash="",
         platformSchema=platformSchema,
         fields=[
