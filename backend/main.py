@@ -337,8 +337,9 @@ def getresult(Editeditems: List[EditedItem]):
         aspects=[],
         )
 
-        
-       
+        #Array Checker for if tags for schemametadata has been edited, tags are the only varaiable editable for schemametadata
+        isSchemaMetadataChanged = []
+        #Array to store SchemaMetaData field info
         field_params = []
         for existing_field in originalfields:
             current_field = {}
@@ -374,14 +375,15 @@ def getresult(Editeditems: List[EditedItem]):
                             istagindataset(tag)
             if schemametadatatags != []:
                 current_field["tags"]=schemametadatatags
-            #Boonlean to check if tags for schemametadata has been edited, tags are the only varaiable editable for schemametadata
-            isSchemaMetadataChanged = True
+            #Filling the Array Checker for if tags for schemametadata has been edited, tags are the only varaiable editable for schemametadata
             if 'globalTags' in existing_field.keys():
                 if 'tags' in current_field.keys():
-                    if existing_field['globalTags']['tags']==current_field['tags']:
-                        isSchemaMetadataChanged = False
-            elif 'tags' not in current_field.keys():
-                isSchemaMetadataChanged = False
+                    if existing_field['globalTags']['tags'] !=current_field['tags']:
+                        isSchemaMetadataChanged.append(True)
+                else:
+                    isSchemaMetadataChanged.append(True)
+            elif 'tags' in current_field.keys():
+                isSchemaMetadataChanged.append(True)
                 
             print("exsiting:", existing_field)
             print(current_field)    
@@ -390,10 +392,10 @@ def getresult(Editeditems: List[EditedItem]):
         
         OriDatasetAspects = getdatasetviaurn(datasetName)
     
-        b=OriDatasetAspects["schemaMetadata"]["fields"]
-
         
-        if isSchemaMetadataChanged == True:
+
+        #Using Array Checker to decide whether to append aspect anot
+        if True in isSchemaMetadataChanged:
             dataset_snapshot.aspects.append(
                 make_schema_mce(
                 dataset_urn=datasetName,
@@ -434,18 +436,24 @@ def getresult(Editeditems: List[EditedItem]):
         
         
         
-        
-        
-      
+        #Checker for changes in editableDatasetProperties
+        isDataset_Description_Changed = True
+    
         if OriDatasetAspects['editableDatasetProperties'] is not None:
             if OriDatasetAspects['editableDatasetProperties']['description'] is not None:
-                if not OriDatasetAspects['editableDatasetProperties']['description']==dataset_Description:
-                    dataset_snapshot.aspects.append(
-                        make_dataset_editable_description_mce(
-                            requestor=requestor,
-                            description= dataset_Description
+                if OriDatasetAspects['editableDatasetProperties']['description']==dataset_Description:
+                    isDataset_Description_Changed = False
+                    
+        elif dataset_Description =='':
+            isDataset_Description_Changed = False
+
+        if isDataset_Description_Changed == True:
+            dataset_snapshot.aspects.append(
+                            make_dataset_editable_description_mce(
+                                requestor=requestor,
+                                description= dataset_Description
+                            )
                         )
-                    )
 
         
         dataset_snapshot.aspects.append(
