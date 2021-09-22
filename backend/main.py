@@ -129,67 +129,120 @@ def main():
     return elements
 
 def getdatasetviaurn(dataset):
-        URL = datahub_gms_endpoint +"/entities/" +dataset
-        headers = {
-        'Content-Type': 'application/json',
-        'X-RestLi-Protocol-Version': '2.0.0'
-        }
-        response = requests.request("GET", URL, headers=headers)
-        newdatasetsnapshot=[]
-        newdatasetsnapshot=dict.fromkeys(["DatasetKey","InstitutionalMemory","Ownership","UpstreamLineage","BrowsePaths","GlobalTags","editableSchemaMetadata","schemaMetadata", "DatasetProperties", "editableDatasetProperties"])
-        datasetsnapshot =response.json()
-        datasetsnapshot=datasetsnapshot['value']['com.linkedin.metadata.snapshot.DatasetSnapshot']
-        # datasetsnapshot['aspects'].pop(0)
-        datasetsnapshotAspects=datasetsnapshot['aspects']
-        
-        
-        for s in range (len(datasetsnapshotAspects)):
-            #For DatasetKey
-            if "com.linkedin.metadata.key.DatasetKey" in datasetsnapshotAspects[s]:
-                newdatasetsnapshot["DatasetKey"]=datasetsnapshotAspects[s]["com.linkedin.metadata.key.DatasetKey"]
+    URL = datahub_gms_endpoint +"/entities/" +dataset
+    headers = {
+    'Content-Type': 'application/json',
+    'X-RestLi-Protocol-Version': '2.0.0'
+    }
+    response = requests.request("GET", URL, headers=headers)
+    newdatasetsnapshot=[]
+    newdatasetsnapshot=dict.fromkeys(["DatasetKey","InstitutionalMemory","Ownership","UpstreamLineage","BrowsePaths","GlobalTags","editableSchemaMetadata","schemaMetadata", "DatasetProperties", "editableDatasetProperties"])
+    datasetsnapshot =response.json()
+    datasetsnapshot=datasetsnapshot['value']['com.linkedin.metadata.snapshot.DatasetSnapshot']
+    # datasetsnapshot['aspects'].pop(0)
+    datasetsnapshotAspects=datasetsnapshot['aspects']
+    
+    
+    for s in range (len(datasetsnapshotAspects)):
+        #For DatasetKey
+        if "com.linkedin.metadata.key.DatasetKey" in datasetsnapshotAspects[s]:
+            newdatasetsnapshot["DatasetKey"]=datasetsnapshotAspects[s]["com.linkedin.metadata.key.DatasetKey"]
 
-            #For InstitutionalMemory              
-            if "com.linkedin.common.InstitutionalMemory" in datasetsnapshotAspects[s]:
-                newdatasetsnapshot["InstitutionalMemory"]=datasetsnapshotAspects[s]["com.linkedin.common.InstitutionalMemory"]
-                
-                
-            #For Ownership
-            if "com.linkedin.common.Ownership" in datasetsnapshotAspects[s]:
-                newdatasetsnapshot["Ownership"]=datasetsnapshotAspects[s]["com.linkedin.common.Ownership"]
+        #For InstitutionalMemory              
+        if "com.linkedin.common.InstitutionalMemory" in datasetsnapshotAspects[s]:
+            newdatasetsnapshot["InstitutionalMemory"]=datasetsnapshotAspects[s]["com.linkedin.common.InstitutionalMemory"]
+            
+            
+        #For Ownership
+        if "com.linkedin.common.Ownership" in datasetsnapshotAspects[s]:
+            newdatasetsnapshot["Ownership"]=datasetsnapshotAspects[s]["com.linkedin.common.Ownership"]
 
-            #For UpstreamLineage
-            if "com.linkedin.dataset.UpstreamLineage" in datasetsnapshotAspects[s]:
-                newdatasetsnapshot["UpstreamLineage"]=datasetsnapshotAspects[s]["com.linkedin.dataset.UpstreamLineage"]
+        #For UpstreamLineage
+        if "com.linkedin.dataset.UpstreamLineage" in datasetsnapshotAspects[s]:
+            newdatasetsnapshot["UpstreamLineage"]=datasetsnapshotAspects[s]["com.linkedin.dataset.UpstreamLineage"]
 
-            #For BrowsePaths
-            if "com.linkedin.common.BrowsePaths" in datasetsnapshotAspects[s]:
-                newdatasetsnapshot["BrowsePaths"]=datasetsnapshotAspects[s]["com.linkedin.common.BrowsePaths"]
-
-
-            #For GlobalTags
-            if "com.linkedin.common.GlobalTags" in datasetsnapshotAspects[s]:
-                newdatasetsnapshot["GlobalTags"]=datasetsnapshotAspects[s]["com.linkedin.common.GlobalTags"]
+        #For BrowsePaths
+        if "com.linkedin.common.BrowsePaths" in datasetsnapshotAspects[s]:
+            newdatasetsnapshot["BrowsePaths"]=datasetsnapshotAspects[s]["com.linkedin.common.BrowsePaths"]
 
 
-            #For EditableSchemaMetadata
-            if "com.linkedin.schema.EditableSchemaMetadata" in datasetsnapshotAspects[s]:
-                newdatasetsnapshot["editableSchemaMetadata"]=datasetsnapshotAspects[s]["com.linkedin.schema.EditableSchemaMetadata"]
+        #For GlobalTags
+        if "com.linkedin.common.GlobalTags" in datasetsnapshotAspects[s]:
+            newdatasetsnapshot["GlobalTags"]=datasetsnapshotAspects[s]["com.linkedin.common.GlobalTags"]
 
 
-            #For schemaMetadata
-            if "com.linkedin.schema.SchemaMetadata" in datasetsnapshotAspects[s]:
-                newdatasetsnapshot["schemaMetadata"]=datasetsnapshotAspects[s]["com.linkedin.schema.SchemaMetadata"]
+        #For EditableSchemaMetadata
+        if "com.linkedin.schema.EditableSchemaMetadata" in datasetsnapshotAspects[s]:
+            newdatasetsnapshot["editableSchemaMetadata"]=datasetsnapshotAspects[s]["com.linkedin.schema.EditableSchemaMetadata"]
 
-            #For DatasetProperties
-            if "com.linkedin.dataset.DatasetProperties" in datasetsnapshotAspects[s]:
-                newdatasetsnapshot["DatasetProperties"]=datasetsnapshotAspects[s]["com.linkedin.dataset.DatasetProperties"]
 
-            #For EditableDatasetProperties
-            if "com.linkedin.dataset.EditableDatasetProperties" in datasetsnapshotAspects[s]:
-                newdatasetsnapshot["editableDatasetProperties"]=datasetsnapshotAspects[s]["com.linkedin.dataset.EditableDatasetProperties"]
-        
-        return newdatasetsnapshot
+        #For schemaMetadata
+        if "com.linkedin.schema.SchemaMetadata" in datasetsnapshotAspects[s]:
+            newdatasetsnapshot["schemaMetadata"]=datasetsnapshotAspects[s]["com.linkedin.schema.SchemaMetadata"]
 
+        #For DatasetProperties
+        if "com.linkedin.dataset.DatasetProperties" in datasetsnapshotAspects[s]:
+            newdatasetsnapshot["DatasetProperties"]=datasetsnapshotAspects[s]["com.linkedin.dataset.DatasetProperties"]
+
+        #For EditableDatasetProperties
+        if "com.linkedin.dataset.EditableDatasetProperties" in datasetsnapshotAspects[s]:
+            newdatasetsnapshot["editableDatasetProperties"]=datasetsnapshotAspects[s]["com.linkedin.dataset.EditableDatasetProperties"]
+    
+    return newdatasetsnapshot
+
+def istagindataset(tag):
+    URL =datahub_gms_endpoint+"/entities"
+    headers = {
+    'Content-Type': 'application/json',
+    'X-RestLi-Protocol-Version': '2.0.0'
+            
+    }
+    parameters = {'action':'search'}
+
+    data = '{ "input": "'+tag+'", "entity": "tag", "start": 0, "count": 10}'
+  
+    payload = requests.request("POST", URL, headers=headers, params = parameters, data=data)
+    payload=payload.json()
+
+    if(not payload["value"]['numEntities'] >= 1):
+        tag_snapshot = TagSnapshot(
+        urn=make_tag_urn(tag),
+        aspects=[],
+        )
+
+        tag_snapshot.aspects.append(
+            make_TagProperties_mce(
+                name=tag
+            )
+        )
+        tag_metadata_record = MetadataChangeEvent(proposedSnapshot=tag_snapshot)
+        # print(metadata_record)
+        for mce in tag_metadata_record.proposedSnapshot.aspects:
+            if not mce.validate():
+                rootLogger.error(
+                    f"{mce.__class__} is not defined properly"
+                )
+                return Response(
+                    f"Dataset was not created because dataset definition has encountered an error for {mce.__class__}",
+                    status_code=400,
+                )  
+        try:
+            rootLogger.error(tag_metadata_record)
+            emitter = DatahubRestEmitter(datahub_gms_endpoint)
+            emitter.emit_mce(tag_metadata_record)
+            emitter._session.close()
+        except Exception as e:
+            rootLogger.debug(e)
+            return Response(
+            "Dataset was not created because upstream has encountered an error {}".format(e),
+            status_code=500,
+        )
+            
+        rootLogger.info(
+            "Make_tag_request_completed_for {} requested_by {}".format(
+                tag, "datahub"
+        )
+        )
        
 
        
@@ -220,9 +273,7 @@ def getresult(Editeditems: List[EditedItem]):
         item.Global_Tags= item.Global_Tags.split(",")
         item.Browse_Path=item.Browse_Path.replace(" ", "")
         item.Browse_Path=item.Browse_Path.split(",")
-    # print(datasetEdited)
-    # print(Editeditems[0].Editable_Tags)
-    # print(Editeditems[0].Original_Tags)
+   
     requestor=make_user_urn("datahub")
     for dataset in datasetEdited:
         editablefield_params = []
@@ -248,12 +299,23 @@ def getresult(Editeditems: List[EditedItem]):
                 editable_field={}
                 editabletags = []
 
-            
-               
-        originaldata(datasetName)
+        
+
+        OriDatasetAspects = getdatasetviaurn(datasetName)
+        originalschemadata =  OriDatasetAspects["schemaMetadata"]
+        originalfields = OriDatasetAspects["schemaMetadata"]["fields"]
+        originalEditablefields= None
+        if OriDatasetAspects["editableSchemaMetadata"] is not None:
+            originalEditablefields =  OriDatasetAspects["editableSchemaMetadata"]['editableSchemaFieldInfo']
+            sorted(originalEditablefields, key=lambda originalEditablefields: originalEditablefields['fieldPath'])
+        originalplatformname = OriDatasetAspects["DatasetKey"]["platform"]
         platformName = originalplatformname
+        ##Sorting function, To match Schema and editableSchema
+        sorted(originalfields, key=lambda originalfields: originalfields['fieldPath'])
+        sorted(editablefield_params, key=lambda editablefield_params: editablefield_params['fieldPath'])
+        
+           
             
- 
 
         
         
@@ -384,13 +446,11 @@ def getresult(Editeditems: List[EditedItem]):
                     isSchemaMetadataChanged.append(True)
             elif 'tags' in current_field.keys():
                 isSchemaMetadataChanged.append(True)
-                
-            print("exsiting:", existing_field)
-            print(current_field)    
+             
             current_field["type"]= list(existing_field["type"]['type'].keys())[0]
             field_params.append(current_field)
         
-        OriDatasetAspects = getdatasetviaurn(datasetName)
+        
     
         
 
@@ -456,14 +516,28 @@ def getresult(Editeditems: List[EditedItem]):
                         )
 
         
-        dataset_snapshot.aspects.append(
-            make_editableschema_mce(
-            #using datahub as requestor, change varaiable requestor if you are another user
-            requestor=requestor,
-            editablefields= editablefield_params
+        
 
-        )
-        )
+        #Array Checker for changes made in editableSchemametadata
+        isEditableSchemaMetadataChanged=[]
+        if originalEditablefields is not None:
+            for f in range(len(originalEditablefields)):
+                if originalEditablefields[f]['globalTags']['tags'] != editablefield_params[f]['tags'] or originalEditablefields[f]["description"] != editablefield_params[f]['field_description']:
+                    isEditableSchemaMetadataChanged.append(True)
+        else:
+            for f in range(len(editablefield_params)):
+                if editablefield_params[f]['tags'] or originalfields[f]['description'] != editablefield_params[f]['field_description']:
+                    isEditableSchemaMetadataChanged.append(True)
+
+        if True in isEditableSchemaMetadataChanged:
+            dataset_snapshot.aspects.append(
+                make_editableschema_mce(
+                #using datahub as requestor, change varaiable requestor if you are another user
+                requestor=requestor,
+                editablefields= editablefield_params
+
+            )
+            )
        
 
         
@@ -471,7 +545,7 @@ def getresult(Editeditems: List[EditedItem]):
         
         metadata_record = MetadataChangeEvent(proposedSnapshot=dataset_snapshot)
     
-        # print(metadata_record)
+        
         for mce in metadata_record.proposedSnapshot.aspects:
             if not mce.validate():
                 rootLogger.error(
@@ -522,89 +596,7 @@ def getresult(Editeditems: List[EditedItem]):
     
 
 
-@app.get('/originalresult')
-def originaldata(urn):
-    URL =datahub_gms_endpoint+"/entities/"+urn
-    headers = {
-    'Content-Type': 'application/json',
-    'X-RestLi-Protocol-Version': '2.0.0'
-    }
-    global originalgmsdata
-    global originalschemadata
-    global originalfields
-    global originalglobaltagsdata
-    global originalplatformname
-    response = requests.request("GET", URL, headers=headers)
-   
-    originalgmsdata =response.json()
-   
-    # originalgmsdata=originalgmsdata["value"]
-    # originalgmsdata.update(DatasetSnapshotClass.dict())
-    for s in range (len(originalgmsdata["value"]["com.linkedin.metadata.snapshot.DatasetSnapshot"]["aspects"])):
-        if "com.linkedin.schema.SchemaMetadata" in originalgmsdata["value"]["com.linkedin.metadata.snapshot.DatasetSnapshot"]["aspects"][s]:
-            originalschemadata= originalgmsdata["value"]["com.linkedin.metadata.snapshot.DatasetSnapshot"]["aspects"][s]["com.linkedin.schema.SchemaMetadata"]
 
-        if "com.linkedin.common.GlobalTags" in originalgmsdata["value"]["com.linkedin.metadata.snapshot.DatasetSnapshot"]["aspects"][s]:
-            originalglobaltagsdata= originalgmsdata["value"]["com.linkedin.metadata.snapshot.DatasetSnapshot"]["aspects"][s]["com.linkedin.common.GlobalTags"]
-
-        if "com.linkedin.metadata.key.DatasetKey" in originalgmsdata["value"]["com.linkedin.metadata.snapshot.DatasetSnapshot"]["aspects"][s]:
-            originalplatformname= originalgmsdata["value"]["com.linkedin.metadata.snapshot.DatasetSnapshot"]["aspects"][s]["com.linkedin.metadata.key.DatasetKey"]["platform"]
-
-    originalfields = originalschemadata["fields"]
-
-def istagindataset(tag):
-    URL =datahub_gms_endpoint+"/entities"
-    headers = {
-    'Content-Type': 'application/json',
-    'X-RestLi-Protocol-Version': '2.0.0'
-            
-    }
-    parameters = {'action':'search'}
-
-    data = '{ "input": "'+tag+'", "entity": "tag", "start": 0, "count": 10}'
-  
-    payload = requests.request("POST", URL, headers=headers, params = parameters, data=data)
-    payload=payload.json()
-
-    if(not payload["value"]['numEntities'] >= 1):
-        tag_snapshot = TagSnapshot(
-        urn=make_tag_urn(tag),
-        aspects=[],
-        )
-
-        tag_snapshot.aspects.append(
-            make_TagProperties_mce(
-                name=tag
-            )
-        )
-        tag_metadata_record = MetadataChangeEvent(proposedSnapshot=tag_snapshot)
-        # print(metadata_record)
-        for mce in tag_metadata_record.proposedSnapshot.aspects:
-            if not mce.validate():
-                rootLogger.error(
-                    f"{mce.__class__} is not defined properly"
-                )
-                return Response(
-                    f"Dataset was not created because dataset definition has encountered an error for {mce.__class__}",
-                    status_code=400,
-                )  
-        try:
-            rootLogger.error(tag_metadata_record)
-            emitter = DatahubRestEmitter(datahub_gms_endpoint)
-            emitter.emit_mce(tag_metadata_record)
-            emitter._session.close()
-        except Exception as e:
-            rootLogger.debug(e)
-            return Response(
-            "Dataset was not created because upstream has encountered an error {}".format(e),
-            status_code=500,
-        )
-            
-        rootLogger.info(
-            "Make_tag_request_completed_for {} requested_by {}".format(
-                tag, "datahub"
-        )
-        )
     
 
         

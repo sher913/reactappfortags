@@ -441,22 +441,22 @@ class App extends React.Component {
         }
       }
     )
-  //   .then(res =>  
+    .then(res =>  
       
       
-  //   {
+    {
       
       
-  //     window.alert(res.data)
-  //     window.location.reload();
+      window.alert(res.data)
+      window.location.reload();
       
     
-  // })
-  // .catch(error => {
-  //   window.alert("Error, Try refresh first and try again\r\n\r\nIf not " +error.response.data)
-  //   window.location.reload(); //Logs a string: Error: Request failed with status code 404
+  })
+  .catch(error => {
+    window.alert("Error, Try refresh first and try again\r\n\r\nIf not " +error.response.data)
+    window.location.reload(); //Logs a string: Error: Request failed with status code 404
   
-  // });
+  });
      
     
   
