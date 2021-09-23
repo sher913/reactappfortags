@@ -1,18 +1,14 @@
-import os
-from os import environ
 import logging
 from logging.handlers import TimedRotatingFileHandler
-import re
-from avro.schema import NULL
 from datahub.metadata.schema_classes import DatasetSnapshotClass
 
-
+import requests
 from requests.api import request
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, Request, Response, status
 from starlette.datastructures import URL
-import requests
+
 from starlette.responses import JSONResponse
 from pydantic import BaseModel
 import datetime
@@ -24,7 +20,7 @@ socket.getaddrinfo('localhost', 8080)
 from datahub.metadata.com.linkedin.pegasus2avro.metadata.snapshot import DatasetSnapshot
 from datahub.metadata.com.linkedin.pegasus2avro.metadata.snapshot import TagSnapshot
 from datahub.metadata.com.linkedin.pegasus2avro.mxe import MetadataChangeEvent
-from ingestion.ingest_api.helper.mce_convenience import (generate_json_output,
+from mce_convenience import (generate_json_output,
                                                get_sys_time,
                                                make_browsepath_mce,
                                                make_dataset_description_mce,
@@ -34,7 +30,7 @@ from ingestion.ingest_api.helper.mce_convenience import (generate_json_output,
                                                make_platform, make_recover_mce,
                                                make_schema_mce, make_user_urn,make_tag_urn, make_schemaglobaltags_mce, 
                                                make_editableschema_mce,make_TagProperties_mce,make_dataset_editable_description_mce)
-from ingestion.ingest_api.helper.models import (FieldParam, create_dataset_params,
+from models import (FieldParam, create_dataset_params,
                                       dataset_status_params, determine_type)
 from datahub.emitter.rest_emitter import DatahubRestEmitter
 
@@ -89,7 +85,11 @@ class EditedItem(BaseModel):
     Description: Optional[str]= None
     Browse_Path: Optional[str]= None
     Dataset_Description: Optional[str]= None
-    
+
+
+@app.get("/")
+def read_root():
+    return {"Hello": "World"}
 
 @app.get('/getdatasets')
 def main():
@@ -591,23 +591,10 @@ def getresult(Editeditems: List[EditedItem]):
             status_code=201,
         )
         
-             
-    
-    
-
-
-
-    
-
-        
-    
-  
-    
-   
     
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="localhost", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 
 
 

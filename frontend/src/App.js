@@ -6,15 +6,12 @@ import 'jquery/dist/jquery.min.js';
 //Datatable Modules
 import "datatables.net-dt/js/dataTables.dataTables";
 import "datatables.net-dt/css/jquery.dataTables.min.css";
-import $, { isEmptyObject } from 'jquery'; 
+import $ from 'jquery'; 
 //For API Requests
 import axios from 'axios';
 //For tab panes
 import Tabs from 'react-bootstrap/Tabs'
 import Tab from 'react-bootstrap/Tab'
-import TabContainer from 'react-bootstrap/TabContainer'
-import TabContent from 'react-bootstrap/TabContent'
-import TabPane from 'react-bootstrap/TabPane'
 class App extends React.Component {
   
   
@@ -31,9 +28,6 @@ class App extends React.Component {
 
  
   componentDidMount() {
-    function insertAt(array, index, ...elementsArray) {
-      array.splice(index, 0, ...elementsArray);
-  };
     function moveArrayItemToNewIndex(arr, old_index, new_index) {
       if (new_index >= arr.length) {
           var k = new_index - arr.length + 1;
@@ -51,8 +45,6 @@ class App extends React.Component {
   
     const finalrowsholder=[]
 
-
-    var finaleditedholder=[]
 
     var elements
     var BrowsePathsholder=[]
