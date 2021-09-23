@@ -1,7 +1,5 @@
 This is the web i will be developing for my intern, it is based on React, FASTAPI, yarn. The Nodejs folder is useless(old work)
 
-Firstly, have to download this folder'datahub tagging ui' and paste in datahub's parent folder from https://github.com/linkedin/datahub
-
 For now i am using a datahub's restendpoint on a VM, if you do not have access to that VM, you have to change the local host endpoint address
 
 Features:
@@ -13,6 +11,10 @@ This is Datahub's UI running on localhost
 
 
 If you want to explore, most of the code changes made are to these files;
+
+Dependencies:
+Requires datahub package which can be installed via quickstart tutorial at https://datahubproject.io/docs/quickstart/
+
 
 
 Python FASTAPI:
@@ -29,6 +31,7 @@ Installation for first time:
     (setup.py located in backend folder)
     2. cd backend
     3. pip install the setup.py
+    4. Create a folder called 'log' in 'backend' folder
 
 To run UI:
 Firstly, initialize FASTAPI:
