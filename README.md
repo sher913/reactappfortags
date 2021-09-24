@@ -6,8 +6,8 @@ Features:
 Able to use this react UI to update information on datasets within Datahub through GMS
 ![Image of data table](https://user-images.githubusercontent.com/60865228/133769051-49a21991-77ed-4d6e-a2c8-81b44fc7c775.gif)
 
-This is Datahub's UI running on localhost
-![Image of datahub UI edited](https://user-images.githubusercontent.com/60865228/131979923-ebe9efec-f11d-4da3-870b-c9a6294de6a0.png)
+This is one of the dataset on Datahub
+![Image of datahub UI edited](https://user-images.githubusercontent.com/60865228/134659624-33da907e-3782-49bf-8f6c-c892558c33b8.png)
 
 
 If you want to explore, most of the code changes made are to these files;
