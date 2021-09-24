@@ -1,4 +1,4 @@
-This is the web i will be developing for my intern, it is based on React, FASTAPI, yarn. The Nodejs folder is useless(old work)
+This is the web i will be developing for my intern, it is based on React, FASTAPI, yarn.
 
 For now i am using a datahub's restendpoint on a VM, if you do not have access to that VM, you have to change the local host endpoint address
 
