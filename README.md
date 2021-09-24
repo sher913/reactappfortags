@@ -25,6 +25,7 @@ root folder contains:
 >/README.md\
 >/docker-compose.yml
 
+<br><br>
 Installation for first time:
 >1. Download Docker for whatever platform you are on
 >2. Clone this repo
