@@ -21,7 +21,14 @@ REACT APP:
 frontend/App.js
 
 
-root folder is Datahub_Tagging_React
+root folder contains:
+/backend
+/frontend
+/.gitignore
+/README.md
+/docker-compose.yml
+
+/n/n      
 Installation for first time:
     1. Download Docker for whatever platform you are on
     2. Clone this repo
