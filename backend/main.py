@@ -94,6 +94,7 @@ def read_root():
 @app.get('/getdatasets')
 def main():
     elements=[]
+    dropped_datasets=[]
     URL =datahub_gms_endpoint+"/entities"
     headers = {
     'Content-Type': 'application/json',
@@ -105,28 +106,35 @@ def main():
     data = '{ "input": "*", "entity": "dataset", "start": 0, "count": 1000}'
   
     response = requests.request("POST", URL, headers=headers, params = parameters, data=data)
-
-
+    #Array for aspects that datasets must have else will be dropped
+    required_aspects = ["schemaMetadata","DatasetKey", "BrowsePaths"]
     datasetobject =response.json()
     datasets = datasetobject["value"]["metadata"]["urns"]
     for dataset in datasets:
         keys_to_remove=[]
-        aspect=getdatasetviaurn(dataset)
+        aspects=getdatasetviaurn(dataset)
 
-        for null_field in aspect:
-            if not aspect[null_field]:
+        for null_field in aspects:
+            if not aspects[null_field]:
                 keys_to_remove.append(null_field)
 
         for key in keys_to_remove:
-            aspect.pop(key)
-
-        elements.append(aspect)
-    # for j in range (len(elements)):
-    #     if "editableSchemaFieldInfo" in elements[j]["editableSchemaMetadata"]:
-    #         print(True)
+            aspects.pop(key)
+        
+        #Array to store aspects that are missing to show in console for user
+        missing_aspects=[]
+        #for loop and if condition to check if aspects have required_aspects, if no... else append to elements and send to REACT
+        if not all(name in aspects for name in required_aspects):
+            for aspect in required_aspects:
+                if aspect not in aspects.keys():
+                    missing_aspects.append(aspect)
+            missing_aspects= ','.join(missing_aspects)
+            dataset_missing_aspect= [dataset.split(',')[1]+" is missing: "+ missing_aspects]
+            dropped_datasets.append(dataset_missing_aspect)
+        else:
+            elements.append(aspects)
     
-    
-    return elements
+    return [elements, dropped_datasets]
 
 def getdatasetviaurn(dataset):
     URL = datahub_gms_endpoint +"/entities/" +dataset

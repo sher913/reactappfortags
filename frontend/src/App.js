@@ -58,8 +58,8 @@ class App extends React.Component {
       }
     }).then(res => 
     { //pushing datasets data to 'elements' varaiable
-      
-      elements = (res["data"])
+      console.log("Datasets dopped: ", res["data"][1])
+      elements = (res["data"][0])
       let count =0
       // aspectSchemaMetadata=['aspects']+['com.linkedin.schema.SchemaMetadata']
       
