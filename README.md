@@ -12,24 +12,21 @@ This is Datahub's UI running on localhost
 
 If you want to explore, most of the code changes made are to these files;
 
-
-Python FASTAPI:
+Python FASTAPI:__
 backend/main.py
 
-
-REACT APP:
+REACT APP:__
 frontend/App.js
 
-
->root folder contains:
->>/backend
->>/frontend
->>/.gitignore
->>/README.md
->>/docker-compose.yml
+>root folder contains:__
+>>/backend__
+>>/frontend__
+>>/.gitignore__
+>>/README.md__
+>>/docker-compose.yml__
 
     
->Installation for first time:
+>Installation for first time:__
 >>1. Download Docker for whatever platform you are on
 >>2. Clone this repo
 >>3. CD to root directory
