@@ -26,11 +26,14 @@ root folder contains:
 >/docker-compose.yml
 
 <br>
+
 Installation for first time:
 >1. Download Docker for whatever platform you are on
 >2. Clone this repo
 >3. CD to root directory
 >4. type in the cmd 'docker-compose up'
+
 <br>
+
 You can just use cmd 'docker-compose up' everytime to start it, even if u already installed before.
 
