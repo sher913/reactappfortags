@@ -18,6 +18,8 @@ backend/main.py
 REACT APP:\
 frontend/App.js
 
+<br>
+
 root folder contains:
 >/backend\
 >/frontend\
