@@ -18,15 +18,14 @@ backend/main.py
 REACT APP:\
 frontend/App.js
 
->root folder contains:\
+root folder contains:\
 >>/backend\
 >>/frontend\
 >>/.gitignore\
 >>/README.md\
->>/docker-compose.yml\
+>>/docker-compose.yml
 
-    
->Installation for first time:\
+Installation for first time:\
 >>1. Download Docker for whatever platform you are on
 >>2. Clone this repo
 >>3. CD to root directory
