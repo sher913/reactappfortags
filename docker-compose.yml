@@ -1,0 +1,20 @@
+version: '3.8'
+services:
+  frontend:
+    build:
+      context: ./
+      dockerfile: frontend/Dockerfile
+    hostname: frontend
+    container_name: frontend
+    ports:
+      - "3000:80"
+
+  backend:
+    build:
+      context: ./
+      dockerfile: backend/Dockerfile
+    hostname: backend
+    container_name: backend
+    ports:
+      - "8000:8000"
+

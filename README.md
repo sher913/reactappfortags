@@ -12,36 +12,21 @@ This is Datahub's UI running on localhost
 
 If you want to explore, most of the code changes made are to these files;
 
-Dependencies:
-Requires datahub package which can be installed via quickstart tutorial at https://datahubproject.io/docs/quickstart/
-
-
 
 Python FASTAPI:
 backend/main.py
-backend/ingestion
+
 
 REACT APP:
 frontend/App.js
 
 
-root folder is datahub by linkedin
+root folder is Datahub_Tagging_React
 Installation for first time:
-    1. cd 'datahub tagging ui'
-    (setup.py located in backend folder)
-    2. cd backend
-    3. pip install the setup.py
-    4. Create a folder called 'log' in 'backend' folder
+    1. Download Docker for whatever platform you are on
+    2. Clone this repo
+    3. CD to root directory
+    4. type in the cmd 'docker-compose up'
 
-To run UI:
-Firstly, initialize FASTAPI:
-    1. cd 'datahub tagging ui'
-    2. cd backend
-    3. python main.py
+You can just use 'docker-compose up' everytime to start it, even if u already installed before.
 
-Secondly, initialize REACT via yarn:
-    1. cd 'datahub tagging ui'
-    2. cd frontend
-    3. yarn start
-    
-Of course, you have to have datahub by linkedin running and correct endpoint address.

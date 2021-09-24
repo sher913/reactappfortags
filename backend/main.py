@@ -304,7 +304,7 @@ def getresult(Editeditems: List[EditedItem]):
         OriDatasetAspects = getdatasetviaurn(datasetName)
         originalschemadata =  OriDatasetAspects["schemaMetadata"]
         originalfields = OriDatasetAspects["schemaMetadata"]["fields"]
-        originalEditablefields= None
+        originalEditablefields= None        
         if OriDatasetAspects["editableSchemaMetadata"] is not None:
             originalEditablefields =  OriDatasetAspects["editableSchemaMetadata"]['editableSchemaFieldInfo']
             sorted(originalEditablefields, key=lambda originalEditablefields: originalEditablefields['fieldPath'])
@@ -439,11 +439,8 @@ def getresult(Editeditems: List[EditedItem]):
                 current_field["tags"]=schemametadatatags
             #Filling the Array Checker for if tags for schemametadata has been edited, tags are the only varaiable editable for schemametadata
             if 'globalTags' in existing_field.keys():
-                if 'tags' in current_field.keys():
-                    if existing_field['globalTags']['tags'] !=current_field['tags']:
+                if existing_field['globalTags']['tags'] != current_field.get('tags',None):
                         isSchemaMetadataChanged.append(True)
-                else:
-                    isSchemaMetadataChanged.append(True)
             elif 'tags' in current_field.keys():
                 isSchemaMetadataChanged.append(True)
              

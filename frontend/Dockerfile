@@ -1,6 +1,12 @@
-FROM node:16.4.2 as frontend-build-deps
-WORKDIR /
-COPY package.json yarn.lock ./
-RUN yarn install
-COPY . /
-CMD ["yarn", "start"]
+FROM node:alpine as builder
+COPY frontend/package.json ./
+COPY frontend/yarn.lock ./
+RUN yarn install --frozen-lockfile
+COPY /frontend .
+RUN yarn build
+
+FROM nginx:alpine
+COPY --from=builder ./build /usr/share/nginx/html
+
+
+
