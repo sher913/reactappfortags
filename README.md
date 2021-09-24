@@ -19,17 +19,17 @@ REACT APP:\
 frontend/App.js
 
 root folder contains:
->>/backend\
->>/frontend\
->>/.gitignore\
->>/README.md\
->>/docker-compose.yml
+>/backend\
+>/frontend\
+>/.gitignore\
+>/README.md\
+>/docker-compose.yml
 
 Installation for first time:
->>1. Download Docker for whatever platform you are on
->>2. Clone this repo
->>3. CD to root directory
->>4. type in the cmd 'docker-compose up'
+>1. Download Docker for whatever platform you are on
+>2. Clone this repo
+>3. CD to root directory
+>4. type in the cmd 'docker-compose up'
 
 You can just use 'docker-compose up' everytime to start it, even if u already installed before.
 
