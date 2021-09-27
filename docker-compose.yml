@@ -1,6 +1,8 @@
 version: '3.8'
 services:
   frontend:
+    env_file:
+      - frontend/.env
     build:
       context: ./
       dockerfile: frontend/Dockerfile
@@ -10,6 +12,8 @@ services:
       - "3000:80"
 
   backend:
+    env_file:
+      - backend/FASTAPI_Varaiables.env
     build:
       context: ./
       dockerfile: backend/Dockerfile

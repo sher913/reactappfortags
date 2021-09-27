@@ -12,6 +12,7 @@ import axios from 'axios';
 //For tab panes
 import Tabs from 'react-bootstrap/Tabs'
 import Tab from 'react-bootstrap/Tab'
+
 class App extends React.Component {
   
   
@@ -44,8 +45,8 @@ class App extends React.Component {
     const datasetcolsholder=[]
   
     const finalrowsholder=[]
-
-
+    console.log("Timeout setting:", process.env.REACT_APP_TIMEOUT_SETTING ?? 'is undefined, so using default value of 3000',"ms")
+ 
     var elements
     var BrowsePathsholder=[]
 
@@ -66,12 +67,12 @@ class App extends React.Component {
     //For loop for all fields in dataset, compare with editableSchema fields; if exist, push both to first element of each array, thus index positions of both edited Schema
     // and Schemameta(original) will match 
     for(let i=0; i< elements.length; i++){
-      for(let j=0; j< elements[i]["schemaMetadata"]["fields"].length; j++){
-        if(elements[i]["editableSchemaMetadata"]!==undefined){
-          for( let a = 0; a<elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"].length; a++){
-            if(elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][a]["fieldPath"] === elements[i]["schemaMetadata"]["fields"][j]["fieldPath"]){
-              moveArrayItemToNewIndex(elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"],a,0)
-              moveArrayItemToNewIndex(elements[i]["schemaMetadata"]["fields"],j,0)
+      for(let j=0; j< elements[i]["SchemaMetadata"]["fields"].length; j++){
+        if(elements[i]["EditableSchemaMetadata"]!==undefined){
+          for( let a = 0; a<elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"].length; a++){
+            if(elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][a]["fieldPath"] === elements[i]["SchemaMetadata"]["fields"][j]["fieldPath"]){
+              moveArrayItemToNewIndex(elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"],a,0)
+              moveArrayItemToNewIndex(elements[i]["SchemaMetadata"]["fields"],j,0)
             }   
       }
     }
@@ -80,7 +81,7 @@ class App extends React.Component {
 
 //for loop for total datasets iteration
     for(let i=0; i< elements.length; i++){
-      for(let j=0; j< elements[i]["schemaMetadata"]["fields"].length; j++){
+      for(let j=0; j< elements[i]["SchemaMetadata"]["fields"].length; j++){
         let rowsholder={}
         
         Object.assign(rowsholder,{"ID": count});
@@ -117,25 +118,25 @@ class App extends React.Component {
   }
    
     //injest field name
-      Object.assign(rowsholder,({"Field_Name": elements[i]["schemaMetadata"]["fields"][j]["fieldPath"]}))
+      Object.assign(rowsholder,({"Field_Name": elements[i]["SchemaMetadata"]["fields"][j]["fieldPath"]}))
 
       //if the dataset even has editableSchemadata
-      if(elements[i]["editableSchemaMetadata"]!==undefined){
-        //Field in editableSchemaMetadata has to match fields in schemaMetadata
-        if(elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]!==undefined
-        && elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["fieldPath"] === elements[i]["schemaMetadata"]["fields"][j]["fieldPath"])
+      if(elements[i]["EditableSchemaMetadata"]!==undefined){
+        //Field in EditableSchemaMetadata has to match fields in SchemaMetadata
+        if(elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]!==undefined
+        && elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]["fieldPath"] === elements[i]["SchemaMetadata"]["fields"][j]["fieldPath"])
         { let tagsholder= []
-          if(elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"] !== undefined)
+          if(elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"] !== undefined)
           {
           
-          if(elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"].length ===0){
+          if(elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"].length ===0){
           tagsholder.push(' ')
         }else{
-          for(let l=0; l< elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"].length; l++){
+          for(let l=0; l< elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"].length; l++){
             if(l>0){
-              tagsholder.push(', ' + (elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"][l]["tag"].split(':').pop()))
+              tagsholder.push(', ' + (elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"][l]["tag"].split(':').pop()))
             }else{
-            tagsholder.push((elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"][l]["tag"].split(':').pop()))
+            tagsholder.push((elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"][l]["tag"].split(':').pop()))
         }
       }
     }
@@ -158,17 +159,17 @@ class App extends React.Component {
     }
        
       //Filling tags from schemametadata
-      if(elements[i]["schemaMetadata"]["fields"][j]["globalTags"]!==undefined){
+      if(elements[i]["SchemaMetadata"]["fields"][j]["globalTags"]!==undefined){
         let tagsholder= []
-        if(elements[i]["schemaMetadata"]["fields"][j]["globalTags"]["tags"].length ===0){
+        if(elements[i]["SchemaMetadata"]["fields"][j]["globalTags"]["tags"].length ===0){
           tagsholder.push(' ')
         }else{
-        for(let m=0; m< elements[i]["schemaMetadata"]["fields"][j]["globalTags"]["tags"].length; m++){
+        for(let m=0; m< elements[i]["SchemaMetadata"]["fields"][j]["globalTags"]["tags"].length; m++){
             if(m>0){
-          tagsholder.push(', ' + (elements[i]["schemaMetadata"]["fields"][j]["globalTags"]["tags"][m]["tag"].split(':').pop()))
+          tagsholder.push(', ' + (elements[i]["SchemaMetadata"]["fields"][j]["globalTags"]["tags"][m]["tag"].split(':').pop()))
          
         }else{
-          tagsholder.push((elements[i]["schemaMetadata"]["fields"][j]["globalTags"]["tags"][m]["tag"].split(':').pop()))
+          tagsholder.push((elements[i]["SchemaMetadata"]["fields"][j]["globalTags"]["tags"][m]["tag"].split(':').pop()))
       }
     }
   }
@@ -181,34 +182,34 @@ class App extends React.Component {
 
 
       //Checks for Description in editableschemaMetaData first, then checks in SchemaMetaData.
-      if(elements[i]["editableSchemaMetadata"]!==undefined){
-        if (elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]!==undefined 
-        && elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["fieldPath"] === elements[i]["schemaMetadata"]["fields"][j]["fieldPath"] 
-        && elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["description"]!==undefined)
+      if(elements[i]["EditableSchemaMetadata"]!==undefined){
+        if (elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]!==undefined 
+        && elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]["fieldPath"] === elements[i]["SchemaMetadata"]["fields"][j]["fieldPath"] 
+        && elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]["description"]!==undefined)
         { 
-          Object.assign(rowsholder,({"Description": elements[i]["editableSchemaMetadata"]["editableSchemaFieldInfo"][j]["description"]}))
+          Object.assign(rowsholder,({"Description": elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]["description"]}))
          
-      } else if(elements[i]["schemaMetadata"]["fields"][j]["description"]!==undefined)
+      } else if(elements[i]["SchemaMetadata"]["fields"][j]["description"]!==undefined)
       {
-        Object.assign(rowsholder,({"Description": elements[i]["schemaMetadata"]["fields"][j]["description"]}))
+        Object.assign(rowsholder,({"Description": elements[i]["SchemaMetadata"]["fields"][j]["description"]}))
       }
     }
 
 
     //Since already checked in editableschemaMetaData , now just checks in schemametadata, else if empty, fill with blank
-      if (elements[i]["editableSchemaMetadata"] ===undefined && elements[i]["schemaMetadata"]["fields"][j]["description"]!==undefined){
-            Object.assign(rowsholder,({"Description": elements[i]["schemaMetadata"]["fields"][j]["description"]}))
+      if (elements[i]["EditableSchemaMetadata"] ===undefined && elements[i]["SchemaMetadata"]["fields"][j]["description"]!==undefined){
+            Object.assign(rowsholder,({"Description": elements[i]["SchemaMetadata"]["fields"][j]["description"]}))
 
-      }if (elements[i]["editableSchemaMetadata"] === undefined && elements[i]["schemaMetadata"]["fields"][j]["description"] === undefined){
+      }if (elements[i]["EditableSchemaMetadata"] === undefined && elements[i]["SchemaMetadata"]["fields"][j]["description"] === undefined){
         Object.assign(rowsholder,({"Description": ' '}))
       }
       //for Timestamp, checks if editableschemametadata exists, if not use schemametadata
-      if(elements[i]["editableSchemaMetadata"] === undefined){
-        let date = new Date (elements[i]["schemaMetadata"]["lastModified"]["time"])
+      if(elements[i]["EditableSchemaMetadata"] === undefined){
+        let date = new Date (elements[i]["SchemaMetadata"]["lastModified"]["time"])
         
         Object.assign(rowsholder,({ "Date_Modified": date.toLocaleString()}))
       }else{
-        let date = new Date (elements[i]["editableSchemaMetadata"]["lastModified"]["time"])
+        let date = new Date (elements[i]["EditableSchemaMetadata"]["lastModified"]["time"])
         Object.assign(rowsholder,({ "Date_Modified": date.toLocaleString()}))
       }
       //for dataset Browsepaths
@@ -235,9 +236,9 @@ class App extends React.Component {
       }
 
       //for dataset description, the if conditions are terrible but required
-      if(elements[i]["editableDatasetProperties"]!==undefined){
-        if(elements[i]["editableDatasetProperties"]["description"]!==undefined){
-          Object.assign(rowsholder,({ "Dataset_Description": elements[i]["editableDatasetProperties"]["description"]}))
+      if(elements[i]["EditableDatasetProperties"]!==undefined){
+        if(elements[i]["EditableDatasetProperties"]["description"]!==undefined){
+          Object.assign(rowsholder,({ "Dataset_Description": elements[i]["EditableDatasetProperties"]["description"]}))
         }else{
           if(elements[i]["DatasetProperties"]!== undefined){
             if(elements[i]["DatasetProperties"]["description"]!== undefined){
@@ -458,8 +459,8 @@ class App extends React.Component {
   });
 
   
-// this number is the timeout timer setting, IMPORTANT IF UR RECORDS TAKE LONGER, SET A LONGER TIMEOUT
-}, 550);
+// this number is the timeout timer setting, IMPORTANT IF UR RECORDS TAKE LONGER, SET A LONGER TIMEOUT. If undefined, default value is 3000ms This setting is defined in .env file
+}, process.env.REACT_APP_TIMEOUT_SETTING  ?? 3000);
   
   
  }

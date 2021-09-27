@@ -1,3 +1,4 @@
+import os
 import logging
 from logging.handlers import TimedRotatingFileHandler
 from datahub.metadata.schema_classes import DatasetSnapshotClass
@@ -41,8 +42,8 @@ origins = [
     "localhost:3000/"
 ]
 
-#Change this endpoint depeding on ur datahub endpoint
-datahub_gms_endpoint ="http://172.104.42.65:8080"
+#Change this endpoint depeding on ur datahub endpoint, uses http://localhost:8080 if not defined
+datahub_gms_endpoint = os.getenv('datahub_gms_endpoint', 'http://localhost:8080')
 
 
 
@@ -107,17 +108,15 @@ def main():
   
     response = requests.request("POST", URL, headers=headers, params = parameters, data=data)
     #Array for aspects that datasets must have else will be dropped
-    required_aspects = ["schemaMetadata","DatasetKey", "BrowsePaths"]
+    required_aspects = ["SchemaMetadata","DatasetKey", "BrowsePaths"]
     datasetobject =response.json()
     datasets = datasetobject["value"]["metadata"]["urns"]
     for dataset in datasets:
         keys_to_remove=[]
         aspects=getdatasetviaurn(dataset)
-
         for null_field in aspects:
             if not aspects[null_field]:
                 keys_to_remove.append(null_field)
-
         for key in keys_to_remove:
             aspects.pop(key)
         
@@ -144,57 +143,17 @@ def getdatasetviaurn(dataset):
     }
     response = requests.request("GET", URL, headers=headers)
     newdatasetsnapshot=[]
-    newdatasetsnapshot=dict.fromkeys(["DatasetKey","InstitutionalMemory","Ownership","UpstreamLineage","BrowsePaths","GlobalTags","editableSchemaMetadata","schemaMetadata", "DatasetProperties", "editableDatasetProperties"])
+    newdatasetsnapshot=dict.fromkeys(["DatasetKey","InstitutionalMemory","Ownership","UpstreamLineage","BrowsePaths","GlobalTags","EditableSchemaMetadata","SchemaMetadata", "DatasetProperties", "EditableDatasetProperties"])
     datasetsnapshot =response.json()
     datasetsnapshot=datasetsnapshot['value']['com.linkedin.metadata.snapshot.DatasetSnapshot']
-    # datasetsnapshot['aspects'].pop(0)
     datasetsnapshotAspects=datasetsnapshot['aspects']
     
     
-    for s in range (len(datasetsnapshotAspects)):
-        #For DatasetKey
-        if "com.linkedin.metadata.key.DatasetKey" in datasetsnapshotAspects[s]:
-            newdatasetsnapshot["DatasetKey"]=datasetsnapshotAspects[s]["com.linkedin.metadata.key.DatasetKey"]
-
-        #For InstitutionalMemory              
-        if "com.linkedin.common.InstitutionalMemory" in datasetsnapshotAspects[s]:
-            newdatasetsnapshot["InstitutionalMemory"]=datasetsnapshotAspects[s]["com.linkedin.common.InstitutionalMemory"]
-            
-            
-        #For Ownership
-        if "com.linkedin.common.Ownership" in datasetsnapshotAspects[s]:
-            newdatasetsnapshot["Ownership"]=datasetsnapshotAspects[s]["com.linkedin.common.Ownership"]
-
-        #For UpstreamLineage
-        if "com.linkedin.dataset.UpstreamLineage" in datasetsnapshotAspects[s]:
-            newdatasetsnapshot["UpstreamLineage"]=datasetsnapshotAspects[s]["com.linkedin.dataset.UpstreamLineage"]
-
-        #For BrowsePaths
-        if "com.linkedin.common.BrowsePaths" in datasetsnapshotAspects[s]:
-            newdatasetsnapshot["BrowsePaths"]=datasetsnapshotAspects[s]["com.linkedin.common.BrowsePaths"]
-
-
-        #For GlobalTags
-        if "com.linkedin.common.GlobalTags" in datasetsnapshotAspects[s]:
-            newdatasetsnapshot["GlobalTags"]=datasetsnapshotAspects[s]["com.linkedin.common.GlobalTags"]
-
-
-        #For EditableSchemaMetadata
-        if "com.linkedin.schema.EditableSchemaMetadata" in datasetsnapshotAspects[s]:
-            newdatasetsnapshot["editableSchemaMetadata"]=datasetsnapshotAspects[s]["com.linkedin.schema.EditableSchemaMetadata"]
-
-
-        #For schemaMetadata
-        if "com.linkedin.schema.SchemaMetadata" in datasetsnapshotAspects[s]:
-            newdatasetsnapshot["schemaMetadata"]=datasetsnapshotAspects[s]["com.linkedin.schema.SchemaMetadata"]
-
-        #For DatasetProperties
-        if "com.linkedin.dataset.DatasetProperties" in datasetsnapshotAspects[s]:
-            newdatasetsnapshot["DatasetProperties"]=datasetsnapshotAspects[s]["com.linkedin.dataset.DatasetProperties"]
-
-        #For EditableDatasetProperties
-        if "com.linkedin.dataset.EditableDatasetProperties" in datasetsnapshotAspects[s]:
-            newdatasetsnapshot["editableDatasetProperties"]=datasetsnapshotAspects[s]["com.linkedin.dataset.EditableDatasetProperties"]
+    for aspect in datasetsnapshotAspects:
+        for key in aspect.keys():
+            keychecker = key.split('.')[-1]
+            if keychecker in newdatasetsnapshot:
+                newdatasetsnapshot[keychecker] = aspect[key]
     
     return newdatasetsnapshot
 
@@ -281,8 +240,9 @@ def getresult(Editeditems: List[EditedItem]):
         item.Global_Tags= item.Global_Tags.split(",")
         item.Browse_Path=item.Browse_Path.replace(" ", "")
         item.Browse_Path=item.Browse_Path.split(",")
-   
-    requestor=make_user_urn("datahub")
+    #Your datahub account name, uses user_not_specified if not specified
+    requestor=make_user_urn(os.getenv('actor', 'user_not_specified'))
+
     for dataset in datasetEdited:
         editablefield_params = []
         for item in Editeditems:
@@ -310,11 +270,11 @@ def getresult(Editeditems: List[EditedItem]):
         
 
         OriDatasetAspects = getdatasetviaurn(datasetName)
-        originalschemadata =  OriDatasetAspects["schemaMetadata"]
-        originalfields = OriDatasetAspects["schemaMetadata"]["fields"]
+        originalschemadata =  OriDatasetAspects["SchemaMetadata"]
+        originalfields = OriDatasetAspects["SchemaMetadata"]["fields"]
         originalEditablefields= None        
-        if OriDatasetAspects["editableSchemaMetadata"] is not None:
-            originalEditablefields =  OriDatasetAspects["editableSchemaMetadata"]['editableSchemaFieldInfo']
+        if OriDatasetAspects["EditableSchemaMetadata"] is not None:
+            originalEditablefields =  OriDatasetAspects["EditableSchemaMetadata"]['editableSchemaFieldInfo']
             sorted(originalEditablefields, key=lambda originalEditablefields: originalEditablefields['fieldPath'])
         originalplatformname = OriDatasetAspects["DatasetKey"]["platform"]
         platformName = originalplatformname
@@ -501,12 +461,12 @@ def getresult(Editeditems: List[EditedItem]):
         
         
         
-        #Checker for changes in editableDatasetProperties
+        #Checker for changes in EditableDatasetProperties
         isDataset_Description_Changed = True
     
-        if OriDatasetAspects['editableDatasetProperties'] is not None:
-            if OriDatasetAspects['editableDatasetProperties']['description'] is not None:
-                if OriDatasetAspects['editableDatasetProperties']['description']==dataset_Description:
+        if OriDatasetAspects['EditableDatasetProperties'] is not None:
+            if OriDatasetAspects['EditableDatasetProperties']['description'] is not None:
+                if OriDatasetAspects['EditableDatasetProperties']['description']==dataset_Description:
                     isDataset_Description_Changed = False
                     
         elif dataset_Description =='':
