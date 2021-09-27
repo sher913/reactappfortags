@@ -37,11 +37,13 @@ Installation for first time:
 >>1.Set the address for your datahub GMS endpoint:Which is your datahub address but on port :8080
 >>2.Set your datahub account Name
 >5. Edit root/frontend/.env file using any texteditor.
->>Set the timeout value according to how long your machine takes to fetch 'getdataset' see picture below; U can leave it blank first, and it will use the default value of 3000ms, once u found your value, edit it and re-install.
-
+>>Set the timeout value(must be more) according to how long your machine takes to fetch 'getdataset'(located in dev tools network tab) see picture below; U can leave it blank first, and it will use the default value of 3000ms, once u found your value, edit it and re-install.
+![Chrom dev tools network tab](https://user-images.githubusercontent.com/60865228/134888557-ee86ba13-5178-4cfd-bd2b-b6a36b895cc3.png)
 >6. CD back to root and type in the cmd 'docker-compose up'
 
 <br>
 
 You can just use cmd 'docker-compose up' everytime to start it, even if u already installed before.
+
+To reinstall, just go to your docker desktop and remove the containers then remove the images and run the command again.
 
