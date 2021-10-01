@@ -308,79 +308,13 @@ def getresult(Editeditems: List[EditedItem]):
             
 
         
-        
+        #fields needed to feed schema mce in mce_convinence.py
         creatoractor = originalschemadata["created"]["actor"]
         lastmodifiedactor = originalschemadata["lastModified"]["actor"]
-        
-
         schemaName= originalschemadata["schemaName"]
         timeforschemametadata = originalschemadata["lastModified"]["time"]
-        platformSchema = list(originalschemadata["platformSchema"].keys())[0]
-
-        #putting '' as str, want to know if can use None
-        documentSchema= ''
-        tableSchema= ''
-        rawSchema= ''
-        schema= ''
-        keySchema= ''
-        valueSchema= ''
-       
-        
-        #KafkaSchemaClass has 2 attr, documentSchema and keySchema, keySchema is optional
-        if platformSchema == "com.linkedin.schema.KafkaSchema":
-            documentSchema = originalschemadata["platformSchema"][platformSchema]["documentSchema"]
-            
-
-        
-        #EspressoSchemaClass has 2 attr, documentSchema and tableSchema, both is required
-        if platformSchema == "com.linkedin.schema.EspressoSchema":
-            documentSchema = originalschemadata["platformSchema"][platformSchema]["documentSchema"]
-            tableSchema = originalschemadata["platformSchema"][platformSchema]["tableSchema"]
-                  
-
-
-        #OracleDDLClass has 1 attr, tableSchema
-        if platformSchema == "com.linkedin.schema.OracleDDL":
-            tableSchema = originalschemadata["platformSchema"][platformSchema]["tableSchema"]
-            
-
-
-        #MySqlDDLClass has 1 attr, tableSchema
-        if platformSchema == "com.linkedin.schema.MySqlDDL":
-            tableSchema = originalschemadata["platformSchema"][platformSchema]["tableSchema"]
-       
-        
-        #PrestoDDLClass has 1 attr, rawSchema
-        if platformSchema == "com.linkedin.schema.PrestoDDL":
-            rawSchema = originalschemadata["platformSchema"][platformSchema]["rawSchema"]
-        
-            
-        
-        #BinaryJsonSchemaClass has 1 attr, schema
-        if platformSchema == "com.linkedin.schema.BinaryJsonSchema":
-            schema = originalschemadata["platformSchema"][platformSchema]["schema"]            
-
-
-        #OrcSchemaClass has 1 attr, schema
-        if platformSchema == "com.linkedin.schema.OrcSchema":
-            schema = originalschemadata["platformSchema"][platformSchema]["schema"]
-
-
-        #SchemalessClass has no attr    
-
-
-        #KeyValueSchemaClass has 2 attr, keySchema and valueSchema, both is required
-        if platformSchema == "com.linkedin.schema.KeyValueSchema":
-            keySchema = originalschemadata["platformSchema"][platformSchema]["keySchema"]
-            valueSchema = originalschemadata["platformSchema"][platformSchema]["valueSchema"]
-            
-
-
-        #OtherSchemaClass has 1 attr, rawSchema
-        if platformSchema == "com.linkedin.schema.OtherSchema":
-            rawSchema = originalschemadata["platformSchema"][platformSchema]["rawSchema"]
-        print(originalschemadata["platformSchema"][platformSchema].keys())
-
+        platformSchema = originalschemadata["platformSchema"]
+      
 
    
 
@@ -447,16 +381,8 @@ def getresult(Editeditems: List[EditedItem]):
                 make_schema_mce(
                 dataset_urn=datasetName,
                 platformName=platformName,
-
                 platformSchema = platformSchema,
-                documentSchema = documentSchema,
                 schemaName=schemaName,
-                tableSchema= tableSchema,
-                rawSchema=rawSchema,
-                schema=schema,
-                keySchema = keySchema,
-                valueSchema=valueSchema,
-
                 creatoractor=creatoractor,
                 lastmodifiedactor=lastmodifiedactor,
                 fields=field_params,
@@ -530,53 +456,53 @@ def getresult(Editeditems: List[EditedItem]):
         
 
         
-    #     metadata_record = MetadataChangeEvent(proposedSnapshot=dataset_snapshot)
+        metadata_record = MetadataChangeEvent(proposedSnapshot=dataset_snapshot)
     
         
-    #     for mce in metadata_record.proposedSnapshot.aspects:
-    #         if not mce.validate():
-    #             rootLogger.error(
-    #                 f"{mce.__class__} is not defined properly"
-    #             )
-    #             return Response(
-    #                 f"Dataset was not created because dataset definition has encountered an error for {mce.__class__}",
-    #                 status_code=400,
-    #             )
+        for mce in metadata_record.proposedSnapshot.aspects:
+            if not mce.validate():
+                rootLogger.error(
+                    f"{mce.__class__} is not defined properly"
+                )
+                return Response(
+                    f"Dataset was not created because dataset definition has encountered an error for {mce.__class__}",
+                    status_code=400,
+                )
         
         
                
                
-    #     try:
-    #         rootLogger.error(metadata_record)
-    #         emitter = DatahubRestEmitter(datahub_gms_endpoint)
-    #         emitter.emit_mce(metadata_record)
-    #         emitter._session.close()
-    #     except Exception as e:
-    #         rootLogger.debug(e)
-    #         return Response(
-    #         "Dataset was not created because upstream has encountered an error {}".format(e),
-    #         status_code=500,
-    #     )
+        try:
+            rootLogger.error(metadata_record)
+            emitter = DatahubRestEmitter(datahub_gms_endpoint)
+            emitter.emit_mce(metadata_record)
+            emitter._session.close()
+        except Exception as e:
+            rootLogger.debug(e)
+            return Response(
+            "Dataset was not created because upstream has encountered an error {}".format(e),
+            status_code=500,
+        )
             
-    #     rootLogger.info(
-    #         "Make_dataset_request_completed_for {} requested_by {}".format(
-    #             datasetName, requestor
-    #     )
-    #     )
-    # if(datasetEdited!=[]):
-    #     return Response(
-    #         "Datasets updated: {}\n\nrequested by: {}".format(
-    #             datasetEdited, requestor
-    #         ),
-    #         status_code=201,
-    #     )
-    # else:
-    #     return Response(
-    #         "No datasets were updated\n\nrequested by: {}".format(
-    #            requestor
-    #         ),
-    #         status_code=201,
-    #     )
+        rootLogger.info(
+            "Make_dataset_request_completed_for {} requested_by {}".format(
+                datasetName, requestor
+        )
+        )
+    if(datasetEdited!=[]):
+        return Response(
+            "Datasets updated: {}\n\nrequested by: {}".format(
+                datasetEdited, requestor
+            ),
+            status_code=201,
+        )
+    else:
+        return Response(
+            "No datasets were updated\n\nrequested by: {}".format(
+               requestor
+            ),
+            status_code=201,
+        )
         
     
 

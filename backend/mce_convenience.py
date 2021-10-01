@@ -203,16 +203,7 @@ def make_schema_mce(
     dataset_urn: str,
     platformName: str,
     schemaName: str,
-
     platformSchema: str,
-    #how to do str = None
-    documentSchema: str,
-    tableSchema: str,
-    rawSchema: str,
-    schema: str,
-    keySchema: str,
-    valueSchema: str,
-
     creatoractor: str,
     lastmodifiedactor: str,
     fields: List[Dict[str, str]],
@@ -248,19 +239,21 @@ def make_schema_mce(
             "com.linkedin.schema.RecordType": RecordTypeClass()           
         }.get(item["type"])
 
-
+    #Reverse engineering the platformschema to send to gms under schemametadata
+    platformSchemaKey = list(platformSchema.keys())[0]
+    platformSchemaValue = platformSchema[platformSchemaKey]
     platformSchema = {
-            "com.linkedin.schema.KafkaSchema": KafkaSchemaClass(documentSchema = documentSchema),
-            "com.linkedin.schema.EspressoSchema": EspressoSchemaClass(documentSchema = documentSchema, tableSchema = tableSchema),
-            "com.linkedin.schema.OracleDDL": OracleDDLClass(tableSchema = tableSchema),
-            "com.linkedin.schema.MySqlDDL": MySqlDDLClass(tableSchema = tableSchema),
-            "com.linkedin.schema.PrestoDDL": PrestoDDLClass(rawSchema = rawSchema),
-            "com.linkedin.schema.BinaryJsonSchema": BinaryJsonSchemaClass(schema = schema),
-            "com.linkedin.schema.OrcSchema": OrcSchemaClass(schema = schema),
+            "com.linkedin.schema.KafkaSchema": KafkaSchemaClass(documentSchema = platformSchemaValue.get("documentSchema")),
+            "com.linkedin.schema.EspressoSchema": EspressoSchemaClass(documentSchema = platformSchemaValue.get("documentSchema"), tableSchema = platformSchemaValue.get("tableSchema")),
+            "com.linkedin.schema.OracleDDL": OracleDDLClass(tableSchema = platformSchemaValue.get("tableSchema")),
+            "com.linkedin.schema.MySqlDDL": MySqlDDLClass(tableSchema = platformSchemaValue.get("tableSchema")),
+            "com.linkedin.schema.PrestoDDL": PrestoDDLClass(rawSchema = platformSchemaValue.get("rawSchema")),
+            "com.linkedin.schema.BinaryJsonSchema": BinaryJsonSchemaClass(schema = platformSchemaValue.get("schema")),
+            "com.linkedin.schema.OrcSchema": OrcSchemaClass(schema = platformSchemaValue.get("schema")),
             "com.linkedin.schema.Schemaless": SchemalessClass(),
-            "com.linkedin.schema.KeyValueSchema": KeyValueSchemaClass(keySchema = keySchema, valueSchema = valueSchema),
-            "com.linkedin.schema.OtherSchema": OtherSchemaClass(rawSchema = rawSchema)            
-        }[platformSchema]
+            "com.linkedin.schema.KeyValueSchema": KeyValueSchemaClass(keySchema = platformSchemaValue.get("keySchema"), valueSchema = platformSchemaValue.get("valueSchema")),
+            "com.linkedin.schema.OtherSchema": OtherSchemaClass(rawSchema = platformSchemaValue.get("rawSchema"))            
+        }.get(platformSchemaKey)
 
 
     mce = SchemaMetadataClass(
