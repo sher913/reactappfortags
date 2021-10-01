@@ -43,7 +43,7 @@ origins = [
 ]
 
 #Change this endpoint depeding on ur datahub endpoint, uses http://localhost:8080 if not defined
-datahub_gms_endpoint = os.getenv('datahub_gms_endpoint', 'http://172.104.42.65:8080')
+datahub_gms_endpoint = os.getenv('datahub_gms_endpoint', 'http://localhost:8080')
 
 
 
