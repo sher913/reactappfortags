@@ -43,7 +43,7 @@ origins = [
 ]
 
 #Change this endpoint depeding on ur datahub endpoint, uses http://localhost:8080 if not defined
-datahub_gms_endpoint = os.getenv('datahub_gms_endpoint', 'http://localhost:8080')
+datahub_gms_endpoint = os.getenv('datahub_gms_endpoint', 'http://172.104.42.65:8080')
 
 
 
@@ -103,14 +103,36 @@ def main():
             
     }
     parameters = {'action':'search'}
-
-    data = '{ "input": "*", "entity": "dataset", "start": 0, "count": 1000}'
+    start = 0
+    #max is 10k, limited by GMS
+    count =10000
+    data = '{ "input": "*", "entity": "dataset", "start": ' +str(start)+',' '"count": ' + str(count)+'}'
   
     response = requests.request("POST", URL, headers=headers, params = parameters, data=data)
+    datasetobject =response.json()
+    #gets the total count of entities, in this case; datasets
+    totalDatasetCount = datasetobject["value"]['numEntities']
+    #Remove the amount of datasets already collected from total count
+    totalDatasetCount-=count
+    #extracts urns(datasets) to a list  called datasets
+    datasets = datasetobject["value"]["metadata"]["urns"]
+    #loop in case there are more than 10k datasets
+    while totalDatasetCount > 0:
+        #adds the count to start value, since index starts with 0, it works
+        start+=count
+        #redefined the data string
+        data = '{ "input": "*", "entity": "dataset", "start": ' +str(start)+',' '"count": ' + str(count)+'}'
+        response = requests.request("POST", URL, headers=headers, params = parameters, data=data)
+        response = response.json()
+        #adds the urns from response to datasets list
+        datasets.extend(response["value"]["metadata"]["urns"])
+         #Remove the amount collected datasets from total count
+        totalDatasetCount-=count
+    
+    
+  
     #Array for aspects that datasets must have else will be dropped
     required_aspects = ["SchemaMetadata","DatasetKey", "BrowsePaths"]
-    datasetobject =response.json()
-    datasets = datasetobject["value"]["metadata"]["urns"]
     for dataset in datasets:
         keys_to_remove=[]
         aspects=getdatasetviaurn(dataset)
@@ -241,7 +263,7 @@ def getresult(Editeditems: List[EditedItem]):
         item.Browse_Path=item.Browse_Path.replace(" ", "")
         item.Browse_Path=item.Browse_Path.split(",")
     #Your datahub account name, uses user_not_specified if not specified
-    requestor=make_user_urn(os.getenv('actor', 'user_not_specified'))
+    requestor=make_user_urn(os.getenv('actor', 'datahub'))
 
     for dataset in datasetEdited:
         editablefield_params = []
@@ -357,7 +379,7 @@ def getresult(Editeditems: List[EditedItem]):
         #OtherSchemaClass has 1 attr, rawSchema
         if platformSchema == "com.linkedin.schema.OtherSchema":
             rawSchema = originalschemadata["platformSchema"][platformSchema]["rawSchema"]
-            
+        print(originalschemadata["platformSchema"][platformSchema].keys())
 
 
    
@@ -508,53 +530,53 @@ def getresult(Editeditems: List[EditedItem]):
         
 
         
-        metadata_record = MetadataChangeEvent(proposedSnapshot=dataset_snapshot)
+    #     metadata_record = MetadataChangeEvent(proposedSnapshot=dataset_snapshot)
     
         
-        for mce in metadata_record.proposedSnapshot.aspects:
-            if not mce.validate():
-                rootLogger.error(
-                    f"{mce.__class__} is not defined properly"
-                )
-                return Response(
-                    f"Dataset was not created because dataset definition has encountered an error for {mce.__class__}",
-                    status_code=400,
-                )
+    #     for mce in metadata_record.proposedSnapshot.aspects:
+    #         if not mce.validate():
+    #             rootLogger.error(
+    #                 f"{mce.__class__} is not defined properly"
+    #             )
+    #             return Response(
+    #                 f"Dataset was not created because dataset definition has encountered an error for {mce.__class__}",
+    #                 status_code=400,
+    #             )
         
         
                
                
-        try:
-            rootLogger.error(metadata_record)
-            emitter = DatahubRestEmitter(datahub_gms_endpoint)
-            emitter.emit_mce(metadata_record)
-            emitter._session.close()
-        except Exception as e:
-            rootLogger.debug(e)
-            return Response(
-            "Dataset was not created because upstream has encountered an error {}".format(e),
-            status_code=500,
-        )
+    #     try:
+    #         rootLogger.error(metadata_record)
+    #         emitter = DatahubRestEmitter(datahub_gms_endpoint)
+    #         emitter.emit_mce(metadata_record)
+    #         emitter._session.close()
+    #     except Exception as e:
+    #         rootLogger.debug(e)
+    #         return Response(
+    #         "Dataset was not created because upstream has encountered an error {}".format(e),
+    #         status_code=500,
+    #     )
             
-        rootLogger.info(
-            "Make_dataset_request_completed_for {} requested_by {}".format(
-                datasetName, requestor
-        )
-        )
-    if(datasetEdited!=[]):
-        return Response(
-            "Datasets updated: {}\n\nrequested by: {}".format(
-                datasetEdited, requestor
-            ),
-            status_code=201,
-        )
-    else:
-        return Response(
-            "No datasets were updated\n\nrequested by: {}".format(
-               requestor
-            ),
-            status_code=201,
-        )
+    #     rootLogger.info(
+    #         "Make_dataset_request_completed_for {} requested_by {}".format(
+    #             datasetName, requestor
+    #     )
+    #     )
+    # if(datasetEdited!=[]):
+    #     return Response(
+    #         "Datasets updated: {}\n\nrequested by: {}".format(
+    #             datasetEdited, requestor
+    #         ),
+    #         status_code=201,
+    #     )
+    # else:
+    #     return Response(
+    #         "No datasets were updated\n\nrequested by: {}".format(
+    #            requestor
+    #         ),
+    #         status_code=201,
+    #     )
         
     
 
