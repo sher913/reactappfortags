@@ -20,10 +20,12 @@ class App extends React.Component {
   constructor(props) {
     super(props)
       this.state = {
-        rows: [],
+        fieldrows: [],
         fieldcols:[],
+        datasetrows: [],
         datasetcols:[],
-        datasetrows: []
+        tagrows: [],
+        tagscols: []
               }
       }
 
@@ -39,17 +41,19 @@ class App extends React.Component {
       arr.splice(new_index, 0, arr.splice(old_index, 1)[0]);
       return arr; 
     };
-    //array holders for rows(rowsholder) and 2 column name holder(fieldcolsholder and datasetcolsholder)
+    //array holders for fieldrows(rowsholder) and 2 column name holder(fieldcolsholder and datasetcolsholder)
     const fieldcolsholder =[]
 
     const datasetcolsholder=[]
+
+    const tagscolsholder=[]
   
     const finalrowsholder=[]
     console.log("Timeout setting:", process.env.REACT_APP_TIMEOUT_SETTING ?? 'is undefined, so using default value of 3000',"ms")
  
     var elements
     var BrowsePathsholder=[]
-
+    var allTagsObject
 
 
     // on here, nid to make Python FASTAPI as middleware to bypass CORS, then axios.get(http://localhost/FASTAPI)
@@ -61,6 +65,8 @@ class App extends React.Component {
     { //pushing datasets data to 'elements' varaiable
       console.log("Datasets dopped: ", res["data"][1])
       elements = (res["data"][0])
+      allTagsObject = (res["data"][2])
+      console.log("AllTagswithCount:" ,allTagsObject)
       let count =0
       // aspectSchemaMetadata=['aspects']+['com.linkedin.schema.SchemaMetadata']
       
@@ -270,6 +276,7 @@ class App extends React.Component {
   //Columns header defintion #important
     fieldcolsholder.push("#", "Platform_Name", "Dataset_Name", "Field_Name", "Editable_Tags","Original_Tags", "Description", "Date_Modified")
     datasetcolsholder.push("Platform_Name", "Dataset_Name", "Dataset_BrowsePath", "Global_Tags","Dataset_Description", "Date_Modified","Origin")
+    tagscolsholder.push("Tag", "count")
    
     const datasetrowsholder= []
     var tempdatasetrowNames=[]
@@ -288,7 +295,7 @@ class App extends React.Component {
     console.log("Data to feed field columns:",finalrowsholder)
 
 
-    this.setState({datasetrows: datasetrowsholder,rows: finalrowsholder, fieldcols: fieldcolsholder, datasetcols: datasetcolsholder});
+    this.setState({datasetrows: datasetrowsholder,fieldrows: finalrowsholder, tagrows: allTagsObject, fieldcols: fieldcolsholder, datasetcols: datasetcolsholder, tagscols: tagscolsholder});
        }); 
    
     //init Datatable, #fieldTable #datasetTable are the table element ids
@@ -339,8 +346,13 @@ class App extends React.Component {
           ]
           
         }
-  
       )
+      var tagTable = $('#tagTable').DataTable(
+        {order: [[ 0, "asc" ]],
+          responsive: true,
+       
+       
+          "lengthMenu": [[10, 20, 100, -1], [10, 20, 100, "All"]]})
 
  //Iterate thru field and dataset table, add edited dataset to a tempArray then use it to add fields' properties and dataset properties to an object and send to Fast API
   $('#test').click(function () {
@@ -474,11 +486,9 @@ class App extends React.Component {
           <h3>Datahub Tagging UI</h3>
       </div>
   <div className="container" >
+
   <Tabs fill defaultActiveKey="Datasets"  id="uncontrolled-tab-example" className="mb-3">
-    <Tab eventKey="Datasets" title="Datasets">
-    
-    
-          
+    <Tab eventKey="Datasets" title="Datasets"> 
     <table id="datasetTable" class="table table-striped table-bordered table-sm row-border hover mb-5"> 
         <thead>
           <tr>
@@ -513,10 +523,8 @@ class App extends React.Component {
       </table>
     
     </Tab>
-    <Tab eventKey="Fields" title="Fields">
-  
- 
-          
+
+    <Tab eventKey="Fields" title="Fields">         
     <table id="fieldTable" class="table table-striped table-bordered table-sm row-border hover mb-5"> 
         <thead>
           <tr>
@@ -525,12 +533,10 @@ class App extends React.Component {
             <th>{result}</th>
         )
         })}
-            
-            
           </tr>
         </thead>
         <tbody>
-        {this.state.rows.map((result) => {
+        {this.state.fieldrows.map((result) => {
           return (
             <tr class="table-success">
    
@@ -552,7 +558,33 @@ class App extends React.Component {
        
     
     </Tab>
-   
+    <Tab eventKey="Tags" title="Tags">
+    <table id="tagTable" class="table table-striped table-bordered table-sm row-border hover mb-5"> 
+      <thead>
+          <tr>
+          {this.state.tagscols.map((result) => {
+          return (
+            <th>{result}</th>
+        )
+        })}
+         </tr>
+         </thead>
+        <tbody>
+        {this.state.tagrows.map((result) => {
+          return (
+            <tr class="table-success">
+                <td>{result.Tag}</td>
+                <td>{result.Count}</td>
+              </tr>
+        )
+        })}
+
+      </tbody>
+      </table>
+
+
+
+    </Tab>
     
   </Tabs>
   </div>

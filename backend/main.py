@@ -43,7 +43,7 @@ origins = [
 ]
 
 #Change this endpoint depeding on ur datahub endpoint, uses http://localhost:8080 if not defined
-datahub_gms_endpoint = os.getenv('datahub_gms_endpoint', 'http://localhost:8080')
+datahub_gms_endpoint = os.getenv('datahub_gms_endpoint' + ':8080', 'http://172.104.42.65:8080')
 
 
 
@@ -154,8 +154,58 @@ def main():
             dropped_datasets.append(dataset_missing_aspect)
         else:
             elements.append(aspects)
+   
+    return [elements, dropped_datasets, getalltagsandcount()]
+
+def getalltagsandcount():
+    URL =datahub_gms_endpoint+"/entities"
+    headers = {
+    'Content-Type': 'application/json',
+    'X-RestLi-Protocol-Version': '2.0.0'
+            
+    }
+    parameters = {'action':'search'}
+    start = 0
+    #max is 10k, limited by GMS
+    count =10000
+    data = '{ "input": "*", "entity": "tag", "start": ' +str(start)+',' '"count": ' + str(count)+'}'
+    response = requests.request("POST", URL, headers=headers, params = parameters, data=data)
+    response =response.json()
+    totalTagsCount = response["value"]['numEntities']
+    totalTagsCount-=count
+    AllTags = response["value"]["metadata"]["urns"]
+    while totalTagsCount > 0: 
+        #adds the count to start value, since index starts with 0, it works
+        start+=count
+        #redefined the data string
+        data = '{ "input": "*", "entity": "tag", "start": ' +str(start)+',' '"count": ' + str(count)+'}'
+        response = requests.request("POST", URL, headers=headers, params = parameters, data=data)
+        response = response.json()
+        #adds the urns from response to datasets list
+        AllTags.extend(response["value"]["metadata"]["urns"])
+         #Remove the amount collected datasets from total count
+        totalTagsCount-=count
+    cleanedTagsObject=[]
+    for tag in AllTags:
+        cleanedtag=tag.split(':')[-1]
+        cleanedTagsObject.append({"Tag":cleanedtag, "Count":gettagcount(cleanedtag)})
     
-    return [elements, dropped_datasets]
+    return cleanedTagsObject
+    
+def gettagcount(tag):
+    URL =datahub_gms_endpoint+"/entities"
+    headers = {
+    'Content-Type': 'application/json',
+    'X-RestLi-Protocol-Version': '2.0.0'
+            
+    }
+    parameters = {'action':'search'}
+
+    data = '{ "input": "'+tag+'", "entity": "dataset", "start": 0, "count": 1}'
+  
+    payload = requests.request("POST", URL, headers=headers, params = parameters, data=data)
+    payload=payload.json()
+    return payload["value"]['numEntities']
 
 def getdatasetviaurn(dataset):
     URL = datahub_gms_endpoint +"/entities/" +dataset
@@ -188,7 +238,7 @@ def istagindataset(tag):
     }
     parameters = {'action':'search'}
 
-    data = '{ "input": "'+tag+'", "entity": "tag", "start": 0, "count": 10}'
+    data = '{ "input": "'+tag+'", "entity": "tag", "start": 0, "count": 1}'
   
     payload = requests.request("POST", URL, headers=headers, params = parameters, data=data)
     payload=payload.json()
