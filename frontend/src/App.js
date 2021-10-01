@@ -50,7 +50,8 @@ class App extends React.Component {
   
     const finalrowsholder=[]
     console.log("Timeout setting:", process.env.REACT_APP_TIMEOUT_SETTING ?? 'is undefined, so using default value of 3000',"ms")
- 
+    //Change this endpoint depending on ur datahub endpoint, uses http://localhost:9002 if not defined
+    const datahub_address =  process.env.REACT_APP_DATAHUB_ADDRESS ?? 'http://locahost:9002/'
     var elements
     var BrowsePathsholder=[]
     var allTagsObject
@@ -354,6 +355,10 @@ class App extends React.Component {
        
           "lengthMenu": [[10, 20, 100, -1], [10, 20, 100, "All"]]})
 
+$('#tagTable').on('click', 'tbody tr', function() {
+  window.location.href = datahub_address+`/tag/urn:li:tag:${tagTable.row(this).data()[0]}`;
+});
+
  //Iterate thru field and dataset table, add edited dataset to a tempArray then use it to add fields' properties and dataset properties to an object and send to Fast API
   $('#test').click(function () {
     let editedrowsholder = {};
@@ -572,7 +577,7 @@ class App extends React.Component {
         <tbody>
         {this.state.tagrows.map((result) => {
           return (
-            <tr class="table-success">
+            <tr>
                 <td>{result.Tag}</td>
                 <td>{result.Count}</td>
               </tr>

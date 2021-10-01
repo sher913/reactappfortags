@@ -50,3 +50,31 @@ div.dataTables_wrapper {
 }
 
 
+#tagTable tbody tr{
+  background-color: #D1E7DD;
+}
+
+
+#tagTable tr.even:hover {
+	background-color: gray;
+  cursor: pointer;
+}
+
+#tagTable tr.even:hover td.sorting_1 {
+	background-color: gray;
+  cursor: pointer;
+}
+
+
+
+#tagTable tr.odd:hover {
+	background-color: gray;
+  cursor: pointer;
+}
+
+
+#tagTable tr.odd:hover td.sorting_1 {
+	background-color: gray;
+  cursor: pointer;
+}
+
