@@ -155,9 +155,9 @@ def main():
         else:
             elements.append(aspects)
    
-    return [elements, dropped_datasets, getalltagsandcount()]
+    return [elements, dropped_datasets, getalltags()]
 
-def getalltagsandcount():
+def getalltags():
     URL =datahub_gms_endpoint+"/entities"
     headers = {
     'Content-Type': 'application/json',
@@ -185,27 +185,13 @@ def getalltagsandcount():
         AllTags.extend(response["value"]["metadata"]["urns"])
          #Remove the amount collected datasets from total count
         totalTagsCount-=count
-    cleanedTagsObject=[]
+    cleanedTagsObject={}
     for tag in AllTags:
         cleanedtag=tag.split(':')[-1]
-        cleanedTagsObject.append({"Tag":cleanedtag, "Count":gettagcount(cleanedtag)})
+        cleanedTagsObject[cleanedtag]=({"Tag":cleanedtag, "Count":0})
+        
     
     return cleanedTagsObject
-    
-def gettagcount(tag):
-    URL =datahub_gms_endpoint+"/entities"
-    headers = {
-    'Content-Type': 'application/json',
-    'X-RestLi-Protocol-Version': '2.0.0'
-            
-    }
-    parameters = {'action':'search'}
-
-    data = '{ "input": "tags:'+tag+' OR fieldTags:'+tag+' OR editedFieldTags:'+tag+'", "entity": "dataset", "start": 0, "count": 1}'
-  
-    payload = requests.request("POST", URL, headers=headers, params = parameters, data=data)
-    payload=payload.json()
-    return payload["value"]['numEntities']
 
 def getdatasetviaurn(dataset):
     URL = datahub_gms_endpoint +"/entities/" +dataset

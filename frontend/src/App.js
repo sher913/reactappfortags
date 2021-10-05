@@ -46,6 +46,7 @@ class App extends React.Component {
 
     const datasetcolsholder=[]
 
+
     const tagscolsholder=[]
   
     const finalrowsholder=[]
@@ -56,6 +57,7 @@ class App extends React.Component {
     var BrowsePathsholder=[]
     var allTagsObject
 
+    
 
     // on here, nid to make Python FASTAPI as middleware to bypass CORS, then axios.get(http://localhost/FASTAPI)
     axios.get('http://localhost:8000/getdatasets', {
@@ -67,7 +69,6 @@ class App extends React.Component {
       console.log("Datasets dopped: ", res["data"][1])
       elements = (res["data"][0])
       allTagsObject = (res["data"][2])
-      console.log("AllTagswithCount:" ,allTagsObject)
       let count =0
       // aspectSchemaMetadata=['aspects']+['com.linkedin.schema.SchemaMetadata']
       
@@ -88,6 +89,18 @@ class App extends React.Component {
 
 //for loop for total datasets iteration
     for(let i=0; i< elements.length; i++){
+      //To capture Tag Count of GlobalTags which is dataset level hence, placed above fields for loop
+      if(elements[i]["GlobalTags"]!==undefined){         
+        for(let k=0; k< elements[i]["GlobalTags"]["tags"].length; k++){
+          if((elements[i]["GlobalTags"]["tags"][k]["tag"].split(':').pop() in allTagsObject)){
+            allTagsObject[elements[i]["GlobalTags"]["tags"][k]["tag"].split(':').pop()]['Count'] ++
+          }
+          //Mostly redundant, however it could capture anomalies of tags that did not end up in database but assigned to dataset
+          else{
+            allTagsObject[elements[i]["GlobalTags"]["tags"][k]["tag"].split(':').pop()] = {'Tag': elements[i]["GlobalTags"]["tags"][k]["tag"].split(':').pop(), 'Count': 1}
+          }
+        }
+      }
       for(let j=0; j< elements[i]["SchemaMetadata"]["fields"].length; j++){
         let rowsholder={}
         
@@ -106,8 +119,7 @@ class App extends React.Component {
             globaltagholder.push(' ')
           }
           else{
-          for(let k=0; k< elements[i]["GlobalTags"]["tags"].length; k++){
-            
+          for(let k=0; k< elements[i]["GlobalTags"]["tags"].length; k++){          
             if(k>0){
               globaltagholder.push(', '+ elements[i]["GlobalTags"]["tags"][k]["tag"].split(':').pop())
             }
@@ -140,6 +152,14 @@ class App extends React.Component {
           tagsholder.push(' ')
         }else{
           for(let l=0; l< elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"].length; l++){
+            //Captures Tag count for editableSchema field Tags.
+              if((elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"][l]["tag"].split(':').pop() in allTagsObject)){
+                allTagsObject[elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"][l]["tag"].split(':').pop()]['Count'] ++
+              }
+              //Mostly redundant, however it could capture anomalies of tags that did not end up in database but assigned to dataset
+              else{
+                allTagsObject[elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"][l]["tag"].split(':').pop()] = {'Tag': elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"][l]["tag"].split(':').pop(), 'Count': 1}
+              }
             if(l>0){
               tagsholder.push(', ' + (elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"][l]["tag"].split(':').pop()))
             }else{
@@ -150,7 +170,7 @@ class App extends React.Component {
     }
         Object.assign(rowsholder, ({"Editable_Tags": tagsholder}))
         
-        //If have editableschemametadata but fieldpaths dont match, set to NO
+        //If have editableschemametadata but fieldpaths dont match, capture empty string instead
       }else{
         let tagsholder= []
         tagsholder.push(' ')
@@ -172,6 +192,14 @@ class App extends React.Component {
           tagsholder.push(' ')
         }else{
         for(let m=0; m< elements[i]["SchemaMetadata"]["fields"][j]["globalTags"]["tags"].length; m++){
+          //Captures Tag Count of Schemametdata field Tags
+          if((elements[i]["SchemaMetadata"]["fields"][j]["globalTags"]["tags"][m]["tag"].split(':').pop() in allTagsObject)){
+            allTagsObject[elements[i]["SchemaMetadata"]["fields"][j]["globalTags"]["tags"][m]["tag"].split(':').pop()]['Count'] ++
+          }
+          //Mostly redundant, however it could capture anomalies of tags that did not end up in database but assigned to dataset
+          else{
+            allTagsObject[elements[i]["SchemaMetadata"]["fields"][j]["globalTags"]["tags"][m]["tag"].split(':').pop()] = {'Tag': elements[i]["SchemaMetadata"]["fields"][j]["globalTags"]["tags"][m]["tag"].split(':').pop(), 'Count': 1}
+          }
             if(m>0){
           tagsholder.push(', ' + (elements[i]["SchemaMetadata"]["fields"][j]["globalTags"]["tags"][m]["tag"].split(':').pop()))
          
@@ -296,7 +324,7 @@ class App extends React.Component {
     console.log("Data to feed field columns:",finalrowsholder)
 
 
-    this.setState({datasetrows: datasetrowsholder,fieldrows: finalrowsholder, tagrows: allTagsObject, fieldcols: fieldcolsholder, datasetcols: datasetcolsholder, tagscols: tagscolsholder});
+    this.setState({datasetrows: datasetrowsholder,fieldrows: finalrowsholder, tagrows: Object.values(allTagsObject), fieldcols: fieldcolsholder, datasetcols: datasetcolsholder, tagscols: tagscolsholder});
        }); 
    
     //init Datatable, #fieldTable #datasetTable are the table element ids
