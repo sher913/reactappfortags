@@ -90,10 +90,10 @@ class App extends React.Component {
             let datasetGlobalTags = elements[i]["GlobalTags"]["tags"].map((tags) => tags["tag"].split(":").pop());
             for (let k = 0; k < datasetGlobalTags.length; k++) {
               if (datasetGlobalTags[k] in allTagsObject) {
-                //TEST THIS LINE IF NULL CAN +=1, EDITABLE AND SCHEMA tag count lines also need to test, if this line can create non-exisitant object, can delete else line ###
+                //Adds to the count counter by one for each tag captured accordingly
                 allTagsObject[datasetGlobalTags[k]]["Count"] += 1;
               }
-              //Mostly redundant, however it could capture anomalies of tags that did not end up in database but assigned to dataset
+              //Mostly redundant since we gather all tags in database, however it could capture anomalies of tags that did not end up in database but assigned to dataset
               else {
                 allTagsObject[datasetGlobalTags[k]] = {
                   Tag: datasetGlobalTags[k],

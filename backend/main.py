@@ -39,6 +39,7 @@ from mce_convenience import (
     make_editableschema_mce,
     make_TagProperties_mce,
     make_dataset_editable_description_mce,
+    str_to_list,
 )
 from models import (
     FieldParam,
@@ -308,15 +309,14 @@ def getresult(Editeditems: List[EditedItem]):
         if item.Dataset_Name not in datasetEdited:
             datasetEdited.append(item.Dataset_Name)
 
-        # makes the edited tags into a list for a fields and for BrowsePaths
-        item.Editable_Tags = item.Editable_Tags.replace(" ", "")
-        item.Editable_Tags = item.Editable_Tags.split(",")
-        item.Original_Tags = item.Original_Tags.replace(" ", "")
-        item.Original_Tags = item.Original_Tags.split(",")
-        item.Global_Tags = item.Global_Tags.replace(" ", "")
-        item.Global_Tags = item.Global_Tags.split(",")
-        item.Browse_Path = item.Browse_Path.replace(" ", "")
-        item.Browse_Path = item.Browse_Path.split(",")
+        # makes the edited tags into a list for booth editable,schemameta fields and for BrowsePaths
+        # str_to_list(item.Editable_Tags)
+        #Ask this on FRI
+        item.Editable_Tags = item.Editable_Tags.replace(" ", "").split(",")
+        item.Original_Tags = item.Original_Tags.replace(" ", "").split(",")
+        item.Global_Tags = item.Global_Tags.replace(" ", "").split(",")
+        item.Browse_Path = item.Browse_Path.replace(" ", "").split(",")
+
     # Your datahub account name, uses user_not_specified if not specified
     requestor = make_user_urn(os.getenv("actor", "datahub"))
 

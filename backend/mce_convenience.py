@@ -19,6 +19,11 @@ DEFAULT_FLOW_CLUSTER = "prod"
 
 T = TypeVar("T")
 
+def str_to_list(str):
+    str = str.replace(" ", "").split(",")
+
+   
+
 
 def get_sys_time() -> int:
     return int(time.time() * 1000)
