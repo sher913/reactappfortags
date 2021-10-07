@@ -43,6 +43,7 @@ def make_user_urn(username: str) -> str:
 def make_tag_urn(tag: str) -> str:
     return f"urn:li:tag:{tag}"
 
+
 def make_institutionalmemory_mce(
     dataset_urn: str, input_url: List[str], input_description: List[str], actor: str
 ) -> InstitutionalMemoryClass:
@@ -52,20 +53,21 @@ def make_institutionalmemory_mce(
     sys_time = get_sys_time()
     actor = make_user_urn(actor)
     mce = InstitutionalMemoryClass(
-            elements=[
-                InstitutionalMemoryMetadataClass(
-                    url=url,
-                    description=description,
-                    createStamp=AuditStampClass(
-                        time=sys_time,
-                        actor=actor,
-                    ),
-                )
-                for url, description in zip(input_url, input_description)
-            ]
-        )
+        elements=[
+            InstitutionalMemoryMetadataClass(
+                url=url,
+                description=description,
+                createStamp=AuditStampClass(
+                    time=sys_time,
+                    actor=actor,
+                ),
+            )
+            for url, description in zip(input_url, input_description)
+        ]
+    )
 
     return mce
+
 
 def make_browsepath_mce(
     path: List[str],
@@ -128,75 +130,56 @@ def make_dataset_description_mce(
     Tags and externalUrl doesnt seem to have any impact on UI.
     """
     return DatasetPropertiesClass(
-                    description=description,
-                    externalUrl=externalUrl,
-                    customProperties=customProperties
-                )
+        description=description,
+        externalUrl=externalUrl,
+        customProperties=customProperties,
+    )
+
 
 def make_dataset_editable_description_mce(
     requestor: str,
     description: str,
-)-> EditableDatasetPropertiesClass:
+) -> EditableDatasetPropertiesClass:
     sys_time = get_sys_time()
 
-    mce= EditableDatasetPropertiesClass(
+    mce = EditableDatasetPropertiesClass(
         description=description,
         created=AuditStampClass(time=sys_time, actor=requestor),
-        lastModified=AuditStampClass(time=sys_time, actor=requestor)
-
+        lastModified=AuditStampClass(time=sys_time, actor=requestor),
     )
     return mce
 
 
-def make_TagProperties_mce(
-    name= str
-) ->TagPropertiesClass:
+def make_TagProperties_mce(name=str) -> TagPropertiesClass:
 
-    return TagPropertiesClass(
-        name = name
-    )
+    return TagPropertiesClass(name=name)
+
 
 def make_schemaglobaltags_mce(
-     tags: List[str]= None,
-)  -> GlobalTagsClass:
-    
+    tags: List[str] = None,
+) -> GlobalTagsClass:
 
-    return GlobalTagsClass(
-        tags=tags
-
-    )
+    return GlobalTagsClass(tags=tags)
 
 
 def make_editableschema_mce(
-    
-
-    requestor: str,
-    editablefields: List[Dict[str, str]]
-    
-    
+    requestor: str, editablefields: List[Dict[str, str]]
 ) -> MetadataChangeEventClass:
     sys_time = get_sys_time()
     mce = EditableSchemaMetadataClass(
-        #using datahub as requestor, change varaiable requestor in main.py(FASTAPI) if you are another user
+        # using datahub as requestor, change varaiable requestor in main.py(FASTAPI) if you are another user
         created=AuditStampClass(time=sys_time, actor=requestor),
         lastModified=AuditStampClass(time=sys_time, actor=requestor),
         editableSchemaFieldInfo=[
             EditableSchemaFieldInfoClass(
-                fieldPath = field["fieldPath"],
-                description= field["field_description"],
-                globalTags=GlobalTagsClass(tags=field.get("tags"))
+                fieldPath=field["fieldPath"],
+                description=field["field_description"],
+                globalTags=GlobalTagsClass(tags=field.get("tags")),
             )
             for field in editablefields
-        ]
-
-
+        ],
     )
     return mce
-
-
-
-
-
 
 
 def make_schema_mce(
@@ -210,7 +193,6 @@ def make_schema_mce(
     primaryKeys: List[str] = None,
     foreignKeysSpecs: List[str] = None,
     system_time: int = None,
-    
 ) -> MetadataChangeEventClass:
     if system_time:
         try:
@@ -236,31 +218,50 @@ def make_schema_mce(
             "com.linkedin.schema.MapType": MapTypeClass(),
             "com.linkedin.schema.ArrayType": ArrayTypeClass(),
             "com.linkedin.schema.UnionType": UnionTypeClass(),
-            "com.linkedin.schema.RecordType": RecordTypeClass()           
+            "com.linkedin.schema.RecordType": RecordTypeClass(),
         }.get(item["type"])
 
-    #Reverse engineering the platformschema to send to gms under schemametadata
+    # Reverse engineering the platformschema to send to gms under schemametadata
     platformSchemaKey = list(platformSchema.keys())[0]
     platformSchemaValue = platformSchema[platformSchemaKey]
     platformSchema = {
-            "com.linkedin.schema.KafkaSchema": KafkaSchemaClass(documentSchema = platformSchemaValue.get("documentSchema")),
-            "com.linkedin.schema.EspressoSchema": EspressoSchemaClass(documentSchema = platformSchemaValue.get("documentSchema"), tableSchema = platformSchemaValue.get("tableSchema")),
-            "com.linkedin.schema.OracleDDL": OracleDDLClass(tableSchema = platformSchemaValue.get("tableSchema")),
-            "com.linkedin.schema.MySqlDDL": MySqlDDLClass(tableSchema = platformSchemaValue.get("tableSchema")),
-            "com.linkedin.schema.PrestoDDL": PrestoDDLClass(rawSchema = platformSchemaValue.get("rawSchema")),
-            "com.linkedin.schema.BinaryJsonSchema": BinaryJsonSchemaClass(schema = platformSchemaValue.get("schema")),
-            "com.linkedin.schema.OrcSchema": OrcSchemaClass(schema = platformSchemaValue.get("schema")),
-            "com.linkedin.schema.Schemaless": SchemalessClass(),
-            "com.linkedin.schema.KeyValueSchema": KeyValueSchemaClass(keySchema = platformSchemaValue.get("keySchema"), valueSchema = platformSchemaValue.get("valueSchema")),
-            "com.linkedin.schema.OtherSchema": OtherSchemaClass(rawSchema = platformSchemaValue.get("rawSchema"))            
-        }.get(platformSchemaKey)
-
+        "com.linkedin.schema.KafkaSchema": KafkaSchemaClass(
+            documentSchema=platformSchemaValue.get("documentSchema")
+        ),
+        "com.linkedin.schema.EspressoSchema": EspressoSchemaClass(
+            documentSchema=platformSchemaValue.get("documentSchema"),
+            tableSchema=platformSchemaValue.get("tableSchema"),
+        ),
+        "com.linkedin.schema.OracleDDL": OracleDDLClass(
+            tableSchema=platformSchemaValue.get("tableSchema")
+        ),
+        "com.linkedin.schema.MySqlDDL": MySqlDDLClass(
+            tableSchema=platformSchemaValue.get("tableSchema")
+        ),
+        "com.linkedin.schema.PrestoDDL": PrestoDDLClass(
+            rawSchema=platformSchemaValue.get("rawSchema")
+        ),
+        "com.linkedin.schema.BinaryJsonSchema": BinaryJsonSchemaClass(
+            schema=platformSchemaValue.get("schema")
+        ),
+        "com.linkedin.schema.OrcSchema": OrcSchemaClass(
+            schema=platformSchemaValue.get("schema")
+        ),
+        "com.linkedin.schema.Schemaless": SchemalessClass(),
+        "com.linkedin.schema.KeyValueSchema": KeyValueSchemaClass(
+            keySchema=platformSchemaValue.get("keySchema"),
+            valueSchema=platformSchemaValue.get("valueSchema"),
+        ),
+        "com.linkedin.schema.OtherSchema": OtherSchemaClass(
+            rawSchema=platformSchemaValue.get("rawSchema")
+        ),
+    }.get(platformSchemaKey)
 
     mce = SchemaMetadataClass(
         schemaName,
         platform=platformName,
         version=0,
-        #Modfied to record both last modified actor and creator
+        # Modfied to record both last modified actor and creator
         created=AuditStampClass(time=sys_time, actor=creatoractor),
         lastModified=AuditStampClass(time=get_sys_time(), actor=lastmodifiedactor),
         hash="",
@@ -272,8 +273,10 @@ def make_schema_mce(
                 nativeDataType=item.get("nativeType", ""),
                 description=item.get("field_description", ""),
                 nullable=item.get("nullable", None),
-                globalTags=GlobalTagsClass(tags=item.get("tags")) if item.get("tags") else None,
-                recursive = item.get("recursive", None),
+                globalTags=GlobalTagsClass(tags=item.get("tags"))
+                if item.get("tags")
+                else None,
+                recursive=item.get("recursive", None),
             )
             for item in fields
         ],
@@ -282,26 +285,30 @@ def make_schema_mce(
     )
     return mce
 
+
 def make_ownership_mce(actor: str, dataset_urn: str) -> OwnershipClass:
     return OwnershipClass(
-                owners=[
-                    OwnerClass(
-                        owner=actor,
-                        type=OwnershipTypeClass.DATAOWNER,
-                    )
-                ],
-                lastModified=AuditStampClass(
-                    time=int(time.time() * 1000),
-                    actor=make_user_urn(actor),
-                ),
+        owners=[
+            OwnerClass(
+                owner=actor,
+                type=OwnershipTypeClass.DATAOWNER,
             )
-            
+        ],
+        lastModified=AuditStampClass(
+            time=int(time.time() * 1000),
+            actor=make_user_urn(actor),
+        ),
+    )
+
+
 def generate_json_output(mce: MetadataChangeEventClass, file_loc: str) -> None:
     """
     Generates the json MCE files that can be ingested via CLI. For debugging
-    """    
+    """
     mce_obj = mce.to_obj()
-    file_name = mce.proposedSnapshot.urn.replace("urn:li:dataset:(urn:li:dataPlatform:", "").split(",")[1]
+    file_name = mce.proposedSnapshot.urn.replace(
+        "urn:li:dataset:(urn:li:dataPlatform:", ""
+    ).split(",")[1]
     path = os.path.join(file_loc, f"{file_name}.json")
 
     with open(path, "w") as f:
