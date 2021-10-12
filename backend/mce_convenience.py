@@ -17,12 +17,7 @@ log = logging.getLogger(__name__)
 DEFAULT_ENV = "PROD"
 DEFAULT_FLOW_CLUSTER = "prod"
 
-T = TypeVar("T")
-
-def str_to_list(str):
-    str = str.replace(" ", "").split(",")
-
-   
+T = TypeVar("T")   
 
 
 def get_sys_time() -> int:

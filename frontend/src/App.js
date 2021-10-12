@@ -86,12 +86,14 @@ class App extends React.Component {
         //for loop for total datasets iteration
         for (let i = 0; i < elements.length; i++) {
           //To capture Tag Count of GlobalTags which is dataset level hence, placed above fields for loop
+          let distinctTagCountChecker = new Set();
           if (elements[i]["GlobalTags"] !== undefined) {
             let datasetGlobalTags = elements[i]["GlobalTags"]["tags"].map((tags) => tags["tag"].split(":").pop());
             for (let k = 0; k < datasetGlobalTags.length; k++) {
               if (datasetGlobalTags[k] in allTagsObject) {
                 //Adds to the count counter by one for each tag captured accordingly
                 allTagsObject[datasetGlobalTags[k]]["Count"] += 1;
+                distinctTagCountChecker.add(datasetGlobalTags[k]);
               }
               //Mostly redundant since we gather all tags in database, however it could capture anomalies of tags that did not end up in database but assigned to dataset
               else {
@@ -155,16 +157,19 @@ class App extends React.Component {
                     let editableFieldTags = elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"].map((tags) => tags["tag"].split(":").pop());
                     tagsholder.push(editableFieldTags.join(", "));
                     for (let l = 0; l < editableFieldTags.length; l++) {
-                      //Captures Tag count for editableSchema field Tags.
-                      if (editableFieldTags[l] in allTagsObject) {
-                        allTagsObject[editableFieldTags[l]]["Count"] += 1;
-                      }
-                      //Mostly redundant, however it could capture anomalies of tags that did not end up in database but assigned to dataset
-                      else {
-                        allTagsObject[editableFieldTags[l]] = {
-                          Tag: editableFieldTags[l],
-                          Count: 1,
-                        };
+                      //Check if tag has been captured for the dataset, else captures Tag count for editableSchema field Tags.
+                      if (!distinctTagCountChecker.has(editableFieldTags[l])) {
+                        if (editableFieldTags[l] in allTagsObject) {
+                          allTagsObject[editableFieldTags[l]]["Count"] += 1;
+                          distinctTagCountChecker.add(editableFieldTags[l]);
+                        }
+                        //Mostly redundant, however it could capture anomalies of tags that did not end up in database but assigned to dataset
+                        else {
+                          allTagsObject[editableFieldTags[l]] = {
+                            Tag: editableFieldTags[l],
+                            Count: 1,
+                          };
+                        }
                       }
                     }
                   }
@@ -193,16 +198,20 @@ class App extends React.Component {
                 let schemaFieldTags = elements[i]["SchemaMetadata"]["fields"][j]["globalTags"]["tags"].map((tags) => tags["tag"].split(":").pop());
                 tagsholder.push(schemaFieldTags.join(", "));
                 for (let m = 0; m < schemaFieldTags.length; m++) {
-                  //Captures Tag Count of Schemametdata field Tags
-                  if (schemaFieldTags[m] in allTagsObject) {
-                    allTagsObject[schemaFieldTags[m]]["Count"] += 1;
-                  }
-                  //Mostly redundant, however it could capture anomalies of tags that did not end up in database but assigned to dataset
-                  else {
-                    allTagsObject[schemaFieldTags[m]] = {
-                      Tag: schemaFieldTags[m],
-                      Count: 1,
-                    };
+                  //Check if tag has been captured for the dataset, else captures Tag Count of Schemametdata field Tags
+
+                  if (!distinctTagCountChecker.has(schemaFieldTags[m])) {
+                    if (schemaFieldTags[m] in allTagsObject) {
+                      allTagsObject[schemaFieldTags[m]]["Count"] += 1;
+                      distinctTagCountChecker.add(schemaFieldTags[m]);
+                    }
+                    //Mostly redundant, however it could capture anomalies of tags that did not end up in database but assigned to dataset
+                    else {
+                      allTagsObject[schemaFieldTags[m]] = {
+                        Tag: schemaFieldTags[m],
+                        Count: 1,
+                      };
+                    }
                   }
                 }
               }

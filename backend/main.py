@@ -39,7 +39,6 @@ from mce_convenience import (
     make_editableschema_mce,
     make_TagProperties_mce,
     make_dataset_editable_description_mce,
-    str_to_list,
 )
 from models import (
     FieldParam,
