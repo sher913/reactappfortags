@@ -2,8 +2,14 @@ This is the web i will be developing for my intern, it is based on React, FASTAP
 
 For now i am using a datahub's restendpoint on a VM, if you do not have access to that VM, you have to change the local host endpoint address
 
-Features:
-Able to use this react UI to update information on datasets within Datahub through GMS
+Key Features:
+Able to use this react UI to update information on datasets within Datahub through GMS:
+
+1. Update all aspects of datasets, E.g. BrowsePath, Tags assigned to it, Description
+2. Display tags assigned to datasets and their count
+3. Able to edit those tags and affect the respective datasets it is assigned to
+   <br>
+
 ![Image of data table](https://user-images.githubusercontent.com/60865228/136764352-b42a6e7b-6e8c-4ab7-9d70-196dced01c75.gif)
 
 This is one of the dataset on Datahub
