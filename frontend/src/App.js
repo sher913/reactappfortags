@@ -440,13 +440,13 @@ class App extends React.Component {
               //To use to change the tag values before submitting to FASTAPI
               changedTagsObjectholder[originalTag] = EditedTag;
               for (let j = 0; j < finalrowsholder.length; j++) {
-                let global_tags = finalrowsholder[j].Global_Tags[0].replace(/\s/g, "").split(",");
-                let editable_tags = finalrowsholder[j].Editable_Tags[0].replace(/\s/g, "").split(",");
-                let original_tags = finalrowsholder[j].Original_Tags[0].replace(/\s/g, "").split(",");
+                let Original_global_tags = finalrowsholder[j].Global_Tags[0].replace(/\s/g, "").split(",");
+                let Original_editable_tags = finalrowsholder[j].Editable_Tags[0].replace(/\s/g, "").split(",");
+                let Original_original_tags = finalrowsholder[j].Original_Tags[0].replace(/\s/g, "").split(",");
                 if (
-                  global_tags.some((r) => Object.keys(changedTagsObjectholder).includes(r)) ||
-                  editable_tags.some((r) => Object.keys(changedTagsObjectholder).includes(r)) ||
-                  original_tags.some((r) => Object.keys(changedTagsObjectholder).includes(r))
+                  Original_global_tags.some((r) => Object.keys(changedTagsObjectholder).includes(r)) ||
+                  Original_editable_tags.some((r) => Object.keys(changedTagsObjectholder).includes(r)) ||
+                  Original_original_tags.some((r) => Object.keys(changedTagsObjectholder).includes(r))
                 ) {
                   tempdatasetnameholder.add(finalrowsholder[j].Dataset_Name);
                 }
