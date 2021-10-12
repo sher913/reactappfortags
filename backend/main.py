@@ -90,12 +90,12 @@ class EditedItem(BaseModel):
     Origin: str
     Platform_Name: str
     Dataset_Name: str
-    Global_Tags: Optional[str] = None
+    Global_Tags: Optional[List[str]] = None
     Field_Name: str
-    Editable_Tags: Optional[str] = None
-    Original_Tags: Optional[str] = None
+    Editable_Tags: Optional[List[str]] = None
+    Original_Tags: Optional[List[str]] = None
     Description: Optional[str] = None
-    Browse_Path: Optional[str] = None
+    Browse_Path: Optional[List[str]] = None
     Dataset_Description: Optional[str] = None
 
 
@@ -307,15 +307,7 @@ def getresult(Editeditems: List[EditedItem]):
         # extracts all edited unique datasets to use as for loops
         if item.Dataset_Name not in datasetEdited:
             datasetEdited.append(item.Dataset_Name)
-
-        # makes the edited tags into a list for booth editable,schemameta fields and for BrowsePaths
-        # str_to_list(item.Editable_Tags)
-        #Ask this on FRI
-        item.Editable_Tags = item.Editable_Tags.replace(" ", "").split(",")
-        item.Original_Tags = item.Original_Tags.replace(" ", "").split(",")
-        item.Global_Tags = item.Global_Tags.replace(" ", "").split(",")
-        item.Browse_Path = item.Browse_Path.replace(" ", "").split(",")
-
+     
     # Your datahub account name, uses user_not_specified if not specified
     requestor = make_user_urn(os.getenv("actor", "datahub"))
 

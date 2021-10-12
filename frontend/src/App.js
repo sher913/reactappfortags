@@ -326,7 +326,7 @@ class App extends React.Component {
         //Columns header defintion #important
         fieldcolsholder.push("#", "Platform_Name", "Dataset_Name", "Field_Name", "Editable_Tags", "Original_Tags", "Description", "Date_Modified");
         datasetcolsholder.push("Platform_Name", "Dataset_Name", "Dataset_BrowsePath", "Global_Tags", "Dataset_Description", "Date_Modified", "Origin");
-        tagscolsholder.push("Tag", "count");
+        tagscolsholder.push("Tag", "Count");
 
         const datasetrowsholder = [];
         var tempdatasetrowNames = [];
@@ -403,25 +403,57 @@ class App extends React.Component {
         ],
       });
       var tagTable = $("#tagTable").DataTable({
-        order: [[0, "asc"]],
+        order: [[1, "desc"]],
         responsive: true,
 
         lengthMenu: [
           [10, 20, 100, -1],
           [10, 20, 100, "All"],
         ],
+        columnDefs: [
+          {
+            type: "html-input",
+            targets: [0],
+            render: function (rows, type, row) {
+              return '<input class="form-control" type="text"  value ="' + rows + '">';
+            },
+          },
+        ],
       });
 
-      $("#tagTable").on("click", "tbody tr", function () {
+      $("#tagTable").on("click", "td:nth-child(2)", function () {
         window.location.href = datahub_address + `/tag/urn:li:tag:${tagTable.row(this).data()[0]}`;
       });
 
-      //Iterate thru field and dataset table, add edited dataset to a tempArray then use it to add fields' properties and dataset properties to an object and send to Fast API
+      //Iterate thru field dataset table and tags table, add edited dataset to a tempArray then use it to add fields' properties and dataset properties to an object and send to Fast API
       $("#test").click(function () {
         let editedrowsholder = {};
-        let tempIDnameholder = [];
-        let tempdatasetnameholder = [];
+        let tempdatasetnameholder = new Set();
         let finaleditedholder = [];
+        let changedTagsObjectholder = new Object();
+
+        function anyChangesfromTags() {
+          tagTable.rows().every(function () {
+            let originalTag = this.data()[0];
+            let EditedTag = $(tagTable.cell(this.index(), 0).node()).find("input").val();
+            if (originalTag !== EditedTag) {
+              //To use to change the tag values before submitting to FASTAPI
+              changedTagsObjectholder[originalTag] = EditedTag;
+              for (let j = 0; j < finalrowsholder.length; j++) {
+                let global_tags = finalrowsholder[j].Global_Tags[0].replace(/\s/g, "").split(",");
+                let editable_tags = finalrowsholder[j].Editable_Tags[0].replace(/\s/g, "").split(",");
+                let original_tags = finalrowsholder[j].Original_Tags[0].replace(/\s/g, "").split(",");
+                if (
+                  global_tags.some((r) => Object.keys(changedTagsObjectholder).includes(r)) ||
+                  editable_tags.some((r) => Object.keys(changedTagsObjectholder).includes(r)) ||
+                  original_tags.some((r) => Object.keys(changedTagsObjectholder).includes(r))
+                ) {
+                  tempdatasetnameholder.add(finalrowsholder[j].Dataset_Name);
+                }
+              }
+            }
+          });
+        }
 
         function anyChangesfromFields() {
           fieldTable.rows().every(function () {
@@ -431,7 +463,7 @@ class App extends React.Component {
               this.data()[6] !== $(fieldTable.cell(this.index(), 6).node()).find("input").val()
             ) {
               //Extracts the edited dataset names from array which contain edits and store in temp arrays
-              tempdatasetnameholder.push(this.data()[2]);
+              tempdatasetnameholder.add(this.data()[2]);
             }
           });
         }
@@ -442,8 +474,8 @@ class App extends React.Component {
               this.data()[3] !== $(datasetTable.cell(this.index(), 3).node()).find("input").val() ||
               this.data()[4] !== $(datasetTable.cell(this.index(), 4).node()).find("input").val()
             ) {
-              if (!tempdatasetnameholder.includes(this.data()[1])) {
-                tempdatasetnameholder.push(this.data()[1]);
+              if (!tempdatasetnameholder.has(this.data()[1])) {
+                tempdatasetnameholder.add(this.data()[1]);
               }
             }
           });
@@ -454,15 +486,27 @@ class App extends React.Component {
         //Takes the row and insert in finaleditedholder
         function addAllFieldsfromDataset() {
           fieldTable.rows().every(function () {
-            if ((tempdatasetnameholder.includes(this.data()[2]) && !tempIDnameholder.includes(parseInt(this.data()[0]))) === true) {
+            if (tempdatasetnameholder.has(this.data()[2])) {
+              let edited_tags = $(fieldTable.cell(this.index(), 4).node()).find("input").val().replace(/\s/g, "").split(",");
+              let orginal_tags = $(fieldTable.cell(this.index(), 5).node()).find("input").val().replace(/\s/g, "").split(",");
+              for (let j = 0; j < edited_tags.length; j++) {
+                if (Object.keys(changedTagsObjectholder).includes(edited_tags[j])) {
+                  edited_tags[j] = changedTagsObjectholder[edited_tags[j]];
+                }
+              }
+              for (let j = 0; j < orginal_tags.length; j++) {
+                if (Object.keys(changedTagsObjectholder).includes(orginal_tags[j])) {
+                  orginal_tags[j] = changedTagsObjectholder[orginal_tags[j]];
+                }
+              }
               let date = new Date();
               Object.assign(editedrowsholder, {
                 ID: parseInt(this.data()[0]),
                 Platform_Name: this.data()[1],
                 Dataset_Name: this.data()[2],
                 Field_Name: this.data()[3],
-                Editable_Tags: $(fieldTable.cell(this.index(), 4).node()).find("input").val(),
-                Original_Tags: $(fieldTable.cell(this.index(), 5).node()).find("input").val(),
+                Editable_Tags: edited_tags,
+                Original_Tags: orginal_tags,
                 Description: $(fieldTable.cell(this.index(), 6).node()).find("input").val(),
                 Date_Modified: Date.parse(date.toLocaleString()),
               });
@@ -478,9 +522,15 @@ class App extends React.Component {
           datasetTable.rows().every(function () {
             for (let j = 0; j < finaleditedholder.length; j++) {
               if (this.data()[0] === finaleditedholder[j].Platform_Name && this.data()[1] === finaleditedholder[j].Dataset_Name) {
+                let global_tags = $(datasetTable.cell(this.index(), 3).node()).find("input").val().replace(/\s/g, "").split(",");
+                for (let j = 0; j < global_tags.length; j++) {
+                  if (Object.keys(changedTagsObjectholder).includes(global_tags[j])) {
+                    global_tags[j] = changedTagsObjectholder[global_tags[j]];
+                  }
+                }
                 Object.assign(finaleditedholder[j], {
-                  Browse_Path: $(datasetTable.cell(this.index(), 2).node()).find("input").val(),
-                  Global_Tags: $(datasetTable.cell(this.index(), 3).node()).find("input").val(),
+                  Browse_Path: $(datasetTable.cell(this.index(), 2).node()).find("input").val().replace(/\s/g, "").split(","),
+                  Global_Tags: global_tags,
                   Dataset_Description: $(datasetTable.cell(this.index(), 4).node()).find("input").val(),
                   Origin: this.data()[6],
                 });
@@ -488,7 +538,8 @@ class App extends React.Component {
             }
           });
         }
-
+        //Check for changes in the Tags table
+        anyChangesfromTags();
         //Checks for changes in fields table, add dataset to tempdatasetArray
         anyChangesfromFields();
         //Checks for changes in dataset table, add dataset to tempdatasetArray if not in Array
@@ -498,7 +549,7 @@ class App extends React.Component {
         //Adds dataset level properties to the fields assigned to the object
         addDatasetProperties();
         console.log("Payload to send to FASTAPI: ", finaleditedholder);
-
+        console.log(changedTagsObjectholder);
         axios
           .post(
             "http://localhost:8000/getresult",
