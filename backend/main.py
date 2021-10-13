@@ -13,7 +13,7 @@ from starlette.datastructures import URL
 from starlette.responses import JSONResponse
 from pydantic import BaseModel
 import datetime
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 import json
 import socket
 
@@ -84,7 +84,6 @@ if not DEBUG:
 
 rootLogger.info("started!")
 
-
 class EditedItem(BaseModel):
     ID: int
     Origin: str
@@ -106,6 +105,7 @@ def read_root():
 
 @app.get("/getdatasets")
 def main():
+    global All_Tags
     elements = []
     dropped_datasets = []
     URL = datahub_gms_endpoint + "/entities"
@@ -172,8 +172,8 @@ def main():
             dropped_datasets.append(dataset_missing_aspect)
         else:
             elements.append(aspects)
-
-    return [elements, dropped_datasets, getalltags()]
+    All_Tags = getalltags()
+    return [elements, dropped_datasets, All_Tags]
 
 
 def getalltags():
@@ -252,53 +252,57 @@ def getdatasetviaurn(dataset):
     return newdatasetsnapshot
 
 
-def istagindataset(tag):
-    URL = datahub_gms_endpoint + "/entities"
-    headers = {"Content-Type": "application/json", "X-RestLi-Protocol-Version": "2.0.0"}
-    parameters = {"action": "search"}
-
-    data = '{ "input": "' + tag + '", "entity": "tag", "start": 0, "count": 1}'
-
-    payload = requests.request(
-        "POST", URL, headers=headers, params=parameters, data=data
+def addTagtoGms(tag):
+    tag_snapshot = TagSnapshot(
+        urn=make_tag_urn(tag),
+        aspects=[],
     )
-    payload = payload.json()
 
-    if not payload["value"]["numEntities"] >= 1:
-        tag_snapshot = TagSnapshot(
-            urn=make_tag_urn(tag),
-            aspects=[],
-        )
-
-        tag_snapshot.aspects.append(make_TagProperties_mce(name=tag))
-        tag_metadata_record = MetadataChangeEvent(proposedSnapshot=tag_snapshot)
-        # print(metadata_record)
-        for mce in tag_metadata_record.proposedSnapshot.aspects:
-            if not mce.validate():
-                rootLogger.error(f"{mce.__class__} is not defined properly")
-                return Response(
-                    f"Dataset was not created because dataset definition has encountered an error for {mce.__class__}",
-                    status_code=400,
-                )
-        try:
-            rootLogger.error(tag_metadata_record)
-            emitter = DatahubRestEmitter(datahub_gms_endpoint)
-            emitter.emit_mce(tag_metadata_record)
-            emitter._session.close()
-        except Exception as e:
-            rootLogger.debug(e)
+    tag_snapshot.aspects.append(make_TagProperties_mce(name=tag))
+    tag_metadata_record = MetadataChangeEvent(proposedSnapshot=tag_snapshot)
+    # print(metadata_record)
+    for mce in tag_metadata_record.proposedSnapshot.aspects:
+        if not mce.validate():
+            rootLogger.error(f"{mce.__class__} is not defined properly")
             return Response(
-                "Dataset was not created because upstream has encountered an error {}".format(
-                    e
-                ),
-                status_code=500,
+                f"Dataset was not created because dataset definition has encountered an error for {mce.__class__}",
+                status_code=400,
             )
-
-        rootLogger.info(
-            "Make_tag_request_completed_for {} requested_by {}".format(tag, "datahub")
+    try:
+        rootLogger.error(tag_metadata_record)
+        emitter = DatahubRestEmitter(datahub_gms_endpoint)
+        emitter.emit_mce(tag_metadata_record)
+        emitter._session.close()
+    except Exception as e:
+        rootLogger.debug(e)
+        return Response(
+            "Dataset was not created because upstream has encountered an error {}".format(
+                e
+            ),
+            status_code=500,
         )
 
+    rootLogger.info(
+        "Make_tag_request_completed_for {} requested_by {}".format(tag, "datahub")
+    )
 
+@app.post("/updatetag")
+def updatetags(Editedtags: Dict[Any, Any] = None):
+    tags_added =[]
+    for tag in Editedtags.values():
+        if tag not in All_Tags.keys():
+            addTagtoGms(tag)
+            tags_added.append(tag)
+    if tags_added != []:
+        return Response(
+            "Tags updated: {}".format(tags_added),
+            status_code=201,
+        )
+    else:
+        return Response(
+            "No datasets or tags were updated",
+            status_code=201,
+        )
 @app.post("/getresult")
 def getresult(Editeditems: List[EditedItem]):
 
@@ -310,7 +314,6 @@ def getresult(Editeditems: List[EditedItem]):
      
     # Your datahub account name, uses user_not_specified if not specified
     requestor = make_user_urn(os.getenv("actor", "datahub"))
-
     for dataset in datasetEdited:
         editablefield_params = []
         for item in Editeditems:
@@ -325,7 +328,10 @@ def getresult(Editeditems: List[EditedItem]):
                 for editabletag in item.Editable_Tags:
                     if editabletag != "":
                         editabletags.append({"tag": make_tag_urn(editabletag)})
-                        istagindataset(editabletag)
+                        if editabletag not in All_Tags.keys():
+                            print("print added new editableTag", editabletag)
+                            addTagtoGms(editabletag)
+                            All_Tags[editabletag] = {"Tag": editabletag, "Count": 0}
 
                 editable_field["tags"] = editabletags
 
@@ -400,12 +406,18 @@ def getresult(Editeditems: List[EditedItem]):
                     for globaltag in item.Global_Tags:
                         if globaltag != "":
                             globaltags.append({"tag": make_tag_urn(globaltag)})
-                            istagindataset(globaltag)
+                            if globaltag not in All_Tags.keys():
+                                print("print added new editableTag", globaltag)
+                                addTagtoGms(globaltag)
+                                All_Tags[globaltag] = {"Tag": globaltag, "Count": 0}
                     # for schemametadata aspects
                     for tag in item.Original_Tags:
                         if tag != "":
                             schemametadatatags.append({"tag": make_tag_urn(tag)})
-                            istagindataset(tag)
+                            if tag not in All_Tags.keys():
+                                print("print added new editableTag", tag)
+                                addTagtoGms(tag)
+                                All_Tags[tag] = {"Tag": tag, "Count": 0}
             if schemametadatatags != []:
                 current_field["tags"] = schemametadatatags
             # Filling the Array Checker for if tags for schemametadata has been edited, tags are the only varaiable editable for schemametadata

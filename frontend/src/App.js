@@ -54,305 +54,299 @@ class App extends React.Component {
     var allTagsObject;
 
     // on here, nid to make Python FASTAPI as middleware to bypass CORS, then axios.get(http://localhost/FASTAPI)
-    axios
-      .get("http://localhost:8000/getdatasets", {
-        headers: {
-          "X-RestLi-Protocol-Version": "2.0.0",
-        },
-      })
-      .then((res) => {
-        //pushing datasets data to 'elements' varaiable
-        console.log("Datasets dopped: ", res["data"][1]);
-        elements = res["data"][0];
-        allTagsObject = res["data"][2];
-        let count = 0;
-        // aspectSchemaMetadata=['aspects']+['com.linkedin.schema.SchemaMetadata']
+    axios.get("http://localhost:8000/getdatasets", {}).then((res) => {
+      //pushing datasets data to 'elements' varaiable
+      console.log("Datasets dopped: ", res["data"][1]);
+      elements = res["data"][0];
+      allTagsObject = res["data"][2];
+      let count = 0;
+      // aspectSchemaMetadata=['aspects']+['com.linkedin.schema.SchemaMetadata']
 
-        //For loop for all fields in dataset, compare with editableSchema fields; if exist, push both to first element of each array, thus index positions of both edited Schema
-        // and Schemameta(original) will match
-        for (let i = 0; i < elements.length; i++) {
-          for (let j = 0; j < elements[i]["SchemaMetadata"]["fields"].length; j++) {
-            if (elements[i]["EditableSchemaMetadata"] !== undefined) {
-              for (let a = 0; a < elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"].length; a++) {
-                if (elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][a]["fieldPath"] === elements[i]["SchemaMetadata"]["fields"][j]["fieldPath"]) {
-                  moveArrayItemToNewIndex(elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"], a, 0);
-                  moveArrayItemToNewIndex(elements[i]["SchemaMetadata"]["fields"], j, 0);
-                }
+      //For loop for all fields in dataset, compare with editableSchema fields; if exist, push both to first element of each array, thus index positions of both edited Schema
+      // and Schemameta(original) will match
+      for (let i = 0; i < elements.length; i++) {
+        for (let j = 0; j < elements[i]["SchemaMetadata"]["fields"].length; j++) {
+          if (elements[i]["EditableSchemaMetadata"] !== undefined) {
+            for (let a = 0; a < elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"].length; a++) {
+              if (elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][a]["fieldPath"] === elements[i]["SchemaMetadata"]["fields"][j]["fieldPath"]) {
+                moveArrayItemToNewIndex(elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"], a, 0);
+                moveArrayItemToNewIndex(elements[i]["SchemaMetadata"]["fields"], j, 0);
               }
             }
           }
         }
+      }
 
-        //for loop for total datasets iteration
-        for (let i = 0; i < elements.length; i++) {
-          //To capture Tag Count of GlobalTags which is dataset level hence, placed above fields for loop
-          let distinctTagCountChecker = new Set();
-          if (elements[i]["GlobalTags"] !== undefined) {
-            let datasetGlobalTags = elements[i]["GlobalTags"]["tags"].map((tags) => tags["tag"].split(":").pop());
-            for (let k = 0; k < datasetGlobalTags.length; k++) {
-              if (datasetGlobalTags[k] in allTagsObject) {
-                //Adds to the count counter by one for each tag captured accordingly
-                allTagsObject[datasetGlobalTags[k]]["Count"] += 1;
-                distinctTagCountChecker.add(datasetGlobalTags[k]);
-              }
-              //Mostly redundant since we gather all tags in database, however it could capture anomalies of tags that did not end up in database but assigned to dataset
-              else {
-                allTagsObject[datasetGlobalTags[k]] = {
-                  Tag: datasetGlobalTags[k],
-                  Count: 1,
-                };
-              }
+      //for loop for total datasets iteration
+      for (let i = 0; i < elements.length; i++) {
+        //To capture Tag Count of GlobalTags which is dataset level hence, placed above fields for loop
+        let distinctTagCountChecker = new Set();
+        if (elements[i]["GlobalTags"] !== undefined) {
+          let datasetGlobalTags = elements[i]["GlobalTags"]["tags"].map((tags) => tags["tag"].split(":").pop());
+          for (let k = 0; k < datasetGlobalTags.length; k++) {
+            if (datasetGlobalTags[k] in allTagsObject) {
+              //Adds to the count counter by one for each tag captured accordingly
+              allTagsObject[datasetGlobalTags[k]]["Count"] += 1;
             }
+            //Mostly redundant since we gather all tags in database, however it could capture anomalies of tags that did not end up in database but assigned to dataset
+            else {
+              allTagsObject[datasetGlobalTags[k]] = {
+                Tag: datasetGlobalTags[k],
+                Count: 1,
+              };
+            }
+            distinctTagCountChecker.add(datasetGlobalTags[k]);
           }
-          for (let j = 0; j < elements[i]["SchemaMetadata"]["fields"].length; j++) {
-            let rowsholder = {};
+        }
+        for (let j = 0; j < elements[i]["SchemaMetadata"]["fields"].length; j++) {
+          let rowsholder = {};
 
-            Object.assign(rowsholder, { ID: count });
-            count += 1;
-            //for loop for platform and table name of datasets, always add key and value pair when pushing to array so aDataSort can refrence later
-            Object.assign(rowsholder, {
-              Origin: elements[i]["DatasetKey"]["origin"],
-            });
-            Object.assign(rowsholder, {
-              Platform_Name: elements[i]["DatasetKey"]["platform"].split(":").pop(),
-            });
-            Object.assign(rowsholder, {
-              Dataset_Name: elements[i]["DatasetKey"]["name"],
-            });
+          Object.assign(rowsholder, { ID: count });
+          count += 1;
+          //for loop for platform and table name of datasets, always add key and value pair when pushing to array so aDataSort can refrence later
+          Object.assign(rowsholder, {
+            Origin: elements[i]["DatasetKey"]["origin"],
+          });
+          Object.assign(rowsholder, {
+            Platform_Name: elements[i]["DatasetKey"]["platform"].split(":").pop(),
+          });
+          Object.assign(rowsholder, {
+            Dataset_Name: elements[i]["DatasetKey"]["name"],
+          });
 
-            //For elements with global tags, if they not equal to undefined, push the tags to array, else push ' ' to array
-            if (elements[i]["GlobalTags"] !== undefined) {
-              let globaltagholder = [];
+          //For elements with global tags, if they not equal to undefined, push the tags to array, else push ' ' to array
+          if (elements[i]["GlobalTags"] !== undefined) {
+            let globaltagholder = [];
 
-              if (elements[i]["GlobalTags"]["tags"].length === 0) {
-                globaltagholder.push(" ");
-              } else {
-                globaltagholder.push(elements[i]["GlobalTags"]["tags"].map((tags) => tags["tag"].split(":").pop()).join(", "));
-              }
-
-              Object.assign(rowsholder, { Global_Tags: globaltagholder });
-            } else {
-              let globaltagholder = [];
+            if (elements[i]["GlobalTags"]["tags"].length === 0) {
               globaltagholder.push(" ");
-              Object.assign(rowsholder, { Global_Tags: globaltagholder });
+            } else {
+              globaltagholder.push(elements[i]["GlobalTags"]["tags"].map((tags) => tags["tag"].split(":").pop()).join(", "));
             }
 
-            //injest field name
-            Object.assign(rowsholder, {
-              Field_Name: elements[i]["SchemaMetadata"]["fields"][j]["fieldPath"],
-            });
+            Object.assign(rowsholder, { Global_Tags: globaltagholder });
+          } else {
+            let globaltagholder = [];
+            globaltagholder.push(" ");
+            Object.assign(rowsholder, { Global_Tags: globaltagholder });
+          }
 
-            //if the dataset even has editableSchemadata
-            if (elements[i]["EditableSchemaMetadata"] !== undefined) {
-              //Field in EditableSchemaMetadata has to match fields in SchemaMetadata
-              if (
-                elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j] !== undefined &&
-                elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]["fieldPath"] === elements[i]["SchemaMetadata"]["fields"][j]["fieldPath"]
-              ) {
-                let tagsholder = [];
-                if (elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"] !== undefined) {
-                  if (elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"].length === 0) {
-                    tagsholder.push(" ");
-                  } else {
-                    let editableFieldTags = elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"].map((tags) => tags["tag"].split(":").pop());
-                    tagsholder.push(editableFieldTags.join(", "));
-                    for (let l = 0; l < editableFieldTags.length; l++) {
-                      //Check if tag has been captured for the dataset, else captures Tag count for editableSchema field Tags.
-                      if (!distinctTagCountChecker.has(editableFieldTags[l])) {
-                        if (editableFieldTags[l] in allTagsObject) {
-                          allTagsObject[editableFieldTags[l]]["Count"] += 1;
-                          distinctTagCountChecker.add(editableFieldTags[l]);
-                        }
-                        //Mostly redundant, however it could capture anomalies of tags that did not end up in database but assigned to dataset
-                        else {
-                          allTagsObject[editableFieldTags[l]] = {
-                            Tag: editableFieldTags[l],
-                            Count: 1,
-                          };
-                        }
+          //injest field name
+          Object.assign(rowsholder, {
+            Field_Name: elements[i]["SchemaMetadata"]["fields"][j]["fieldPath"],
+          });
+
+          //if the dataset even has editableSchemadata
+          if (elements[i]["EditableSchemaMetadata"] !== undefined) {
+            //Field in EditableSchemaMetadata has to match fields in SchemaMetadata
+            if (
+              elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j] !== undefined &&
+              elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]["fieldPath"] === elements[i]["SchemaMetadata"]["fields"][j]["fieldPath"]
+            ) {
+              let tagsholder = [];
+              if (elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"] !== undefined) {
+                if (elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"].length === 0) {
+                  tagsholder.push(" ");
+                } else {
+                  let editableFieldTags = elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"].map((tags) => tags["tag"].split(":").pop());
+                  tagsholder.push(editableFieldTags.join(", "));
+                  for (let l = 0; l < editableFieldTags.length; l++) {
+                    //Check if tag has been captured for the dataset, else captures Tag count for editableSchema field Tags.
+                    if (!distinctTagCountChecker.has(editableFieldTags[l])) {
+                      if (editableFieldTags[l] in allTagsObject) {
+                        allTagsObject[editableFieldTags[l]]["Count"] += 1;
                       }
+                      //Mostly redundant, however it could capture anomalies of tags that did not end up in database but assigned to dataset
+                      else {
+                        allTagsObject[editableFieldTags[l]] = {
+                          Tag: editableFieldTags[l],
+                          Count: 1,
+                        };
+                      }
+                      distinctTagCountChecker.add(editableFieldTags[l]);
                     }
                   }
                 }
-                Object.assign(rowsholder, { Editable_Tags: tagsholder });
-
-                //If have editableschemametadata but fieldpaths dont match, capture empty string instead
-              } else {
-                let tagsholder = [];
-                tagsholder.push(" ");
-                Object.assign(rowsholder, { Editable_Tags: tagsholder });
               }
-              //If do not have editableschemametadata at all
+              Object.assign(rowsholder, { Editable_Tags: tagsholder });
+
+              //If have editableschemametadata but fieldpaths dont match, capture empty string instead
             } else {
               let tagsholder = [];
               tagsholder.push(" ");
               Object.assign(rowsholder, { Editable_Tags: tagsholder });
             }
+            //If do not have editableschemametadata at all
+          } else {
+            let tagsholder = [];
+            tagsholder.push(" ");
+            Object.assign(rowsholder, { Editable_Tags: tagsholder });
+          }
 
-            //Filling tags from schemametadata
-            if (elements[i]["SchemaMetadata"]["fields"][j]["globalTags"] !== undefined) {
-              let tagsholder = [];
-              if (elements[i]["SchemaMetadata"]["fields"][j]["globalTags"]["tags"].length === 0) {
-                tagsholder.push(" ");
-              } else {
-                let schemaFieldTags = elements[i]["SchemaMetadata"]["fields"][j]["globalTags"]["tags"].map((tags) => tags["tag"].split(":").pop());
-                tagsholder.push(schemaFieldTags.join(", "));
-                for (let m = 0; m < schemaFieldTags.length; m++) {
-                  //Check if tag has been captured for the dataset, else captures Tag Count of Schemametdata field Tags
+          //Filling tags from schemametadata
+          if (elements[i]["SchemaMetadata"]["fields"][j]["globalTags"] !== undefined) {
+            let tagsholder = [];
+            if (elements[i]["SchemaMetadata"]["fields"][j]["globalTags"]["tags"].length === 0) {
+              tagsholder.push(" ");
+            } else {
+              let schemaFieldTags = elements[i]["SchemaMetadata"]["fields"][j]["globalTags"]["tags"].map((tags) => tags["tag"].split(":").pop());
+              tagsholder.push(schemaFieldTags.join(", "));
+              for (let m = 0; m < schemaFieldTags.length; m++) {
+                //Check if tag has been captured for the dataset, else captures Tag Count of Schemametdata field Tags
 
-                  if (!distinctTagCountChecker.has(schemaFieldTags[m])) {
-                    if (schemaFieldTags[m] in allTagsObject) {
-                      allTagsObject[schemaFieldTags[m]]["Count"] += 1;
-                      distinctTagCountChecker.add(schemaFieldTags[m]);
-                    }
-                    //Mostly redundant, however it could capture anomalies of tags that did not end up in database but assigned to dataset
-                    else {
-                      allTagsObject[schemaFieldTags[m]] = {
-                        Tag: schemaFieldTags[m],
-                        Count: 1,
-                      };
-                    }
+                if (!distinctTagCountChecker.has(schemaFieldTags[m])) {
+                  if (schemaFieldTags[m] in allTagsObject) {
+                    allTagsObject[schemaFieldTags[m]]["Count"] += 1;
+                  }
+                  //Mostly redundant, however it could capture anomalies of tags that did not end up in database but assigned to dataset
+                  else {
+                    allTagsObject[schemaFieldTags[m]] = {
+                      Tag: schemaFieldTags[m],
+                      Count: 1,
+                    };
                   }
                 }
-              }
-              Object.assign(rowsholder, { Original_Tags: tagsholder });
-            } else {
-              let tagsholder = [];
-              tagsholder.push(" ");
-              Object.assign(rowsholder, { Original_Tags: tagsholder });
-            }
-
-            //Checks for Description in editableschemaMetaData first, then checks in SchemaMetaData.
-            if (elements[i]["EditableSchemaMetadata"] !== undefined) {
-              if (
-                elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j] !== undefined &&
-                elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]["fieldPath"] === elements[i]["SchemaMetadata"]["fields"][j]["fieldPath"] &&
-                elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]["description"] !== undefined
-              ) {
-                Object.assign(rowsholder, {
-                  Description: elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]["description"],
-                });
-              } else if (elements[i]["SchemaMetadata"]["fields"][j]["description"] !== undefined) {
-                Object.assign(rowsholder, {
-                  Description: elements[i]["SchemaMetadata"]["fields"][j]["description"],
-                });
+                distinctTagCountChecker.add(schemaFieldTags[m]);
               }
             }
+            Object.assign(rowsholder, { Original_Tags: tagsholder });
+          } else {
+            let tagsholder = [];
+            tagsholder.push(" ");
+            Object.assign(rowsholder, { Original_Tags: tagsholder });
+          }
 
-            //Since already checked in editableschemaMetaData , now just checks in schemametadata, else if empty, fill with blank
-            if (elements[i]["EditableSchemaMetadata"] === undefined && elements[i]["SchemaMetadata"]["fields"][j]["description"] !== undefined) {
+          //Checks for Description in editableschemaMetaData first, then checks in SchemaMetaData.
+          if (elements[i]["EditableSchemaMetadata"] !== undefined) {
+            if (
+              elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j] !== undefined &&
+              elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]["fieldPath"] === elements[i]["SchemaMetadata"]["fields"][j]["fieldPath"] &&
+              elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]["description"] !== undefined
+            ) {
+              Object.assign(rowsholder, {
+                Description: elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]["description"],
+              });
+            } else if (elements[i]["SchemaMetadata"]["fields"][j]["description"] !== undefined) {
               Object.assign(rowsholder, {
                 Description: elements[i]["SchemaMetadata"]["fields"][j]["description"],
               });
             }
-            if (elements[i]["EditableSchemaMetadata"] === undefined && elements[i]["SchemaMetadata"]["fields"][j]["description"] === undefined) {
-              Object.assign(rowsholder, { Description: " " });
-            }
-            //for Timestamp, checks if editableschemametadata exists, if not use schemametadata
-            if (elements[i]["EditableSchemaMetadata"] === undefined) {
-              let date = new Date(elements[i]["SchemaMetadata"]["lastModified"]["time"]);
+          }
 
-              Object.assign(rowsholder, {
-                Date_Modified: date.toLocaleString(),
-              });
-            } else {
-              let date = new Date(elements[i]["EditableSchemaMetadata"]["lastModified"]["time"]);
-              Object.assign(rowsholder, {
-                Date_Modified: date.toLocaleString(),
-              });
-            }
-            //for dataset Browsepaths
-            if (elements[i]["BrowsePaths"] !== undefined) {
-              let BrowsePathsholder = [];
+          //Since already checked in editableschemaMetaData , now just checks in schemametadata, else if empty, fill with blank
+          if (elements[i]["EditableSchemaMetadata"] === undefined && elements[i]["SchemaMetadata"]["fields"][j]["description"] !== undefined) {
+            Object.assign(rowsholder, {
+              Description: elements[i]["SchemaMetadata"]["fields"][j]["description"],
+            });
+          }
+          if (elements[i]["EditableSchemaMetadata"] === undefined && elements[i]["SchemaMetadata"]["fields"][j]["description"] === undefined) {
+            Object.assign(rowsholder, { Description: " " });
+          }
+          //for Timestamp, checks if editableschemametadata exists, if not use schemametadata
+          if (elements[i]["EditableSchemaMetadata"] === undefined) {
+            let date = new Date(elements[i]["SchemaMetadata"]["lastModified"]["time"]);
 
-              if (elements[i]["BrowsePaths"]["paths"] !== []) {
-                for (let j = 0; j < elements[i]["BrowsePaths"]["paths"].length; j++) {
-                  if (j > 0) {
-                    BrowsePathsholder.push(", ", elements[i]["BrowsePaths"]["paths"][j]);
-                  } else {
-                    BrowsePathsholder.push(elements[i]["BrowsePaths"]["paths"][j]);
-                  }
+            Object.assign(rowsholder, {
+              Date_Modified: date.toLocaleString(),
+            });
+          } else {
+            let date = new Date(elements[i]["EditableSchemaMetadata"]["lastModified"]["time"]);
+            Object.assign(rowsholder, {
+              Date_Modified: date.toLocaleString(),
+            });
+          }
+          //for dataset Browsepaths
+          if (elements[i]["BrowsePaths"] !== undefined) {
+            let BrowsePathsholder = [];
+
+            if (elements[i]["BrowsePaths"]["paths"] !== []) {
+              for (let j = 0; j < elements[i]["BrowsePaths"]["paths"].length; j++) {
+                if (j > 0) {
+                  BrowsePathsholder.push(", ", elements[i]["BrowsePaths"]["paths"][j]);
+                } else {
+                  BrowsePathsholder.push(elements[i]["BrowsePaths"]["paths"][j]);
                 }
-              } else {
-                BrowsePathsholder = [];
-                BrowsePathsholder.push(" ");
               }
-              Object.assign(rowsholder, {
-                Dataset_BrowsePath: BrowsePathsholder,
-              });
             } else {
               BrowsePathsholder = [];
               BrowsePathsholder.push(" ");
-              Object.assign(rowsholder, {
-                Dataset_BrowsePath: BrowsePathsholder,
-              });
             }
+            Object.assign(rowsholder, {
+              Dataset_BrowsePath: BrowsePathsholder,
+            });
+          } else {
+            BrowsePathsholder = [];
+            BrowsePathsholder.push(" ");
+            Object.assign(rowsholder, {
+              Dataset_BrowsePath: BrowsePathsholder,
+            });
+          }
 
-            //for dataset description, the if conditions are terrible but required
-            if (elements[i]["EditableDatasetProperties"] !== undefined) {
-              if (elements[i]["EditableDatasetProperties"]["description"] !== undefined) {
-                Object.assign(rowsholder, {
-                  Dataset_Description: elements[i]["EditableDatasetProperties"]["description"],
-                });
-              } else {
-                if (elements[i]["DatasetProperties"] !== undefined) {
-                  if (elements[i]["DatasetProperties"]["description"] !== undefined) {
-                    Object.assign(rowsholder, {
-                      Dataset_Description: elements[i]["DatasetProperties"]["description"],
-                    });
-                  } else {
-                    Object.assign(rowsholder, { Dataset_Description: " " });
-                  }
+          //for dataset description, the if conditions are terrible but required
+          if (elements[i]["EditableDatasetProperties"] !== undefined) {
+            if (elements[i]["EditableDatasetProperties"]["description"] !== undefined) {
+              Object.assign(rowsholder, {
+                Dataset_Description: elements[i]["EditableDatasetProperties"]["description"],
+              });
+            } else {
+              if (elements[i]["DatasetProperties"] !== undefined) {
+                if (elements[i]["DatasetProperties"]["description"] !== undefined) {
+                  Object.assign(rowsholder, {
+                    Dataset_Description: elements[i]["DatasetProperties"]["description"],
+                  });
                 } else {
                   Object.assign(rowsholder, { Dataset_Description: " " });
                 }
-              }
-            } else if (elements[i]["DatasetProperties"] !== undefined) {
-              if (elements[i]["DatasetProperties"]["description"] !== undefined) {
-                Object.assign(rowsholder, {
-                  Dataset_Description: elements[i]["DatasetProperties"]["description"],
-                });
               } else {
                 Object.assign(rowsholder, { Dataset_Description: " " });
               }
+            }
+          } else if (elements[i]["DatasetProperties"] !== undefined) {
+            if (elements[i]["DatasetProperties"]["description"] !== undefined) {
+              Object.assign(rowsholder, {
+                Dataset_Description: elements[i]["DatasetProperties"]["description"],
+              });
             } else {
               Object.assign(rowsholder, { Dataset_Description: " " });
             }
-
-            finalrowsholder.push(rowsholder);
-            rowsholder = {};
+          } else {
+            Object.assign(rowsholder, { Dataset_Description: " " });
           }
+
+          finalrowsholder.push(rowsholder);
+          rowsholder = {};
         }
-        //Columns header defintion #important
-        fieldcolsholder.push("#", "Platform_Name", "Dataset_Name", "Field_Name", "Editable_Tags", "Original_Tags", "Description", "Date_Modified");
-        datasetcolsholder.push("Platform_Name", "Dataset_Name", "Dataset_BrowsePath", "Global_Tags", "Dataset_Description", "Date_Modified", "Origin");
-        tagscolsholder.push("Tag", "Count");
+      }
+      //Columns header defintion #important
+      fieldcolsholder.push("#", "Platform_Name", "Dataset_Name", "Field_Name", "Editable_Tags", "Original_Tags", "Description", "Date_Modified");
+      datasetcolsholder.push("Platform_Name", "Dataset_Name", "Dataset_BrowsePath", "Global_Tags", "Dataset_Description", "Date_Modified", "Origin");
+      tagscolsholder.push("Tag", "Count");
 
-        const datasetrowsholder = [];
-        var tempdatasetrowNames = [];
+      const datasetrowsholder = [];
+      var tempdatasetrowNames = [];
 
-        for (let j = 0; j < finalrowsholder.length; j++) {
-          if (!tempdatasetrowNames.includes(finalrowsholder[j].Dataset_Name)) {
-            datasetrowsholder.push(finalrowsholder[j]);
-            tempdatasetrowNames.push(finalrowsholder[j].Dataset_Name);
-          }
+      for (let j = 0; j < finalrowsholder.length; j++) {
+        if (!tempdatasetrowNames.includes(finalrowsholder[j].Dataset_Name)) {
+          datasetrowsholder.push(finalrowsholder[j]);
+          tempdatasetrowNames.push(finalrowsholder[j].Dataset_Name);
         }
+      }
 
-        console.log("Sorted fields of data retrived from GMS:", elements);
-        console.log("Column Headers:", fieldcolsholder);
+      console.log("Sorted fields of data retrived from GMS:", elements);
+      console.log("Column Headers:", fieldcolsholder);
 
-        console.log("Data to feed dataset columns:", datasetrowsholder);
-        console.log("Data to feed field columns:", finalrowsholder);
-
-        this.setState({
-          datasetrows: datasetrowsholder,
-          fieldrows: finalrowsholder,
-          tagrows: Object.values(allTagsObject),
-          fieldcols: fieldcolsholder,
-          datasetcols: datasetcolsholder,
-          tagscols: tagscolsholder,
-        });
+      console.log("Data to feed dataset columns:", datasetrowsholder);
+      console.log("Data to feed field columns:", finalrowsholder);
+      console.log("Data to feed tags columns:", allTagsObject);
+      this.setState({
+        datasetrows: datasetrowsholder,
+        fieldrows: finalrowsholder,
+        tagrows: Object.values(allTagsObject),
+        fieldcols: fieldcolsholder,
+        datasetcols: datasetcolsholder,
+        tagscols: tagscolsholder,
       });
+    });
 
     //init Datatable, #fieldTable #datasetTable are the table element ids
     setTimeout(() => {
@@ -550,27 +544,51 @@ class App extends React.Component {
         addDatasetProperties();
         console.log("Payload to send to FASTAPI: ", finaleditedholder);
         console.log(changedTagsObjectholder);
-        axios
-          .post(
-            "http://localhost:8000/getresult",
+        if (!finaleditedholder.length) {
+          axios
+            .post(
+              "http://localhost:8000/updatetag",
 
-            finaleditedholder,
+              changedTagsObjectholder,
 
-            {
-              headers: {
-                // Overwrite Axios's automatically set Content-Type
-                "Content-Type": "application/json",
-              },
-            }
-          )
-          .then((res) => {
-            window.alert(res.data);
-            window.location.reload();
-          })
-          .catch((error) => {
-            window.alert("Error, Try refresh first and try again\r\n\r\nIf not " + error.response.data);
-            window.location.reload(); //Logs a string: Error: Request failed with status code 404
-          });
+              {
+                headers: {
+                  // Overwrite Axios's automatically set Content-Type
+                  "Content-Type": "application/json",
+                },
+              }
+            )
+            .then((res) => {
+              window.alert(res.data);
+              window.location.reload();
+            })
+            .catch((error) => {
+              window.alert("Error, Try refresh first and try again\r\n\r\nIf not " + error.response.data);
+              window.location.reload(); //Logs a string: Error: Request failed with status code 404
+            });
+        } else {
+          axios
+            .post(
+              "http://localhost:8000/getresult",
+
+              finaleditedholder,
+
+              {
+                headers: {
+                  // Overwrite Axios's automatically set Content-Type
+                  "Content-Type": "application/json",
+                },
+              }
+            )
+            .then((res) => {
+              window.alert(res.data);
+              window.location.reload();
+            })
+            .catch((error) => {
+              window.alert("Error, Try refresh first and try again\r\n\r\nIf not " + error.response.data);
+              window.location.reload(); //Logs a string: Error: Request failed with status code 404
+            });
+        }
       });
 
       // this number is the timeout timer setting, IMPORTANT IF UR RECORDS TAKE LONGER, SET A LONGER TIMEOUT. If undefined, default value is 3000ms This setting is defined in .env file
