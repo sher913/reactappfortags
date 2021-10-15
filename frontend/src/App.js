@@ -38,6 +38,15 @@ class App extends React.Component {
       arr.splice(new_index, 0, arr.splice(old_index, 1)[0]);
       return arr;
     }
+    const convertArrayToObject = (array, key) => {
+      const initialValue = {};
+      return array.reduce((obj, item) => {
+        return {
+          ...obj,
+          [item[key]]: item,
+        };
+      }, initialValue);
+    };
     //array holders for fieldrows(rowsholder) and 2 column name holder(fieldcolsholder and datasetcolsholder)
     const fieldcolsholder = [];
 
@@ -82,7 +91,7 @@ class App extends React.Component {
         //To capture Tag Count of GlobalTags which is dataset level hence, placed above fields for loop
         let distinctTagCountChecker = new Set();
         if (elements[i]["GlobalTags"] !== undefined) {
-          let datasetGlobalTags = elements[i]["GlobalTags"]["tags"].map((tags) => tags["tag"].split(":").pop());
+          let datasetGlobalTags = elements[i]["GlobalTags"]["tags"].map((tags) => tags["tag"].split("urn:li:tag:").pop());
           for (let k = 0; k < datasetGlobalTags.length; k++) {
             if (datasetGlobalTags[k] in allTagsObject) {
               //Adds to the count counter by one for each tag captured accordingly
@@ -108,7 +117,7 @@ class App extends React.Component {
             Origin: elements[i]["DatasetKey"]["origin"],
           });
           Object.assign(rowsholder, {
-            Platform_Name: elements[i]["DatasetKey"]["platform"].split(":").pop(),
+            Platform_Name: elements[i]["DatasetKey"]["platform"].split("urn:li:dataPlatform:").pop(),
           });
           Object.assign(rowsholder, {
             Dataset_Name: elements[i]["DatasetKey"]["name"],
@@ -121,7 +130,7 @@ class App extends React.Component {
             if (elements[i]["GlobalTags"]["tags"].length === 0) {
               globaltagholder.push(" ");
             } else {
-              globaltagholder.push(elements[i]["GlobalTags"]["tags"].map((tags) => tags["tag"].split(":").pop()).join(", "));
+              globaltagholder.push(elements[i]["GlobalTags"]["tags"].map((tags) => tags["tag"].split("urn:li:tag:").pop()).join(", "));
             }
 
             Object.assign(rowsholder, { Global_Tags: globaltagholder });
@@ -148,7 +157,9 @@ class App extends React.Component {
                 if (elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"].length === 0) {
                   tagsholder.push(" ");
                 } else {
-                  let editableFieldTags = elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"].map((tags) => tags["tag"].split(":").pop());
+                  let editableFieldTags = elements[i]["EditableSchemaMetadata"]["editableSchemaFieldInfo"][j]["globalTags"]["tags"].map((tags) =>
+                    tags["tag"].split("urn:li:tag:").pop()
+                  );
                   tagsholder.push(editableFieldTags.join(", "));
                   for (let l = 0; l < editableFieldTags.length; l++) {
                     //Check if tag has been captured for the dataset, else captures Tag count for editableSchema field Tags.
@@ -189,7 +200,7 @@ class App extends React.Component {
             if (elements[i]["SchemaMetadata"]["fields"][j]["globalTags"]["tags"].length === 0) {
               tagsholder.push(" ");
             } else {
-              let schemaFieldTags = elements[i]["SchemaMetadata"]["fields"][j]["globalTags"]["tags"].map((tags) => tags["tag"].split(":").pop());
+              let schemaFieldTags = elements[i]["SchemaMetadata"]["fields"][j]["globalTags"]["tags"].map((tags) => tags["tag"].split("urn:li:tag:").pop());
               tagsholder.push(schemaFieldTags.join(", "));
               for (let m = 0; m < schemaFieldTags.length; m++) {
                 //Check if tag has been captured for the dataset, else captures Tag Count of Schemametdata field Tags
@@ -320,7 +331,7 @@ class App extends React.Component {
       //Columns header defintion #important
       fieldcolsholder.push("#", "Platform_Name", "Dataset_Name", "Field_Name", "Editable_Tags", "Original_Tags", "Description", "Date_Modified");
       datasetcolsholder.push("Platform_Name", "Dataset_Name", "Dataset_BrowsePath", "Global_Tags", "Dataset_Description", "Date_Modified", "Origin");
-      tagscolsholder.push("Tag", "Count");
+      tagscolsholder.push("Tag", "Description", "Count");
 
       const datasetrowsholder = [];
       var tempdatasetrowNames = [];
@@ -397,7 +408,7 @@ class App extends React.Component {
         ],
       });
       var tagTable = $("#tagTable").DataTable({
-        order: [[1, "desc"]],
+        order: [[2, "desc"]],
         responsive: true,
 
         lengthMenu: [
@@ -407,7 +418,7 @@ class App extends React.Component {
         columnDefs: [
           {
             type: "html-input",
-            targets: [0],
+            targets: [0, 1],
             render: function (rows, type, row) {
               return '<input class="form-control" type="text"  value ="' + rows + '">';
             },
@@ -415,7 +426,7 @@ class App extends React.Component {
         ],
       });
 
-      $("#tagTable").on("click", "td:nth-child(2)", function () {
+      $("#tagTable").on("click", "td:nth-child(3)", function () {
         window.location.href = datahub_address + `/tag/urn:li:tag:${tagTable.row(this).data()[0]}`;
       });
 
@@ -430,9 +441,12 @@ class App extends React.Component {
           tagTable.rows().every(function () {
             let originalTag = this.data()[0];
             let EditedTag = $(tagTable.cell(this.index(), 0).node()).find("input").val();
+            let originalDesc = this.data()[1];
+            let EditedDesc = $(tagTable.cell(this.index(), 1).node()).find("input").val();
+
             if (originalTag !== EditedTag) {
               //To use to change the tag values before submitting to FASTAPI
-              changedTagsObjectholder[originalTag] = EditedTag;
+              changedTagsObjectholder[originalTag] = { Tag: EditedTag, Description: EditedDesc };
               for (let j = 0; j < finalrowsholder.length; j++) {
                 let Original_global_tags = finalrowsholder[j].Global_Tags[0].replace(/\s/g, "").split(",");
                 let Original_editable_tags = finalrowsholder[j].Editable_Tags[0].replace(/\s/g, "").split(",");
@@ -445,6 +459,8 @@ class App extends React.Component {
                   tempdatasetnameholder.add(finalrowsholder[j].Dataset_Name);
                 }
               }
+            } else if (originalDesc !== EditedDesc) {
+              changedTagsObjectholder[originalTag] = { Tag: EditedTag, Description: EditedDesc };
             }
           });
         }
@@ -482,15 +498,25 @@ class App extends React.Component {
           fieldTable.rows().every(function () {
             if (tempdatasetnameholder.has(this.data()[2])) {
               let edited_tags = $(fieldTable.cell(this.index(), 4).node()).find("input").val().replace(/\s/g, "").split(",");
-              let orginal_tags = $(fieldTable.cell(this.index(), 5).node()).find("input").val().replace(/\s/g, "").split(",");
               for (let j = 0; j < edited_tags.length; j++) {
-                if (Object.keys(changedTagsObjectholder).includes(edited_tags[j])) {
-                  edited_tags[j] = changedTagsObjectholder[edited_tags[j]];
+                edited_tags[j] = convertArrayToObject([{ Tag: edited_tags[j], Description: "" }], "Tag");
+              }
+              let orginal_tags = $(fieldTable.cell(this.index(), 5).node()).find("input").val().replace(/\s/g, "").split(",");
+              for (var key in Object.keys(edited_tags)) {
+                console.log("fsefs", edited_tags);
+                if (Object.keys(changedTagsObjectholder).includes(key)) {
+                  let originalkey = edited_tags[key];
+                  edited_tags[key] = {
+                    OriginalTag: originalkey,
+                    Tag: changedTagsObjectholder[edited_tags[key]]["Tag"],
+                    Description: changedTagsObjectholder[edited_tags[key]]["Description"],
+                  };
                 }
               }
+              console.log("gjkkrgf", edited_tags);
               for (let j = 0; j < orginal_tags.length; j++) {
                 if (Object.keys(changedTagsObjectholder).includes(orginal_tags[j])) {
-                  orginal_tags[j] = changedTagsObjectholder[orginal_tags[j]];
+                  orginal_tags[j] = changedTagsObjectholder[orginal_tags[j]]["Tag"];
                 }
               }
               let date = new Date();
@@ -518,8 +544,8 @@ class App extends React.Component {
               if (this.data()[0] === finaleditedholder[j].Platform_Name && this.data()[1] === finaleditedholder[j].Dataset_Name) {
                 let global_tags = $(datasetTable.cell(this.index(), 3).node()).find("input").val().replace(/\s/g, "").split(",");
                 for (let j = 0; j < global_tags.length; j++) {
-                  if (Object.keys(changedTagsObjectholder).includes(global_tags[j])) {
-                    global_tags[j] = changedTagsObjectholder[global_tags[j]];
+                  if (Object.keys(changedTagsObjectholder).includes(global_tags[j]["Tag"])) {
+                    global_tags[j] = changedTagsObjectholder[global_tags[j]]["Tag"];
                   }
                 }
                 Object.assign(finaleditedholder[j], {
@@ -543,51 +569,49 @@ class App extends React.Component {
         //Adds dataset level properties to the fields assigned to the object
         addDatasetProperties();
         console.log("Payload to send to FASTAPI: ", finaleditedholder);
-        console.log(changedTagsObjectholder);
+        console.log("Tags Edited: ", changedTagsObjectholder);
         if (!finaleditedholder.length) {
-          axios
-            .post(
-              "http://localhost:8000/updatetag",
+          axios.post(
+            "http://localhost:8000/updatetag",
 
-              changedTagsObjectholder,
+            changedTagsObjectholder,
 
-              {
-                headers: {
-                  // Overwrite Axios's automatically set Content-Type
-                  "Content-Type": "application/json",
-                },
-              }
-            )
-            .then((res) => {
-              window.alert(res.data);
-              window.location.reload();
-            })
-            .catch((error) => {
-              window.alert("Error, Try refresh first and try again\r\n\r\nIf not " + error.response.data);
-              window.location.reload(); //Logs a string: Error: Request failed with status code 404
-            });
+            {
+              headers: {
+                // Overwrite Axios's automatically set Content-Type
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          // .then((res) => {
+          //   window.alert(res.data);
+          //   window.location.reload();
+          // })
+          // .catch((error) => {
+          //   window.alert("Error, Try refresh first and try again\r\n\r\nIf not " + error.response.data);
+          //   window.location.reload(); //Logs a string: Error: Request failed with status code 404
+          // });
         } else {
-          axios
-            .post(
-              "http://localhost:8000/getresult",
+          axios.post(
+            "http://localhost:8000/getresult",
 
-              finaleditedholder,
+            finaleditedholder,
 
-              {
-                headers: {
-                  // Overwrite Axios's automatically set Content-Type
-                  "Content-Type": "application/json",
-                },
-              }
-            )
-            .then((res) => {
-              window.alert(res.data);
-              window.location.reload();
-            })
-            .catch((error) => {
-              window.alert("Error, Try refresh first and try again\r\n\r\nIf not " + error.response.data);
-              window.location.reload(); //Logs a string: Error: Request failed with status code 404
-            });
+            {
+              headers: {
+                // Overwrite Axios's automatically set Content-Type
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          // .then((res) => {
+          //   window.alert(res.data);
+          //   window.location.reload();
+          // })
+          // .catch((error) => {
+          //   window.alert("Error, Try refresh first and try again\r\n\r\nIf not " + error.response.data);
+          //   window.location.reload(); //Logs a string: Error: Request failed with status code 404
+          // });
         }
       });
 
@@ -672,6 +696,7 @@ class App extends React.Component {
                     return (
                       <tr>
                         <td>{result.Tag}</td>
+                        <td>{result.Description}</td>
                         <td>{result.Count}</td>
                       </tr>
                     );

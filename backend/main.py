@@ -1,7 +1,8 @@
 import os
 import logging
 from logging.handlers import TimedRotatingFileHandler
-from datahub.metadata.schema_classes import DatasetSnapshotClass
+from avro.schema import NULL
+from datahub.metadata.schema_classes import DatasetSnapshotClass, NullTypeClass
 
 import requests
 from requests.api import request
@@ -210,11 +211,18 @@ def getalltags():
         AllTags.extend(response["value"]["metadata"]["urns"])
         # Remove the amount collected datasets from total count
         totalTagsCount -= count
+ 
     cleanedTagsObject = {}
     for tag in AllTags:
-        cleanedtag = tag.split(":")[-1]
-        cleanedTagsObject[cleanedtag] = {"Tag": cleanedtag, "Count": 0}
-
+        cleanedtag = tag.split("urn:li:tag:").pop()
+        res = requests.request("GET",datahub_gms_endpoint+'/aspects/urn%3Ali%3Atag%3A'+cleanedtag+'?aspect=tagProperties&version=0')
+        res=res.json()
+        #ask xl if any way to combine 3 .gets() into 1
+        tag_Description = res.get("aspect")
+        if tag_Description:
+            tag_Description = tag_Description.get('com.linkedin.tag.TagProperties')
+            tag_Description = tag_Description.get('description')
+        cleanedTagsObject[cleanedtag] = {"Tag": cleanedtag, "Description": tag_Description if tag_Description else "", "Count": 0}
     return cleanedTagsObject
 
 
@@ -252,13 +260,13 @@ def getdatasetviaurn(dataset):
     return newdatasetsnapshot
 
 
-def addTagtoGms(tag):
+def addTagtoGms(tag, description =None):
     tag_snapshot = TagSnapshot(
         urn=make_tag_urn(tag),
         aspects=[],
     )
 
-    tag_snapshot.aspects.append(make_TagProperties_mce(name=tag))
+    tag_snapshot.aspects.append(make_TagProperties_mce(name=tag, description = description))
     tag_metadata_record = MetadataChangeEvent(proposedSnapshot=tag_snapshot)
     # print(metadata_record)
     for mce in tag_metadata_record.proposedSnapshot.aspects:
@@ -288,19 +296,25 @@ def addTagtoGms(tag):
 
 @app.post("/updatetag")
 def updatetags(Editedtags: Dict[Any, Any] = None):
-    tags_added =[]
-    for tag in Editedtags.values():
-        if tag not in All_Tags.keys():
-            addTagtoGms(tag)
-            tags_added.append(tag)
-    if tags_added != []:
+    tags_modified =[]
+    tags_not_modified =[]
+    for value in Editedtags.values():
+        tag = value['Tag']
+        description = value['Description']
+      
+        if tag not in All_Tags.keys() or description != All_Tags[tag]['Description']:
+            addTagtoGms(tag,description)
+            tags_modified.append(tag)
+        else:
+            tags_not_modified.append(tag)
+    if tags_modified != []:
         return Response(
-            "Tags updated: {}".format(tags_added),
+            "Tags updated: {}".format(tags_modified),
             status_code=201,
         )
     else:
         return Response(
-            "No datasets or tags were updated",
+            "No datasets or tags were updated because tags {} already exist".format(tags_not_modified),
             status_code=201,
         )
 @app.post("/getresult")
@@ -326,12 +340,14 @@ def getresult(Editeditems: List[EditedItem]):
                 editable_field["fieldPath"] = item.Field_Name
                 editable_field["field_description"] = item.Description
                 for editabletag in item.Editable_Tags:
+                    editabletag = editabletag.get('Tag') if type(editabletag) == dict else editabletag
+                    editable_tag_description = editabletag.get('Description') if type(editabletag) == dict else None
                     if editabletag != "":
                         editabletags.append({"tag": make_tag_urn(editabletag)})
                         if editabletag not in All_Tags.keys():
-                            print("print added new editableTag", editabletag)
-                            addTagtoGms(editabletag)
-                            All_Tags[editabletag] = {"Tag": editabletag, "Count": 0}
+                            print("print added new editableTag", editabletag, "with description of", editable_tag_description)
+                            addTagtoGms(editabletag, editable_tag_description)
+                            All_Tags[editabletag] = {"Tag": editabletag, 'Description':editable_tag_description,  "Count": 0}
 
                 editable_field["tags"] = editabletags
 

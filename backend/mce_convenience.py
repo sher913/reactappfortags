@@ -150,9 +150,9 @@ def make_dataset_editable_description_mce(
     return mce
 
 
-def make_TagProperties_mce(name=str) -> TagPropertiesClass:
+def make_TagProperties_mce(name: str, description: Optional[str]) -> TagPropertiesClass:
 
-    return TagPropertiesClass(name=name)
+    return TagPropertiesClass(name=name, description = description if description else None)
 
 
 def make_schemaglobaltags_mce(
