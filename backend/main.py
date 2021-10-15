@@ -90,10 +90,10 @@ class EditedItem(BaseModel):
     Origin: str
     Platform_Name: str
     Dataset_Name: str
-    Global_Tags: Optional[List[str]] = None
+    Global_Tags: Optional[Dict[Any, Any]] = None
     Field_Name: str
-    Editable_Tags: Optional[List[str]] = None
-    Original_Tags: Optional[List[str]] = None
+    Editable_Tags: Optional[Dict[Any, Any]] = None
+    Original_Tags: Optional[Dict[Any, Any]] = None
     Description: Optional[str] = None
     Browse_Path: Optional[List[str]] = None
     Dataset_Description: Optional[str] = None
@@ -340,14 +340,15 @@ def getresult(Editeditems: List[EditedItem]):
                 editable_field["fieldPath"] = item.Field_Name
                 editable_field["field_description"] = item.Description
                 for editabletag in item.Editable_Tags:
-                    editabletag = editabletag.get('Tag') if type(editabletag) == dict else editabletag
-                    editable_tag_description = editabletag.get('Description') if type(editabletag) == dict else None
-                    if editabletag != "":
-                        editabletags.append({"tag": make_tag_urn(editabletag)})
-                        if editabletag not in All_Tags.keys():
-                            print("print added new editableTag", editabletag, "with description of", editable_tag_description)
-                            addTagtoGms(editabletag, editable_tag_description)
-                            All_Tags[editabletag] = {"Tag": editabletag, 'Description':editable_tag_description,  "Count": 0}
+                    print("sahjfewh", item.Editable_Tags)
+                    editabletag_tag = item.Editable_Tags[editabletag].get('Tag','')
+                    editable_tag_description = item.Editable_Tags[editabletag].get('Description',None)
+                    if editabletag_tag != "":
+                        editabletags.append({"tag": make_tag_urn(editabletag_tag)})
+                        if editabletag_tag not in All_Tags.keys() or All_Tags[editabletag_tag]['Description']!=editable_tag_description:
+                            print("print added new editableTag", editabletag_tag, "with description of", editable_tag_description)
+                            addTagtoGms(editabletag_tag, editable_tag_description)
+                            All_Tags[editabletag_tag] = {"Tag": editabletag_tag, 'Description':editable_tag_description,  "Count": 0}
 
                 editable_field["tags"] = editabletags
 
@@ -420,20 +421,24 @@ def getresult(Editeditems: List[EditedItem]):
                 ):
                     # globaltag is not actually under schemadata aspect, it has its own aspect
                     for globaltag in item.Global_Tags:
-                        if globaltag != "":
-                            globaltags.append({"tag": make_tag_urn(globaltag)})
-                            if globaltag not in All_Tags.keys():
-                                print("print added new editableTag", globaltag)
-                                addTagtoGms(globaltag)
-                                All_Tags[globaltag] = {"Tag": globaltag, "Count": 0}
+                        globaltag_tag = item.Global_Tags[globaltag].get('Tag','')
+                        globaltag_description = item.Global_Tags[globaltag].get('Description',None)
+                        if globaltag_tag != "":
+                            globaltags.append({"tag": make_tag_urn(globaltag_tag)})
+                            if globaltag_tag not in All_Tags.keys() or All_Tags[globaltag_tag]['Description']!=globaltag_description:
+                                print("print added new editableTag", globaltag_tag)
+                                addTagtoGms(globaltag_tag, globaltag_description)
+                                All_Tags[globaltag_tag] = {"Tag": globaltag_tag,"Description":globaltag_description, "Count": 0}
                     # for schemametadata aspects
                     for tag in item.Original_Tags:
-                        if tag != "":
-                            schemametadatatags.append({"tag": make_tag_urn(tag)})
-                            if tag not in All_Tags.keys():
-                                print("print added new editableTag", tag)
-                                addTagtoGms(tag)
-                                All_Tags[tag] = {"Tag": tag, "Count": 0}
+                        tag_tag = item.Original_Tags[tag].get('Tag','')
+                        tag_description = item.Original_Tags[tag].get('Description',None)
+                        if tag_tag != "":
+                            schemametadatatags.append({"tag": make_tag_urn(tag_tag)})
+                            if tag_tag not in All_Tags.keys() or All_Tags[tag_tag]['Description']!=tag_description:
+                                print("print added new editableTag", tag_tag)
+                                addTagtoGms(tag_tag, tag_description)
+                                All_Tags[tag_tag] = {"Tag": tag_tag, "Description":tag_description,  "Count": 0}
             if schemametadatatags != []:
                 current_field["tags"] = schemametadatatags
             # Filling the Array Checker for if tags for schemametadata has been edited, tags are the only varaiable editable for schemametadata
