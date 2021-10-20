@@ -124,12 +124,17 @@ def main():
         "POST", URL, headers=headers, params=parameters, data=data
     )
     datasetobject = response.json()
+    
     # gets the total count of entities, in this case; datasets
     totalDatasetCount = datasetobject["value"]["numEntities"]
     # Remove the amount of datasets already collected from total count
     totalDatasetCount -= count
     # extracts urns(datasets) to a list  called datasets
-    datasets = datasetobject["value"]["metadata"]["urns"]
+    dataset_unfiltered_list = datasetobject['value']['entities']
+    datasets= []
+    for unfiltered_list in dataset_unfiltered_list:
+        datasets.append(unfiltered_list['entity'])
+   
     # loop in case there are more than 10k datasets
     while totalDatasetCount > 0:
         # adds the count to start value, since index starts with 0, it works
@@ -144,10 +149,11 @@ def main():
         )
         response = response.json()
         # adds the urns from response to datasets list
-        datasets.extend(response["value"]["metadata"]["urns"])
+        dataset_unfiltered_list = response['value']['entities']
+        for unfiltered_list in dataset_unfiltered_list:
+            datasets.append(unfiltered_list['entity'])
         # Remove the amount collected datasets from total count
         totalDatasetCount -= count
-
     # Array for aspects that datasets must have else will be dropped
     required_aspects = ["SchemaMetadata", "DatasetKey", "BrowsePaths"]
     for dataset in datasets:
@@ -183,7 +189,7 @@ def getalltags():
     parameters = {"action": "search"}
     start = 0
     # max is 10k, limited by GMS
-    count = 10000
+    count = 10
     data = (
         '{ "input": "*", "entity": "tag", "start": ' + str(start) + ","
         '"count": ' + str(count) + "}"
@@ -194,7 +200,10 @@ def getalltags():
     response = response.json()
     totalTagsCount = response["value"]["numEntities"]
     totalTagsCount -= count
-    AllTags = response["value"]["metadata"]["urns"]
+    AllTags = []
+    #response['value']['entities'] == list of entites retrieved
+    for tags in response['value']['entities']:
+        AllTags.append(tags['entity'])
     while totalTagsCount > 0:
         # adds the count to start value, since index starts with 0, it works
         start += count
@@ -208,10 +217,10 @@ def getalltags():
         )
         response = response.json()
         # adds the urns from response to datasets list
-        AllTags.extend(response["value"]["metadata"]["urns"])
+        for tags in response['value']['entities']:
+            AllTags.append(tags['entity'])
         # Remove the amount collected datasets from total count
         totalTagsCount -= count
- 
     cleanedTagsObject = {}
     for tag in AllTags:
         cleanedtag = tag.split("urn:li:tag:").pop()
