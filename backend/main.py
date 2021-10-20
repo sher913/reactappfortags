@@ -189,7 +189,7 @@ def getalltags():
     parameters = {"action": "search"}
     start = 0
     # max is 10k, limited by GMS
-    count = 10
+    count = 10000
     data = (
         '{ "input": "*", "entity": "tag", "start": ' + str(start) + ","
         '"count": ' + str(count) + "}"
