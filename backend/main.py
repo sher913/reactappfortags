@@ -1,8 +1,6 @@
 import os
 import logging
 from logging.handlers import TimedRotatingFileHandler
-import re
-from avro.schema import NULL
 from datahub.metadata.schema_classes import DatasetSnapshotClass, NullTypeClass
 
 import requests
@@ -468,6 +466,7 @@ def getresult(Editeditems: List[EditedItem]):
                         globaltag_description = item.Global_Tags[globaltag].get(
                             "Description", None
                         )
+                       
                         if globaltag_tag != "":
                             globaltags.append({"tag": make_tag_urn(globaltag_tag)})
                             if (
@@ -475,7 +474,7 @@ def getresult(Editeditems: List[EditedItem]):
                                 or All_Tags[globaltag_tag]["Description"]
                                 != globaltag_description
                             ):
-                                print("print added new editableTag", globaltag_tag)
+                                print("print added new Global Tag", globaltag_tag)
                                 addTagtoGms(globaltag_tag, globaltag_description)
                                 All_Tags[globaltag_tag] = {
                                     "Tag": globaltag_tag,
@@ -494,7 +493,7 @@ def getresult(Editeditems: List[EditedItem]):
                                 tag_tag not in All_Tags.keys()
                                 or All_Tags[tag_tag]["Description"] != tag_description
                             ):
-                                print("print added new editableTag", tag_tag)
+                                print("print added new SchemaMetaData Tag", tag_tag)
                                 addTagtoGms(tag_tag, tag_description)
                                 All_Tags[tag_tag] = {
                                     "Tag": tag_tag,
@@ -560,7 +559,6 @@ def getresult(Editeditems: List[EditedItem]):
 
         # Array Checker for changes made in editableSchemametadata
         isEditableSchemaMetadataChanged = []
-        print(originalEditablefields)
         if originalEditablefields is not None:
             for f in range(len(originalEditablefields)):
                 if (

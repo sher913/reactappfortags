@@ -512,6 +512,11 @@ class App extends React.Component {
                     Tag: changedTagsObjectholder[edited_key]["Tag"],
                     Description: changedTagsObjectholder[edited_key]["Description"],
                   };
+                } else if (Object.keys(allTagsObject).includes(edited_key)) {
+                  edited_tags_as_Object[edited_key] = {
+                    Tag: allTagsObject[edited_key]["Tag"],
+                    Description: allTagsObject[edited_key]["Description"],
+                  };
                 }
               }
               for (let k = 0; k < orginal_tags.length; k++) {
@@ -523,6 +528,11 @@ class App extends React.Component {
                   orginal_tags_as_Object[original_key] = {
                     Tag: changedTagsObjectholder[original_key]["Tag"],
                     Description: changedTagsObjectholder[original_key]["Description"],
+                  };
+                } else if (Object.keys(allTagsObject).includes(original_key)) {
+                  orginal_tags_as_Object[original_key] = {
+                    Tag: allTagsObject[original_key]["Tag"],
+                    Description: allTagsObject[original_key]["Description"],
                   };
                 }
               }
@@ -560,6 +570,11 @@ class App extends React.Component {
                     global_tags_as_Object[global_key] = {
                       Tag: changedTagsObjectholder[global_key]["Tag"],
                       Description: changedTagsObjectholder[global_key]["Description"],
+                    };
+                  } else if (Object.keys(allTagsObject).includes(global_key)) {
+                    global_tags_as_Object[global_key] = {
+                      Tag: allTagsObject[global_key]["Tag"],
+                      Description: allTagsObject[global_key]["Description"],
                     };
                   }
                 }
