@@ -1,6 +1,7 @@
 import os
 import logging
 from logging.handlers import TimedRotatingFileHandler
+import re
 from avro.schema import NULL
 from datahub.metadata.schema_classes import DatasetSnapshotClass, NullTypeClass
 
@@ -85,6 +86,7 @@ if not DEBUG:
 
 rootLogger.info("started!")
 
+
 class EditedItem(BaseModel):
     ID: int
     Origin: str
@@ -124,17 +126,16 @@ def main():
         "POST", URL, headers=headers, params=parameters, data=data
     )
     datasetobject = response.json()
-    
     # gets the total count of entities, in this case; datasets
     totalDatasetCount = datasetobject["value"]["numEntities"]
     # Remove the amount of datasets already collected from total count
     totalDatasetCount -= count
     # extracts urns(datasets) to a list  called datasets
-    dataset_unfiltered_list = datasetobject['value']['entities']
-    datasets= []
+    dataset_unfiltered_list = datasetobject["value"]["entities"]
+    datasets = []
     for unfiltered_list in dataset_unfiltered_list:
-        datasets.append(unfiltered_list['entity'])
-   
+        datasets.append(unfiltered_list["entity"])
+
     # loop in case there are more than 10k datasets
     while totalDatasetCount > 0:
         # adds the count to start value, since index starts with 0, it works
@@ -149,9 +150,9 @@ def main():
         )
         response = response.json()
         # adds the urns from response to datasets list
-        dataset_unfiltered_list = response['value']['entities']
+        dataset_unfiltered_list = response["value"]["entities"]
         for unfiltered_list in dataset_unfiltered_list:
-            datasets.append(unfiltered_list['entity'])
+            datasets.append(unfiltered_list["entity"])
         # Remove the amount collected datasets from total count
         totalDatasetCount -= count
     # Array for aspects that datasets must have else will be dropped
@@ -201,9 +202,9 @@ def getalltags():
     totalTagsCount = response["value"]["numEntities"]
     totalTagsCount -= count
     AllTags = []
-    #response['value']['entities'] == list of entites retrieved
-    for tags in response['value']['entities']:
-        AllTags.append(tags['entity'])
+    # response['value']['entities'] == list of entites retrieved
+    for tags in response["value"]["entities"]:
+        AllTags.append(tags["entity"])
     while totalTagsCount > 0:
         # adds the count to start value, since index starts with 0, it works
         start += count
@@ -217,21 +218,31 @@ def getalltags():
         )
         response = response.json()
         # adds the urns from response to datasets list
-        for tags in response['value']['entities']:
-            AllTags.append(tags['entity'])
+        for tags in response["value"]["entities"]:
+            AllTags.append(tags["entity"])
         # Remove the amount collected datasets from total count
         totalTagsCount -= count
     cleanedTagsObject = {}
     for tag in AllTags:
         cleanedtag = tag.split("urn:li:tag:").pop()
-        res = requests.request("GET",datahub_gms_endpoint+'/aspects/urn%3Ali%3Atag%3A'+cleanedtag+'?aspect=tagProperties&version=0')
-        res=res.json()
-        #ask xl if any way to combine 3 .gets() into 1
+        res = requests.request(
+            "GET",
+            datahub_gms_endpoint
+            + "/aspects/urn%3Ali%3Atag%3A"
+            + cleanedtag
+            + "?aspect=tagProperties&version=0",
+        )
+        res = res.json()
+        # ask xl if any way to combine 3 .gets() into 1
         tag_Description = res.get("aspect")
         if tag_Description:
-            tag_Description = tag_Description.get('com.linkedin.tag.TagProperties')
-            tag_Description = tag_Description.get('description')
-        cleanedTagsObject[cleanedtag] = {"Tag": cleanedtag, "Description": tag_Description if tag_Description else "", "Count": 0}
+            tag_Description = tag_Description.get("com.linkedin.tag.TagProperties")
+            tag_Description = tag_Description.get("description")
+        cleanedTagsObject[cleanedtag] = {
+            "Tag": cleanedtag,
+            "Description": tag_Description if tag_Description else "",
+            "Count": 0,
+        }
     return cleanedTagsObject
 
 
@@ -255,9 +266,13 @@ def getdatasetviaurn(dataset):
         ]
     )
     datasetsnapshot = response.json()
-    datasetsnapshot = datasetsnapshot["value"][
-        "com.linkedin.metadata.snapshot.DatasetSnapshot"
-    ]
+
+    try:
+        datasetsnapshot = datasetsnapshot["value"][
+            "com.linkedin.metadata.snapshot.DatasetSnapshot"
+        ]
+    except KeyError:
+        return {}
     datasetsnapshotAspects = datasetsnapshot["aspects"]
 
     for aspect in datasetsnapshotAspects:
@@ -265,19 +280,19 @@ def getdatasetviaurn(dataset):
             keychecker = key.split(".")[-1]
             if keychecker in newdatasetsnapshot:
                 newdatasetsnapshot[keychecker] = aspect[key]
-
     return newdatasetsnapshot
 
 
-def addTagtoGms(tag, description =None):
+def addTagtoGms(tag, description=None):
     tag_snapshot = TagSnapshot(
         urn=make_tag_urn(tag),
         aspects=[],
     )
 
-    tag_snapshot.aspects.append(make_TagProperties_mce(name=tag, description = description))
+    tag_snapshot.aspects.append(
+        make_TagProperties_mce(name=tag, description=description)
+    )
     tag_metadata_record = MetadataChangeEvent(proposedSnapshot=tag_snapshot)
-    # print(metadata_record)
     for mce in tag_metadata_record.proposedSnapshot.aspects:
         if not mce.validate():
             rootLogger.error(f"{mce.__class__} is not defined properly")
@@ -303,16 +318,17 @@ def addTagtoGms(tag, description =None):
         "Make_tag_request_completed_for {} requested_by {}".format(tag, "datahub")
     )
 
+
 @app.post("/updatetag")
 def updatetags(Editedtags: Dict[Any, Any] = None):
-    tags_modified =[]
-    tags_not_modified =[]
+    tags_modified = []
+    tags_not_modified = []
     for value in Editedtags.values():
-        tag = value['Tag']
-        description = value['Description']
-      
-        if tag not in All_Tags.keys() or description != All_Tags[tag]['Description']:
-            addTagtoGms(tag,description)
+        tag = value["Tag"]
+        description = value["Description"]
+
+        if tag not in All_Tags.keys() or description != All_Tags[tag]["Description"]:
+            addTagtoGms(tag, description)
             tags_modified.append(tag)
         else:
             tags_not_modified.append(tag)
@@ -323,9 +339,13 @@ def updatetags(Editedtags: Dict[Any, Any] = None):
         )
     else:
         return Response(
-            "No datasets or tags were updated because tags {} already exist".format(tags_not_modified),
+            "No datasets or tags were updated because tags {} already exist".format(
+                tags_not_modified
+            ),
             status_code=201,
         )
+
+
 @app.post("/getresult")
 def getresult(Editeditems: List[EditedItem]):
 
@@ -334,7 +354,7 @@ def getresult(Editeditems: List[EditedItem]):
         # extracts all edited unique datasets to use as for loops
         if item.Dataset_Name not in datasetEdited:
             datasetEdited.append(item.Dataset_Name)
-     
+
     # Your datahub account name, uses user_not_specified if not specified
     requestor = make_user_urn(os.getenv("actor", "datahub"))
     for dataset in datasetEdited:
@@ -349,15 +369,29 @@ def getresult(Editeditems: List[EditedItem]):
                 editable_field["fieldPath"] = item.Field_Name
                 editable_field["field_description"] = item.Description
                 for editabletag in item.Editable_Tags:
-                    print("sahjfewh", item.Editable_Tags)
-                    editabletag_tag = item.Editable_Tags[editabletag].get('Tag','')
-                    editable_tag_description = item.Editable_Tags[editabletag].get('Description',None)
+                    editabletag_tag = item.Editable_Tags[editabletag].get("Tag", "")
+                    editable_tag_description = item.Editable_Tags[editabletag].get(
+                        "Description", None
+                    )
                     if editabletag_tag != "":
                         editabletags.append({"tag": make_tag_urn(editabletag_tag)})
-                        if editabletag_tag not in All_Tags.keys() or All_Tags[editabletag_tag]['Description']!=editable_tag_description:
-                            print("print added new editableTag", editabletag_tag, "with description of", editable_tag_description)
+                        if (
+                            editabletag_tag not in All_Tags.keys()
+                            or All_Tags[editabletag_tag]["Description"]
+                            != editable_tag_description
+                        ):
+                            print(
+                                "print added new editableTag",
+                                editabletag_tag,
+                                "with description of",
+                                editable_tag_description,
+                            )
                             addTagtoGms(editabletag_tag, editable_tag_description)
-                            All_Tags[editabletag_tag] = {"Tag": editabletag_tag, 'Description':editable_tag_description,  "Count": 0}
+                            All_Tags[editabletag_tag] = {
+                                "Tag": editabletag_tag,
+                                "Description": editable_tag_description,
+                                "Count": 0,
+                            }
 
                 editable_field["tags"] = editabletags
 
@@ -430,24 +464,43 @@ def getresult(Editeditems: List[EditedItem]):
                 ):
                     # globaltag is not actually under schemadata aspect, it has its own aspect
                     for globaltag in item.Global_Tags:
-                        globaltag_tag = item.Global_Tags[globaltag].get('Tag','')
-                        globaltag_description = item.Global_Tags[globaltag].get('Description',None)
+                        globaltag_tag = item.Global_Tags[globaltag].get("Tag", "")
+                        globaltag_description = item.Global_Tags[globaltag].get(
+                            "Description", None
+                        )
                         if globaltag_tag != "":
                             globaltags.append({"tag": make_tag_urn(globaltag_tag)})
-                            if globaltag_tag not in All_Tags.keys() or All_Tags[globaltag_tag]['Description']!=globaltag_description:
+                            if (
+                                globaltag_tag not in All_Tags.keys()
+                                or All_Tags[globaltag_tag]["Description"]
+                                != globaltag_description
+                            ):
                                 print("print added new editableTag", globaltag_tag)
                                 addTagtoGms(globaltag_tag, globaltag_description)
-                                All_Tags[globaltag_tag] = {"Tag": globaltag_tag,"Description":globaltag_description, "Count": 0}
+                                All_Tags[globaltag_tag] = {
+                                    "Tag": globaltag_tag,
+                                    "Description": globaltag_description,
+                                    "Count": 0,
+                                }
                     # for schemametadata aspects
                     for tag in item.Original_Tags:
-                        tag_tag = item.Original_Tags[tag].get('Tag','')
-                        tag_description = item.Original_Tags[tag].get('Description',None)
+                        tag_tag = item.Original_Tags[tag].get("Tag", "")
+                        tag_description = item.Original_Tags[tag].get(
+                            "Description", None
+                        )
                         if tag_tag != "":
                             schemametadatatags.append({"tag": make_tag_urn(tag_tag)})
-                            if tag_tag not in All_Tags.keys() or All_Tags[tag_tag]['Description']!=tag_description:
+                            if (
+                                tag_tag not in All_Tags.keys()
+                                or All_Tags[tag_tag]["Description"] != tag_description
+                            ):
                                 print("print added new editableTag", tag_tag)
                                 addTagtoGms(tag_tag, tag_description)
-                                All_Tags[tag_tag] = {"Tag": tag_tag, "Description":tag_description,  "Count": 0}
+                                All_Tags[tag_tag] = {
+                                    "Tag": tag_tag,
+                                    "Description": tag_description,
+                                    "Count": 0,
+                                }
             if schemametadatatags != []:
                 current_field["tags"] = schemametadatatags
             # Filling the Array Checker for if tags for schemametadata has been edited, tags are the only varaiable editable for schemametadata
@@ -479,7 +532,7 @@ def getresult(Editeditems: List[EditedItem]):
 
         dataset_snapshot.aspects.append(make_browsepath_mce(path=browsePath))
 
-        dataset_snapshot.aspects.append(make_schemaglobaltags_mce(tags=globaltags))
+        dataset_snapshot.aspects.append(make_schemaglobaltags_mce(tags= globaltags))
 
         # Checker for changes in EditableDatasetProperties
         isDataset_Description_Changed = True
@@ -507,23 +560,36 @@ def getresult(Editeditems: List[EditedItem]):
 
         # Array Checker for changes made in editableSchemametadata
         isEditableSchemaMetadataChanged = []
+        print(originalEditablefields)
         if originalEditablefields is not None:
             for f in range(len(originalEditablefields)):
                 if (
                     originalEditablefields[f]["globalTags"]["tags"]
                     != editablefield_params[f]["tags"]
-                    or originalEditablefields[f]["description"]
-                    != editablefield_params[f]["field_description"]
                 ):
                     isEditableSchemaMetadataChanged.append(True)
+                try: 
+                    if (originalEditablefields[f]["description"]
+                    != editablefield_params[f]["field_description"]):
+                        isEditableSchemaMetadataChanged.append(True)
+                    
+                except KeyError:
+                    if editablefield_params[f]["field_description"]:
+                        isEditableSchemaMetadataChanged.append(True)
         else:
             for f in range(len(editablefield_params)):
                 if (
                     editablefield_params[f]["tags"]
-                    or originalfields[f]["description"]
-                    != editablefield_params[f]["field_description"]
                 ):
                     isEditableSchemaMetadataChanged.append(True)
+                try: 
+                    if (originalfields[f]["description"]
+                    != editablefield_params[f]["field_description"]):
+                        isEditableSchemaMetadataChanged.append(True)
+                    
+                except KeyError:
+                    if editablefield_params[f]["field_description"]:
+                        isEditableSchemaMetadataChanged.append(True)
 
         if True in isEditableSchemaMetadataChanged:
             dataset_snapshot.aspects.append(

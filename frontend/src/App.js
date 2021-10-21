@@ -421,7 +421,7 @@ class App extends React.Component {
             type: "html-input",
             targets: [0, 1],
             render: function (rows, type, row) {
-              return '<input class="form-control" type="text"  value ="' + rows + '">';
+              return '<input class="form-control" type="text"  value ="' + rows + '"style= "width:auto">';
             },
           },
         ],
