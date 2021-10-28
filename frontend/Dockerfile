@@ -1,4 +1,4 @@
-FROM node:alpine as builder
+FROM node:16.4.2 as builder
 COPY frontend/package.json ./
 COPY frontend/yarn.lock ./
 RUN yarn install --frozen-lockfile
