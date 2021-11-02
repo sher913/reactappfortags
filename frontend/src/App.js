@@ -375,7 +375,7 @@ class App extends React.Component {
             type: "html-input",
             targets: [4, 5, 6],
             render: function (rows, type, row) {
-              return '<input class="form-control" type="text"  value ="' + rows + '" style= "width:auto">';
+              return '<input class="form-control" type="text" value ="' + rows + '" style= "width:300px;height:50px">';
             },
           },
           {
@@ -398,7 +398,7 @@ class App extends React.Component {
             type: "html-input",
             targets: [2, 3, 4],
             render: function (rows, type, row) {
-              return '<input class="form-control" type="text"  value ="' + rows + '" style= "width:auto">';
+              return '<input class="form-control" value="' + rows + '" style= "width:300px;height:50px">';
             },
           },
           {
@@ -421,7 +421,7 @@ class App extends React.Component {
             type: "html-input",
             targets: [0, 1],
             render: function (rows, type, row) {
-              return '<input class="form-control" type="text"  value ="' + rows + '"style= "width:auto">';
+              return '<input class="form-control" type="text"  value ="' + rows + '"style= "width:300px;height:50px">';
             },
           },
         ],

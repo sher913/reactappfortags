@@ -609,12 +609,10 @@ def getresult(Editeditems: List[EditedItem]):
                 )
 
         try:
-            rootLogger.error(metadata_record)
             emitter = DatahubRestEmitter(datahub_gms_endpoint)
             emitter.emit_mce(metadata_record)
             emitter._session.close()
         except Exception as e:
-            rootLogger.debug(e)
             return Response(
                 "Dataset was not created because upstream has encountered an error {}".format(
                     e

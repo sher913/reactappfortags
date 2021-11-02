@@ -37,44 +37,36 @@
   }
 }
 
-
-
 div.dataTables_wrapper {
   margin: 0 auto;
 
   position: absolute;
- 
+
   left: 50%;
   margin-right: -50%;
-  transform: translate(-50%)
+  transform: translate(-50%);
 }
 
-
-#tagTable tbody tr{
-  background-color: #D1E7DD;
+#tagTable tbody tr {
+  background-color: #d1e7dd;
 }
-
 
 #tagTable tr.even:hover {
-	background-color: gray;
+  background-color: gray;
   cursor: pointer;
 }
 
 #tagTable tr.even:hover td.sorting_1 {
-	background-color: gray;
+  background-color: gray;
   cursor: pointer;
 }
-
-
 
 #tagTable tr.odd:hover {
-	background-color: gray;
+  background-color: gray;
   cursor: pointer;
 }
-
 
 #tagTable tr.odd:hover td.sorting_1 {
-	background-color: gray;
+  background-color: gray;
   cursor: pointer;
 }
-
