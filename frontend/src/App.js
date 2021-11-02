@@ -12,6 +12,10 @@ import axios from "axios";
 //For tab panes
 import Tabs from "react-bootstrap/Tabs";
 import Tab from "react-bootstrap/Tab";
+import { Route, Switch } from "react-router-dom";
+import { useAuth0 } from "@auth0/auth0-react";
+import { LoadingIndicator } from "./components/loading-indicator";
+import { IsAuthenticated } from "./components/is-authenticated";
 
 class App extends React.Component {
   //Declare data store variables
@@ -656,89 +660,95 @@ class App extends React.Component {
     //Datatable HTML
     return (
       <div className="MainDiv">
-        <div class="jumbotron text-center">
-          <h3>Datahub Tagging UI</h3>
-        </div>
-        <div className="container">
-          <Tabs fill defaultActiveKey="Datasets" id="uncontrolled-tab-example" className="mb-3">
-            <Tab eventKey="Datasets" title="Datasets">
-              <table id="datasetTable" class="table table-striped table-bordered table-sm row-border hover mb-5">
-                <thead>
-                  <tr>
-                    {this.state.datasetcols.map((result) => {
-                      return <th>{result}</th>;
-                    })}
-                  </tr>
-                </thead>
-                <tbody>
-                  {this.state.datasetrows.map((result) => {
-                    return (
-                      <tr class="table-success">
-                        <td>{result.Platform_Name}</td>
-                        <td>{result.Dataset_Name}</td>
-                        <td>{result.Dataset_BrowsePath}</td>
-                        <td>{result.Global_Tags}</td>
-                        <td>{result.Dataset_Description}</td>
-                        <td>{result.Date_Modified}</td>
-                        <td>{result.Origin}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </Tab>
+        <LoadingIndicator />
 
-            <Tab eventKey="Fields" title="Fields">
-              <table id="fieldTable" class="table table-striped table-bordered table-sm row-border hover mb-5">
-                <thead>
-                  <tr>
-                    {this.state.fieldcols.map((result) => {
-                      return <th>{result}</th>;
-                    })}
-                  </tr>
-                </thead>
-                <tbody>
-                  {this.state.fieldrows.map((result) => {
-                    return (
-                      <tr class="table-success">
-                        <td>{result.ID}</td>
-                        <td>{result.Platform_Name}</td>
-                        <td>{result.Dataset_Name}</td>
-                        <td>{result.Field_Name}</td>
-                        <td>{result.Editable_Tags}</td>
-                        <td>{result.Original_Tags}</td>
-                        <td>{result.Description}</td>
-                        <td>{result.Date_Modified}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </Tab>
-            <Tab eventKey="Tags" title="Tags">
-              <table id="tagTable" class="table table-striped table-bordered table-sm row-border hover mb-5">
-                <thead>
-                  <tr>
-                    {this.state.tagscols.map((result) => {
-                      return <th>{result}</th>;
-                    })}
-                  </tr>
-                </thead>
-                <tbody>
-                  {this.state.tagrows.map((result) => {
-                    return (
+        {<isAuthenticated /> ? (
+          <div>
+            <div class="jumbotron text-center">
+              <h3>Datahub Tagging UI</h3>
+            </div>
+            <div className="container">
+              <Tabs fill defaultActiveKey="Datasets" id="uncontrolled-tab-example" className="mb-3">
+                <Tab eventKey="Datasets" title="Datasets">
+                  <table id="datasetTable" class="table table-striped table-bordered table-sm row-border hover mb-5">
+                    <thead>
                       <tr>
-                        <td>{result.Tag}</td>
-                        <td>{result.Description}</td>
-                        <td>{result.Count}</td>
+                        {this.state.datasetcols.map((result) => {
+                          return <th>{result}</th>;
+                        })}
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </Tab>
-          </Tabs>
-        </div>
+                    </thead>
+                    <tbody>
+                      {this.state.datasetrows.map((result) => {
+                        return (
+                          <tr class="table-success">
+                            <td>{result.Platform_Name}</td>
+                            <td>{result.Dataset_Name}</td>
+                            <td>{result.Dataset_BrowsePath}</td>
+                            <td>{result.Global_Tags}</td>
+                            <td>{result.Dataset_Description}</td>
+                            <td>{result.Date_Modified}</td>
+                            <td>{result.Origin}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </Tab>
+
+                <Tab eventKey="Fields" title="Fields">
+                  <table id="fieldTable" class="table table-striped table-bordered table-sm row-border hover mb-5">
+                    <thead>
+                      <tr>
+                        {this.state.fieldcols.map((result) => {
+                          return <th>{result}</th>;
+                        })}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {this.state.fieldrows.map((result) => {
+                        return (
+                          <tr class="table-success">
+                            <td>{result.ID}</td>
+                            <td>{result.Platform_Name}</td>
+                            <td>{result.Dataset_Name}</td>
+                            <td>{result.Field_Name}</td>
+                            <td>{result.Editable_Tags}</td>
+                            <td>{result.Original_Tags}</td>
+                            <td>{result.Description}</td>
+                            <td>{result.Date_Modified}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </Tab>
+                <Tab eventKey="Tags" title="Tags">
+                  <table id="tagTable" class="table table-striped table-bordered table-sm row-border hover mb-5">
+                    <thead>
+                      <tr>
+                        {this.state.tagscols.map((result) => {
+                          return <th>{result}</th>;
+                        })}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {this.state.tagrows.map((result) => {
+                        return (
+                          <tr>
+                            <td>{result.Tag}</td>
+                            <td>{result.Description}</td>
+                            <td>{result.Count}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </Tab>
+              </Tabs>
+            </div>
+          </div>
+        ) : null}
       </div>
     );
   }
