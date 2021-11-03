@@ -5,9 +5,10 @@ For now i am using a datahub's restendpoint on a VM, if you do not have access t
 Key Features:
 Able to use this react UI to update information on datasets within Datahub through GMS:
 
-1. Update all aspects of datasets, E.g. BrowsePath, Tags assigned to it, Description
-2. Display tags assigned to datasets and their count
-3. Able to edit those tags and affect the respective datasets it is assigned to
+1. Access control (login with auth0)
+2. Update all aspects of datasets, E.g. BrowsePath, Tags assigned to it, Description
+3. Display tags assigned to datasets and their count
+4. Able to edit those tags and affect the respective datasets it is assigned to
    <br>
 
 ![Image of data table](https://user-images.githubusercontent.com/60865228/140048407-c2bc2bae-21c6-4d7f-b278-44877060697f.gif)
