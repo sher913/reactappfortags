@@ -10,7 +10,7 @@ Able to use this react UI to update information on datasets within Datahub throu
 3. Able to edit those tags and affect the respective datasets it is assigned to
    <br>
 
-![Image of data table](https://user-images.githubusercontent.com/60865228/137517312-3b98cd56-ad10-43ee-b04f-03b9a75d3ec5.gif)
+![Image of data table](https://user-images.githubusercontent.com/60865228/140048407-c2bc2bae-21c6-4d7f-b278-44877060697f.gif)
 
 This is one of the dataset on Datahub
 ![Image of datahub UI edited](https://user-images.githubusercontent.com/60865228/134659624-33da907e-3782-49bf-8f6c-c892558c33b8.png)
