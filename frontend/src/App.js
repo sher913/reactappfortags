@@ -12,15 +12,14 @@ import axios from "axios";
 //For tab panes
 import Tabs from "react-bootstrap/Tabs";
 import Tab from "react-bootstrap/Tab";
-import { Route, Switch } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 import { LoadingIndicator } from "./components/loading-indicator";
-import { IsAuthenticated } from "./components/is-authenticated";
-
+import LoginRequired from "./components/login-required";
 class App extends React.Component {
   //Declare data store variables
   constructor(props) {
     super(props);
+
     this.state = {
       fieldrows: [],
       fieldcols: [],
@@ -658,12 +657,12 @@ class App extends React.Component {
 
   render() {
     //Datatable HTML
-    return (
-      <div className="MainDiv">
-        <LoadingIndicator />
-
-        {<isAuthenticated /> ? (
-          <div>
+    const DataTable = (n) => {
+      const { isLoading, isAuthenticated, error, user, loginWithRedirect, logout } = useAuth0();
+      if (isAuthenticated) {
+        return (
+          <div className="MainDiv">
+            <LoadingIndicator />
             <div class="jumbotron text-center">
               <h3>Datahub Tagging UI</h3>
             </div>
@@ -748,9 +747,19 @@ class App extends React.Component {
               </Tabs>
             </div>
           </div>
-        ) : null}
-      </div>
-    );
+        );
+      } else {
+        return (
+          <div className="MainDiv">
+            <LoginRequired />
+            <LoadingIndicator />
+          </div>
+        );
+      }
+    };
+    {
+      return <DataTable />;
+    }
   }
 }
 
