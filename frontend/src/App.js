@@ -62,12 +62,13 @@ class App extends React.Component {
     console.log("Timeout setting:", process.env.REACT_APP_TIMEOUT_SETTING ?? "is undefined, so using default value of 3000", "ms");
     //Change this endpoint depending on ur datahub endpoint, uses http://localhost:9002 if not defined
     const datahub_address = process.env.REACT_APP_DATAHUB_ADDRESS ?? "http://locahost:9002/";
+    const fastapi_address = process.env.REACT_APP_FASTAPI_ADDRESS ?? "http://locahost:8000/";
     var elements;
     var BrowsePathsholder = [];
     var allTagsObject;
-
+    console.log(process.env.REACT_APP_FASTAPI_ADDRESS);
     // on here, nid to make Python FASTAPI as middleware to bypass CORS, then axios.get(http://localhost/FASTAPI)
-    axios.get("http://localhost:8000/getdatasets", {}).then((res) => {
+    axios.get(fastapi_address + "/getdatasets", {}).then((res) => {
       //pushing datasets data to 'elements' varaiable
       console.log("Datasets dopped: ", res["data"][1]);
       elements = res["data"][0];
@@ -607,7 +608,7 @@ class App extends React.Component {
         if (!finaleditedholder.length) {
           axios
             .post(
-              "http://localhost:8000/updatetag",
+              fastapi_address + "/updatetag",
 
               changedTagsObjectholder,
 
@@ -629,7 +630,7 @@ class App extends React.Component {
         } else {
           axios
             .post(
-              "http://localhost:8000/getresult",
+              fastapi_address + "/getresult",
 
               finaleditedholder,
 
