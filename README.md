@@ -49,10 +49,10 @@ Installation for first time:
 >     > 2.Set the timeout value(must be more) according to how long your machine takes to fetch 'getdataset'(located in dev tools network tab) see picture below; <br>
 >     > U can leave it blank first, and it will use the default value of 3000ms, once u found your value, edit it and re-install.
 >     > ![Chrom dev tools network tab](https://user-images.githubusercontent.com/60865228/134888557-ee86ba13-5178-4cfd-bd2b-b6a36b895cc3.png)
-> 6.  CD back to root and type in the cmd 'docker-compose up'
+> 6.  CD back to root and type in the cmd 'docker-compose up --build'
 
 <br>
 
-You can just use cmd 'docker-compose up' everytime to start it, even if u already installed before.
+You can just use cmd 'docker-compose up', 'docker-compose up --build'(install new changes) everytime to start it, even if u already installed before.
 
 To reinstall, just go to your docker desktop and remove the containers then remove the images and run the command again.
